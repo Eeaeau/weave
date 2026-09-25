@@ -56,10 +56,10 @@ func _check_webs(match_scene: Node2D) -> bool:
 
 
 func _check_collectibles(match_scene: Node2D) -> bool:
-	var pebble: ThrownWeaponData = load("res://src/features/weapons/pebble.tres")
-	var cutter: WebToolData = load("res://src/features/weapons/twig_cutter.tres")
-	var moth: InsectData = load("res://src/features/insects/silk_moth.tres")
-	var beetle: InsectData = load("res://src/features/insects/health_beetle.tres")
+	var pebble: ThrownWeaponData = load("res://src/features/collectibles/weapons/pebble.tres")
+	var cutter: WebToolData = load("res://src/features/collectibles/weapons/twig_cutter.tres")
+	var moth: InsectData = load("res://src/features/collectibles/insects/silk_moth.tres")
+	var beetle: InsectData = load("res://src/features/collectibles/insects/health_beetle.tres")
 	var windborne_weapon: WindborneWeapon2D = match_scene.get_node("WindbornePebble")
 	var windborne_insect: WindborneInsect2D = match_scene.get_node("WindborneMoth")
 	if (not pebble is CollectibleData or not cutter is CollectibleData

@@ -11,9 +11,9 @@ src/
   features/
     spiders/                    BaseSpider2D and inherited player/opponent scenes
     collectibles/               Shared collectible scene and data parents
-    insects/                    Insect data and windborne placeholder
+      insects/                  Insect data and windborne placeholder
+      weapons/                  Weapon data and windborne placeholder
     web/                        WebStrand2D placeholder
-    weapons/                    Weapon data and windborne placeholder
     world/maps/branch_canopy/   2D tree map and branch start markers
     ui/                         Title, settings, input, pause, game over, match HUD
 assets/                          Assets shared across features

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="WebToolData" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://src/features/weapons/web_tool_data.gd" id="1"]
+[ext_resource type="Script" path="res://src/features/collectibles/weapons/web_tool_data.gd" id="1"]
 
 [resource]
 script = ExtResource("1")

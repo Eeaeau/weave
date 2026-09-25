@@ -5,12 +5,12 @@
 [ext_resource type="PackedScene" path="res://src/features/spiders/player_spider.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://src/features/spiders/opponent_spider.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://src/features/web/web_strand.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://src/features/weapons/windborne_weapon.tscn" id="6"]
-[ext_resource type="Resource" path="res://src/features/weapons/pebble.tres" id="7"]
+[ext_resource type="PackedScene" path="res://src/features/collectibles/weapons/windborne_weapon.tscn" id="6"]
+[ext_resource type="Resource" path="res://src/features/collectibles/weapons/pebble.tres" id="7"]
 [ext_resource type="PackedScene" path="res://src/features/ui/match_hud.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://src/features/ui/pause_menu.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://src/features/insects/windborne_insect.tscn" id="10"]
-[ext_resource type="Resource" path="res://src/features/insects/silk_moth.tres" id="11"]
+[ext_resource type="PackedScene" path="res://src/features/collectibles/insects/windborne_insect.tscn" id="10"]
+[ext_resource type="Resource" path="res://src/features/collectibles/insects/silk_moth.tres" id="11"]
 
 [node name="WebMatch" type="Node2D"]
 script = ExtResource("1")
