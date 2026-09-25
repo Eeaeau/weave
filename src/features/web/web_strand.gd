@@ -1,11 +1,11 @@
-class_name WebStrand2D
-extends Node2D
-## A visual strand. Durability is data only until web rules are implemented.
+class_name WebStrand3D
+extends Node3D
+## A 3D strand placeholder. Durability is data until web rules are built.
 
-@export var endpoint_a: Vector2 = Vector2.ZERO
-@export var endpoint_b: Vector2 = Vector2(100, 0)
+@export var endpoint_a: Vector3 = Vector3.ZERO
+@export var endpoint_b: Vector3 = Vector3(1, 0, 0)
 @export_range(1, 100) var durability: int = 3
 
 
-func _draw() -> void:
-	draw_line(endpoint_a, endpoint_b, Color(0.77, 0.89, 0.88, 0.85), 3.0, true)
+func _ready() -> void:
+	SceneGeometry3D.segment(self, endpoint_a, endpoint_b, 0.035, Color("c6e3df"))

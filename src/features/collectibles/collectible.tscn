@@ -2,5 +2,5 @@
 
 [ext_resource type="Script" path="res://src/features/collectibles/collectible.gd" id="1"]
 
-[node name="Collectible" type="Node2D"]
+[node name="Collectible" type="Node3D"]
 script = ExtResource("1")

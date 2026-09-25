@@ -28,10 +28,10 @@ func _run() -> void:
 	menu.get_node("Center/Menu/PlayButton").pressed.emit()
 	await process_frame
 	await process_frame
-	if not current_scene is WebMatch2D:
-		_fail("Play did not open the 2D match")
+	if not current_scene is WebMatch3D:
+		_fail("Play did not open the 3D match")
 		return
-	var match_scene: WebMatch2D = current_scene
+	var match_scene: WebMatch3D = current_scene
 	var pause_menu: PauseMenu = match_scene.get_node("PauseMenu")
 	pause_menu.show_pause()
 	if not paused or not pause_menu.visible:

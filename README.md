@@ -9,12 +9,12 @@ project.godot
 src/
   game/                         Match composition root
   features/
-    spiders/                    BaseSpider2D and inherited player/opponent scenes
+    spiders/                    BaseSpider3D and inherited player/opponent scenes
     collectibles/               Shared collectible scene and data parents
       insects/                  Insect data and windborne placeholder
       weapons/                  Weapon data and windborne placeholder
-    web/                        WebStrand2D placeholder
-    world/maps/branch_canopy/   2D tree map and branch start markers
+    web/                        WebStrand3D placeholder
+    world/maps/branch_canopy/   3D tree map, camera, and branch start markers
     ui/                         Title, settings, input, pause, game over, match HUD
 assets/                          Assets shared across features
 addons/                          Optional Godot plugins
@@ -25,7 +25,7 @@ tools/                           Local quality checker
 
 Keep a scene, its script, and assets used only by that scene in one feature folder. This lets a feature move or be removed without chasing files across the project. Use top-level `assets/` for files shared by several features. Empty placeholder folders contain `.gitkeep` so they remain visible in Git.
 
-`BaseSpider2D` is the shared spider scene and script. Player and opponent scenes inherit it, giving each a clear place for later controls or AI. Weapons and insects both inherit `CollectibleData` and `Collectible2D`. Weapon and insect resources are examples; catching and effects are not connected. `WebStrand2D` exposes endpoints and durability as editable data, but no damage behavior is connected. The map's `BackgroundMusic` node has no stream assigned yet.
+`BaseSpider3D` is the shared spider scene and script. Player and opponent scenes inherit it, giving each a clear place for later controls or AI. Weapons and insects both inherit `CollectibleData` and `Collectible3D`. Weapon and insect resources are examples; spawning, catching, and effects are not connected. `WebStrand3D` exposes endpoints and durability as editable data, but no damage behavior is connected. The map has a perspective camera with gentle sway to show parallax between foreground branches and distant foliage. The map's `BackgroundMusic` node has no stream assigned yet.
 
 The scene coordinates and art are disposable placeholders. Planned work is tracked in [GitHub Issues](https://github.com/Eeaeau/weave/issues) and the [Weave board](https://github.com/users/Eeaeau/projects/3/views/2).
 

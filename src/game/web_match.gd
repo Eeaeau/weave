@@ -1,6 +1,6 @@
-class_name WebMatch2D
-extends Node2D
-## Composes the arena, actors, web, weapon marker, and reusable UI.
+class_name WebMatch3D
+extends Node3D
+## Composes the 3D arena, actors, web, collectible markers, and reusable UI.
 
 @onready var hud: MatchHud = $MatchHud
 @onready var pause_settings: SettingsMenu = $PauseMenu/SettingsMenu

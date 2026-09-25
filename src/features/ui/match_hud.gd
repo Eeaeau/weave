@@ -19,6 +19,6 @@ func set_show_hints(enabled: bool) -> void:
 func _update_status() -> void:
 	if not is_node_ready():
 		return
-	status.text = "WEAVE  |  2D scene prototype"
+	status.text = "WEAVE  |  2.5D scene prototype"
 	if show_hints:
 		status.text += "\nBranches, spiders, strands, and weapon are placeholders.\nEsc: pause"

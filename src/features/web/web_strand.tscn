@@ -2,5 +2,5 @@
 
 [ext_resource type="Script" path="res://src/features/web/web_strand.gd" id="1"]
 
-[node name="WebStrand" type="Node2D"]
+[node name="WebStrand" type="Node3D"]
 script = ExtResource("1")
