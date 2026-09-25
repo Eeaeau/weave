@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
 [ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/parallax_camera.gd" id="2"]
+[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/branch.svg" id="3"]
+[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/canopy.svg" id="4"]
 
 [node name="BranchCanopy" type="Node3D"]
 script = ExtResource("1")
@@ -12,16 +14,60 @@ position = Vector3(-5, 0, 0)
 [node name="OpponentBranchStart" type="Marker3D" parent="."]
 position = Vector3(5, 0, 0)
 
+[node name="LeftBranch" type="Sprite3D" parent="."]
+position = Vector3(-7.3, 0, 0)
+billboard = 1
+texture = ExtResource("3")
+
+[node name="RightBranch" type="Sprite3D" parent="."]
+position = Vector3(7.3, 0, 0)
+billboard = 1
+flip_h = true
+texture = ExtResource("3")
+
+[node name="FarCanopyLeft" type="Sprite3D" parent="."]
+position = Vector3(-8, -2, -7)
+pixel_size = 0.02
+billboard = 1
+texture = ExtResource("4")
+
+[node name="FarCanopyMidLeft" type="Sprite3D" parent="."]
+position = Vector3(-3, -3, -9)
+pixel_size = 0.02
+billboard = 1
+texture = ExtResource("4")
+
+[node name="FarCanopyMidRight" type="Sprite3D" parent="."]
+position = Vector3(4, -3, -9)
+pixel_size = 0.02
+billboard = 1
+texture = ExtResource("4")
+
+[node name="FarCanopyRight" type="Sprite3D" parent="."]
+position = Vector3(9, -2, -7)
+pixel_size = 0.02
+billboard = 1
+texture = ExtResource("4")
+
+[node name="NearCanopyLeft" type="Sprite3D" parent="."]
+position = Vector3(-10, 1, 5)
+pixel_size = 0.018
+billboard = 1
+modulate = Color(0.75, 0.88, 0.8, 1)
+texture = ExtResource("4")
+
+[node name="NearCanopyRight" type="Sprite3D" parent="."]
+position = Vector3(10, 1, 5)
+pixel_size = 0.018
+billboard = 1
+modulate = Color(0.75, 0.88, 0.8, 1)
+texture = ExtResource("4")
+
 [node name="ParallaxCamera" type="Camera3D" parent="."]
 position = Vector3(0, 10, 14)
 fov = 65.0
 current = true
 script = ExtResource("2")
-
-[node name="Sunlight" type="DirectionalLight3D" parent="."]
-rotation = Vector3(-0.7, -0.5, -0.2)
-light_energy = 1.5
-shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 

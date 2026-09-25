@@ -21,4 +21,4 @@ func _update_status() -> void:
 		return
 	status.text = "WEAVE  |  2.5D scene prototype"
 	if show_hints:
-		status.text += "\nBranches, spiders, strands, and weapon are placeholders.\nEsc: pause"
+		status.text += "\nBranches, spiders, webs, and collectibles are placeholders.\nEsc: pause"

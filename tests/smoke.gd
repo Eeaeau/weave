@@ -21,11 +21,11 @@ func _run() -> void:
 	var map_ok: bool = await _check_map(match_scene)
 	if not (_check_spiders(match_scene) and map_ok
 			and _check_webs(match_scene) and _check_collectibles(match_scene)
-			and _check_audio()):
+			and _check_sprite_visuals(match_scene) and _check_audio()):
 		return
 	match_scene.queue_free()
 	await process_frame
-	print("SMOKE PASS: 3D map, camera, spiders, webs, collectible inheritance, and audio slots")
+	print("SMOKE PASS: sprites, camera, spiders, webs, collectibles, and audio slots")
 	quit(0)
 
 
@@ -84,6 +84,14 @@ func _check_collectibles(match_scene: Node3D) -> bool:
 func _check_audio() -> bool:
 	if AudioServer.get_bus_index("Music") < 0 or AudioServer.get_bus_index("SFX") < 0:
 		return _fail("Audio buses are missing")
+	return true
+
+
+func _check_sprite_visuals(match_scene: Node3D) -> bool:
+	var sprites := match_scene.find_children("*", "Sprite3D", true, false)
+	var meshes := match_scene.find_children("*", "MeshInstance3D", true, false)
+	if sprites.size() < 20 or not meshes.is_empty():
+		return _fail("World placeholders must be 2D sprites in the 3D scene")
 	return true
 
 
