@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
 [ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/parallax_camera.gd" id="2"]
 [ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/branch.svg" id="3"]
 [ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/canopy.svg" id="4"]
+[ext_resource type="PackedScene" path="res://src/features/wind/wind_event.tscn" id="5"]
 
 [node name="BranchCanopy" type="Node3D"]
 script = ExtResource("1")
@@ -73,3 +74,5 @@ script = ExtResource("2")
 
 [node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
 bus = &"Music"
+
+[node name="WindEvent" parent="." instance=ExtResource("5")]
