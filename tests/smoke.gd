@@ -19,12 +19,12 @@ func _run() -> void:
 		_fail("Match root is not 2D")
 		return
 	if not (_check_spiders(match_scene) and _check_map(match_scene)
-			and _check_webs(match_scene) and _check_weapons(match_scene)
+			and _check_webs(match_scene) and _check_collectibles(match_scene)
 			and _check_audio()):
 		return
 	match_scene.queue_free()
 	await process_frame
-	print("SMOKE PASS: 2D map, spiders, starting webs, weapon data, and audio slots")
+	print("SMOKE PASS: 2D map, spiders, webs, collectible inheritance, and audio slots")
 	quit(0)
 
 
@@ -55,13 +55,20 @@ func _check_webs(match_scene: Node2D) -> bool:
 	return true
 
 
-func _check_weapons(match_scene: Node2D) -> bool:
+func _check_collectibles(match_scene: Node2D) -> bool:
 	var pebble: ThrownWeaponData = load("res://src/features/weapons/pebble.tres")
 	var cutter: WebToolData = load("res://src/features/weapons/twig_cutter.tres")
-	var windborne: WindborneWeapon2D = match_scene.get_node("WindbornePebble")
-	if (not pebble is WeaponData or not cutter is WeaponData
-			or windborne.weapon != pebble):
-		return _fail("Weapon data inheritance or scene reference is broken")
+	var moth: InsectData = load("res://src/features/insects/silk_moth.tres")
+	var beetle: InsectData = load("res://src/features/insects/health_beetle.tres")
+	var windborne_weapon: WindborneWeapon2D = match_scene.get_node("WindbornePebble")
+	var windborne_insect: WindborneInsect2D = match_scene.get_node("WindborneMoth")
+	if (not pebble is CollectibleData or not cutter is CollectibleData
+			or not moth is CollectibleData or not beetle is CollectibleData):
+		return _fail("Collectible data inheritance is broken")
+	if (not windborne_weapon is Collectible2D or not windborne_insect is Collectible2D
+			or windborne_weapon.collectible != pebble
+			or windborne_insect.collectible != moth):
+		return _fail("Collectible scene inheritance or data reference is broken")
 	return true
 
 
