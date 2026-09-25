@@ -45,7 +45,7 @@
 
 **Files:** Create `src/features/wind/wind_lane.gd`, `src/features/wind/wind_flight.gd`, `tests/wind_flight_smoke.gd`; modify `tools/check.py` to run the test.
 
-**Interfaces:** `WindLane3D` is a `Marker3D` with `side: int` and `contact_rect: Rect2` in the web plane's local X/Z axes. `WindFlight3D.configure(item: Collectible3D, start_world: Vector3, contact_world: Vector3, exit_world: Vector3, duration: float, sway: float) -> void` parents the item. It emits `plane_crossed(item: Collectible3D, world_point: Vector3)` exactly once and `finished` once; `advance(delta: float) -> void` lets the test step time without waiting for wall time.
+**Interfaces:** `WindLane3D` is a `Marker3D` with `side: int` and `contact_rect: Rect2` in the web plane's local X/Z axes. `WindFlight3D.configure(item: Collectible3D, path_points: PackedVector3Array, duration: float, sway: float) -> void` parents the item; `path_points` contains start, web contact, and exit in that order. It emits `plane_crossed(item: Collectible3D, world_point: Vector3)` exactly once and `finished` once; `advance(delta: float) -> void` lets the test step time without waiting for wall time.
 
 - [ ] **Step 1: Write failing flight smoke test.** With a transformed plane and a chosen local point `(x, z)`, assert the reported world point maps back to that local point. Advance in small steps through 7–9 seconds; assert one crossing, one finish, background-to-foreground Z travel, and visible lateral motion with `sway > 0`. Advance again and assert no duplicate signals. Remove the item early and assert the flight finishes.
 - [ ] **Step 2: Run `wind_flight_smoke.gd`; confirm it fails.** Use the Godot command from Task 1 with this test path.
