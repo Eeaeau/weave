@@ -46,10 +46,12 @@ func start_round(round_number: int) -> void:
 	_spawned = 0
 	is_active = true
 	event_started.emit(round_number)
+	$Gust.start_gust()
 	_spawn_next()
 
 
 func advance(delta: float) -> void:
+	$Gust.advance(delta)
 	if not is_active:
 		return
 	_elapsed += maxf(delta, 0.0)
@@ -139,4 +141,5 @@ func _finish_event() -> void:
 	if not is_active:
 		return
 	is_active = false
+	$Gust.finish_gust()
 	event_finished.emit(_round_number)

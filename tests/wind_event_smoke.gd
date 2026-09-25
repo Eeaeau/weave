@@ -10,7 +10,8 @@ func _initialize() -> void:
 
 func _run() -> void:
 	if not (_staggered_group_and_contact() and _empty_group_finishes()
-			and _removed_item_does_not_stall() and _preview_includes_starting_webs()):
+			and _removed_item_does_not_stall() and _preview_includes_starting_webs()
+			and _audio_layers_work()):
 		quit(1)
 		return
 	print("WIND EVENT PASS: staggered group, contact handoff, and lifecycle")
@@ -53,7 +54,7 @@ func _staggered_group_and_contact() -> bool:
 		event.advance(0.1)
 	if contacts.size() != 3 or finished != [1] or event.is_active:
 		contact_errors.append("Three items must cross once before the event finishes")
-	event.queue_free()
+	event.free()
 	if not contact_errors.is_empty():
 		return _fail(contact_errors[0])
 	return true
@@ -68,7 +69,7 @@ func _empty_group_finishes() -> bool:
 	event.start_round(2)
 	if event.is_active or finished != [2]:
 		return _fail("An empty catalog must end its wind event immediately")
-	event.queue_free()
+	event.free()
 	return true
 
 
@@ -82,7 +83,7 @@ func _removed_item_does_not_stall() -> bool:
 		event.advance(0.1)
 	if event.is_active:
 		return _fail("Removing an item must not stall the wind phase")
-	event.queue_free()
+	event.free()
 	return true
 
 
@@ -92,7 +93,68 @@ func _preview_includes_starting_webs() -> bool:
 	var webs := preview.get_node_or_null("WebMatch/StartingWebs")
 	if webs == null or webs.get_child_count() != 10:
 		return _fail("The wind preview must show the starting webs")
-	preview.queue_free()
+	preview.free()
+	return true
+
+
+func _audio_layers_work() -> bool:
+	var map_scene: PackedScene = load(
+			"res://src/features/world/maps/branch_canopy/branch_canopy.tscn")
+	var map: Node3D = map_scene.instantiate()
+	root.add_child(map)
+	var ambience: Node = map.get_node_or_null("CanopyAmbience")
+	var event: WindEvent3D = map.get_node("WindEvent")
+	if ambience == null or event.get_node_or_null("Gust") == null:
+		return _fail("Map ambience and event gust players must exist")
+	var ambience_ok := _check_ambience(ambience)
+	var gust_ok := _check_gust(event)
+	map.free()
+	return ambience_ok and gust_ok and _check_missing_gust()
+
+
+func _check_ambience(ambience: Node) -> bool:
+	if not ambience.has_method("advance"):
+		return _fail("Ambience must support deterministic stepping")
+	for name in ["ForestA", "ForestB", "SoftWind"]:
+		if ambience.get_node(name).bus != &"SFX":
+			return _fail("Ambience players must use the SFX bus")
+	if not ambience.get_node("ForestA").playing:
+		return _fail("Forest ambience must begin with the map")
+	var first_interval: float = ambience.sample_soft_wind_interval()
+	var second_interval: float = ambience.sample_soft_wind_interval()
+	if is_equal_approx(first_interval, second_interval):
+		return _fail("Soft wind intervals must vary")
+	var loop_length: float = ambience.get_node("ForestA").stream.get_length()
+	ambience.advance(loop_length - ambience.crossfade_seconds + 0.1)
+	if not ambience.get_node("ForestB").playing:
+		return _fail("Forest tracks must alternate at loop boundary")
+	return true
+
+
+func _check_gust(event: WindEvent3D) -> bool:
+	if event.get_node("Gust").bus != &"SFX":
+		return _fail("Wind gust must use the SFX bus")
+	event.start_round(1)
+	if not event.get_node("Gust").playing:
+		return _fail("One gust must start with the group")
+	for step in 120:
+		event.advance(0.1)
+	event.advance(2.0)
+	if event.get_node("Gust").playing:
+		return _fail("Gust must fade when the event ends")
+	return true
+
+
+func _check_missing_gust() -> bool:
+	var silent_event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(silent_event)
+	silent_event.get_node("Gust").stream = null
+	silent_event.start_round(2)
+	for step in 120:
+		silent_event.advance(0.1)
+	if silent_event.is_active:
+		return _fail("A missing gust stream must not stall the event")
+	silent_event.free()
 	return true
 
 
