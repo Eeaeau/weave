@@ -1,0 +1,79 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/features/ui/controls_menu.gd" id="1"]
+
+[node name="ControlsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.09, 0.14, 0.98)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(930, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Center/Panel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "INPUT"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="Center/Panel"]
+layout_mode = 2
+text = "Example actions for this template. Click a binding to change it."
+horizontal_alignment = 1
+
+[node name="ColumnHeadings" type="Label" parent="Center/Panel"]
+layout_mode = 2
+text = "Action                         Keyboard                                     Gamepad"
+
+[node name="Scroll" type="ScrollContainer" parent="Center/Panel"]
+custom_minimum_size = Vector2(930, 330)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="Center/Panel/Scroll"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Hint" type="Label" parent="Center/Panel"]
+layout_mode = 2
+text = "Keyboard and gamepad slots are independent. Esc cancels rebinding."
+horizontal_alignment = 1
+
+[node name="Status" type="Label" parent="Center/Panel"]
+layout_mode = 2
+text = " "
+horizontal_alignment = 1
+
+[node name="ResetButton" type="Button" parent="Center/Panel"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Reset Defaults"
+
+[node name="BackButton" type="Button" parent="Center/Panel"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Back to Settings"

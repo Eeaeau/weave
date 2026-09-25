@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[node name="BindingRow" type="HBoxContainer"]
+theme_override_constants/separation = 8
+
+[node name="ActionLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+
+[node name="Keyboard0" type="Button" parent="."]
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Keyboard1" type="Button" parent="."]
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Gamepad0" type="Button" parent="."]
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Gamepad1" type="Button" parent="."]
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+size_flags_horizontal = 3

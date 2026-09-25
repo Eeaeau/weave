@@ -1,0 +1,25 @@
+* text=auto
+*.gd text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.godot text eol=lf
+*.cfg text eol=lf
+*.uid text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.png binary
+*.jpg binary
+*.ogg binary
+*.wav binary
+*.glb binary
+*.webp binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.blend binary
+*.aseprite binary
+*.kra binary
+*.fbx binary
+*.exr binary
+*.hdr binary

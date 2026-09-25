@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://src/features/spiders/base_spider.tscn" id="1"]
+[ext_resource type="Script" path="res://src/features/spiders/opponent_spider.gd" id="2"]
+
+[node name="OpponentSpider" instance=ExtResource("1")]
+script = ExtResource("2")
+team_name = "Opponent"
+body_color = Color(0.95, 0.62, 0.45, 1)

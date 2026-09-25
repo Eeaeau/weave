@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="WebToolData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/features/weapons/web_tool_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Twig Cutter"
+description = "Placeholder tool for damaging web strands."
+strand_damage = 1

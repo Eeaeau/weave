@@ -1,0 +1,245 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/features/ui/settings_menu.gd" id="1"]
+[ext_resource type="PackedScene" path="res://src/features/ui/controls_menu.tscn" id="2"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.09, 0.14, 0.96)
+
+[node name="Hub" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="Hub"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Menu" type="VBoxContainer" parent="Hub/Center"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Hub/Center/Menu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="GeneralButton" type="Button" parent="Hub/Center/Menu"]
+custom_minimum_size = Vector2(340, 48)
+layout_mode = 2
+text = "General"
+
+[node name="DisplayButton" type="Button" parent="Hub/Center/Menu"]
+custom_minimum_size = Vector2(340, 48)
+layout_mode = 2
+text = "Display"
+
+[node name="AudioButton" type="Button" parent="Hub/Center/Menu"]
+custom_minimum_size = Vector2(340, 48)
+layout_mode = 2
+text = "Audio"
+
+[node name="InputButton" type="Button" parent="Hub/Center/Menu"]
+custom_minimum_size = Vector2(340, 48)
+layout_mode = 2
+text = "Input & Controls"
+
+[node name="BackButton" type="Button" parent="Hub/Center/Menu"]
+custom_minimum_size = Vector2(340, 48)
+layout_mode = 2
+text = "Back"
+
+[node name="GeneralPage" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="GeneralPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Menu" type="VBoxContainer" parent="GeneralPage/Center"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="GeneralPage/Center/Menu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "GENERAL"
+horizontal_alignment = 1
+
+[node name="HintsCheck" type="CheckButton" parent="GeneralPage/Center/Menu"]
+layout_mode = 2
+button_pressed = true
+text = "Show scene hints"
+
+[node name="Description" type="Label" parent="GeneralPage/Center/Menu"]
+layout_mode = 2
+text = "Add game-specific preferences here as needed."
+horizontal_alignment = 1
+
+[node name="BackButton" type="Button" parent="GeneralPage/Center/Menu"]
+custom_minimum_size = Vector2(360, 48)
+layout_mode = 2
+text = "Back to Settings"
+
+[node name="DisplayPage" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="DisplayPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Menu" type="VBoxContainer" parent="DisplayPage/Center"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "DISPLAY"
+horizontal_alignment = 1
+
+[node name="DisplayModeLabel" type="Label" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+text = "Window mode"
+
+[node name="DisplayModeOption" type="OptionButton" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+
+[node name="WindowSizeLabel" type="Label" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+text = "Window size (windowed only)"
+
+[node name="WindowSizeOption" type="OptionButton" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+
+[node name="FpsLimitLabel" type="Label" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+text = "FPS limit"
+
+[node name="FpsLimitOption" type="OptionButton" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+
+[node name="DisplayHint" type="Label" parent="DisplayPage/Center/Menu"]
+layout_mode = 2
+text = "Fullscreen uses the current monitor resolution."
+horizontal_alignment = 1
+
+[node name="BackButton" type="Button" parent="DisplayPage/Center/Menu"]
+custom_minimum_size = Vector2(360, 48)
+layout_mode = 2
+text = "Back to Settings"
+
+[node name="AudioPage" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="AudioPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Menu" type="VBoxContainer" parent="AudioPage/Center"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="AudioPage/Center/Menu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "AUDIO"
+horizontal_alignment = 1
+
+[node name="MasterLabel" type="Label" parent="AudioPage/Center/Menu"]
+layout_mode = 2
+text = "Master volume"
+
+[node name="MasterSlider" type="HSlider" parent="AudioPage/Center/Menu"]
+layout_mode = 2
+focus_mode = 2
+max_value = 100.0
+step = 1.0
+value = 100.0
+
+[node name="MusicLabel" type="Label" parent="AudioPage/Center/Menu"]
+layout_mode = 2
+text = "Music volume"
+
+[node name="MusicSlider" type="HSlider" parent="AudioPage/Center/Menu"]
+layout_mode = 2
+focus_mode = 2
+max_value = 100.0
+step = 1.0
+value = 100.0
+
+[node name="SfxLabel" type="Label" parent="AudioPage/Center/Menu"]
+layout_mode = 2
+text = "SFX volume"
+
+[node name="SfxSlider" type="HSlider" parent="AudioPage/Center/Menu"]
+layout_mode = 2
+focus_mode = 2
+max_value = 100.0
+step = 1.0
+value = 100.0
+
+[node name="BackButton" type="Button" parent="AudioPage/Center/Menu"]
+custom_minimum_size = Vector2(360, 48)
+layout_mode = 2
+text = "Back to Settings"
+
+[node name="ControlsMenu" parent="." instance=ExtResource("2")]

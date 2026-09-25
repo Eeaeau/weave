@@ -1,0 +1,22 @@
+# Godot generates this cache on each machine.
+.godot/
+*.translation
+
+# Local editor and operating system files.
+.DS_Store
+Thumbs.db
+*.tmp
+*~
+*.swp
+*.swo
+*.blend1
+.vscode/
+.idea/
+.vs/
+.mono/
+__pycache__/
+*.pyc
+.venv/
+godot-*.log
+build/*
+!build/.gdignore

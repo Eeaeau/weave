@@ -1,0 +1,71 @@
+name: Build web and optionally deploy to itch.io
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Upload this build to itch.io
+        type: boolean
+        required: true
+        default: false
+      channel:
+        description: itch.io channel name
+        type: string
+        required: true
+        default: html5
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v7
+
+      - name: Install Godot and export templates
+        uses: chickensoft-games/setup-godot@v2.4.1
+        with:
+          version: 4.7.2
+          use-dotnet: false
+          include-templates: true
+
+      - name: Run local quality gate
+        run: python3 tools/check.py
+
+      - name: Export Web build
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --export-release Web build/web/index.html
+          test -s build/web/index.html
+
+      - name: Save build for review
+        uses: actions/upload-artifact@v7
+        with:
+          name: godot-web-build
+          path: build/web/
+
+      - name: Install butler
+        if: inputs.deploy
+        run: |
+          curl -fsSL 'https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default' -o butler.zip
+          unzip -q butler.zip -d "$RUNNER_TEMP/butler"
+          chmod +x "$RUNNER_TEMP/butler/butler"
+          echo "$RUNNER_TEMP/butler" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/butler/butler" -V
+
+      - name: Upload to itch.io
+        if: inputs.deploy
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_USER: ${{ vars.ITCH_USER }}
+          ITCH_GAME: ${{ vars.ITCH_GAME }}
+          ITCH_CHANNEL: ${{ inputs.channel }}
+        run: |
+          : "${BUTLER_API_KEY:?Set the BUTLER_API_KEY repository secret}"
+          : "${ITCH_USER:?Set the ITCH_USER repository variable}"
+          : "${ITCH_GAME:?Set the ITCH_GAME repository variable}"
+          : "${ITCH_CHANNEL:?Choose a channel}"
+          butler push build/web "$ITCH_USER/$ITCH_GAME:$ITCH_CHANNEL" --userversion "${GITHUB_SHA::7}"
