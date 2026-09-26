@@ -20,3 +20,6 @@ __pycache__/
 godot-*.log
 build/*
 !build/.gdignore
+
+# Local agent planning notes belong in issues, not the repository.
+docs/superpowers/

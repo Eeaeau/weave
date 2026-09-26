@@ -29,10 +29,11 @@ collectible = ExtResource("11")
 
 [node name="PauseMenu" parent="." unique_id=2111747350 instance=ExtResource("9")]
 
-[node name="MatchManager" type="Node" parent="." unique_id=819919269 node_paths=PackedStringArray("teams", "match_hud")]
+[node name="MatchManager" type="Node" parent="." unique_id=819919269 node_paths=PackedStringArray("teams", "match_hud", "wind_event")]
 script = ExtResource("11_m5no2")
 teams = [NodePath("../TeamA"), NodePath("../TeamB")]
 match_hud = NodePath("../MatchHud")
+wind_event = NodePath("../BranchCanopy/WindEvent")
 n_spiders_per_team = 2
 metadata/_custom_type_script = "uid://vjxl4iy367xq"
 
@@ -43,5 +44,3 @@ spider_scene = ExtResource("3")
 [node name="TeamB" parent="." unique_id=1203086720 instance=ExtResource("11_pd16p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1016297, -4.7683716e-07, 0.14235687)
 spider_scene = ExtResource("3")
-
-[connection signal="team_changed" from="MatchManager" to="." method="_on_match_manager_team_changed"]

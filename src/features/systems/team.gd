@@ -15,7 +15,7 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	var active_spider: PlayerSpider3D = get_active_spider()
-	if not active_spider:
+	if not active_spider or not active_spider.is_active:
 		return
 	if active_spider.is_done():
 		active_spider.deactivate()

@@ -42,7 +42,7 @@ horizontal_alignment = 1
 
 [node name="Description" type="Label" parent="Center/Panel"]
 layout_mode = 2
-text = "Example actions for this template. Click a binding to change it."
+text = "Player controls. Click a binding to change it."
 horizontal_alignment = 1
 
 [node name="ColumnHeadings" type="Label" parent="Center/Panel"]
