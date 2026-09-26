@@ -47,6 +47,10 @@ func _run() -> void:
 	if not current_scene is MainMenu:
 		_fail("Main Menu did not return to title")
 		return
+	current_scene.queue_free()
+	await process_frame
+	# Let the prior match's audio playback release before exiting Godot.
+	await create_timer(0.2).timeout
 	print("MENU PASS: title, settings, controls, play, pause, and return")
 	quit(0)
 

@@ -158,6 +158,11 @@ def run(
         for error in ("SCRIPT ERROR:", "Parse Error:", "Failed loading resource", "Failed to load script")
     ):
         raise RuntimeError(f"Godot reported a script or resource error: {display}")
+    if godot and any(
+        warning in output
+        for warning in ("ObjectDB instances were leaked at exit", "resources still in use at exit")
+    ):
+        raise RuntimeError(f"Godot reported leaked resources at exit: {display}")
     return output.strip()
 
 

@@ -16,6 +16,8 @@ func _run() -> void:
 			and _large_step_preserves_stagger() and _reset_restores_first_spawn()):
 		quit(1)
 		return
+	# Godot's audio mixer releases stopped MP3 playback after its next buffer cycle.
+	await create_timer(0.2).timeout
 	print("WIND EVENT PASS: staggered group, contact handoff, and lifecycle")
 	quit(0)
 
