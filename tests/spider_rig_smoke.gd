@@ -21,6 +21,12 @@ const TARGET_BONES := {
 	"FootMidFrontLeft": "CTRL_foot_mid_front.L",
 	"FootMidFrontRight": "CTRL_foot_mid_front.R",
 }
+const EXPECTED_LEFT_LEG_ROOTS := {
+	"DEF_leg_front_01.L": Vector3(-0.662302, 0.5, 0.544667),
+	"DEF_leg_mid_front_01.L": Vector3(-0.732124, 0.5, 0.123694),
+	"DEF_leg_mid_back_01.L": Vector3(-0.602005, 0.5, -0.366899),
+	"DEF_leg_back_01.L": Vector3(-0.486562, 0.5, -0.656935),
+}
 
 
 func _initialize() -> void:
@@ -39,8 +45,10 @@ func _run() -> void:
 			or not _check_leg_strokes(rig)
 			or not _check_base_spider()):
 		return
+	if not await _check_eye_tracking(rig):
+		return
 	rig.free()
-	print("SPIDER RIG PASS: 71 bones, 8 foot targets, and 8 adjustable leg strokes")
+	print("SPIDER RIG PASS: armature, targets, leg strokes, and animated eye tracking")
 	quit(0)
 
 
@@ -61,6 +69,15 @@ func _check_imported_rig(rig: Node) -> bool:
 		var rest_position := skeleton.get_bone_global_rest(bone_index).origin
 		if not target.position.is_equal_approx(rest_position):
 			return _fail("Foot target no longer matches controller rest pose: " + target_name)
+	return _check_leg_roots(skeleton)
+
+
+func _check_leg_roots(skeleton: Skeleton3D) -> bool:
+	for bone_name in EXPECTED_LEFT_LEG_ROOTS:
+		var bone_index := skeleton.find_bone(bone_name)
+		var rest_position := skeleton.get_bone_global_rest(bone_index).origin
+		if not rest_position.is_equal_approx(EXPECTED_LEFT_LEG_ROOTS[bone_name]):
+			return _fail("Imported leg root is stale: " + bone_name)
 	return true
 
 
@@ -89,6 +106,45 @@ func _check_leg_strokes(rig: Node) -> bool:
 	var rendered_width := vertices[0].distance_to(vertices[1])
 	if not is_equal_approx(rendered_width, width_value):
 		return _fail("Leg ribbon width must match the Inspector stroke width")
+	return true
+
+
+func _check_eye_tracking(rig: Node) -> bool:
+	var eyes := rig.get_node_or_null("BoneAttachment3D/BodyOffset") as Node3D
+	if eyes == null or eyes.get_script() == null:
+		return _fail("Spider body must have a valid eye-tracking script")
+	var target := eyes.get_node_or_null("LookAtPos") as Marker3D
+	var left_eye := eyes.get_node_or_null("LeftEye") as Sprite3D
+	var right_eye := eyes.get_node_or_null("RightEye") as Sprite3D
+	if target == null or left_eye == null or right_eye == null:
+		return _fail("Eye tracking requires two pupils and an animatable LookAtPos marker")
+	var radius_value: Variant = eyes.get("eye_radius")
+	if not radius_value is float or radius_value <= 0.0:
+		return _fail("Eye movement radius must be adjustable")
+	return await _check_eye_motion(target, left_eye, right_eye, radius_value)
+
+
+func _check_eye_motion(
+		target: Marker3D,
+		left_eye: Sprite3D,
+		right_eye: Sprite3D,
+		eye_radius: float,
+) -> bool:
+	var left_neutral := left_eye.position
+	var right_neutral := right_eye.position
+	target.position = Vector3(10.0, 0.0, 0.0)
+	await process_frame
+	var left_offset := left_eye.position - left_neutral
+	var right_offset := right_eye.position - right_neutral
+	if not left_offset.is_equal_approx(right_offset):
+		return _fail("Both pupils must follow the same look direction")
+	if not is_equal_approx(left_offset.length(), eye_radius):
+		return _fail("Pupil movement must clamp to the configured radius")
+	target.position = Vector3.ZERO
+	await process_frame
+	if (not left_eye.position.is_equal_approx(left_neutral)
+			or not right_eye.position.is_equal_approx(right_neutral)):
+		return _fail("Pupils must return to their neutral positions")
 	return true
 
 
