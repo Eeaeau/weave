@@ -331,7 +331,7 @@ func _check_eye_tracking(rig: Node) -> bool:
 	var radius_value: Variant = eyes.get("eye_radius")
 	if not radius_value is float or radius_value <= 0.0:
 		return _fail("Eye movement radius must be adjustable")
-	if not _check_eye_idle_animation(eyes, target):
+	if not await _check_eye_idle_animation(rig, eyes, target):
 		return false
 	return await _check_eye_motion(eyes, radius_value)
 
@@ -354,10 +354,10 @@ func _check_eye_alignment(
 	return true
 
 
-func _check_eye_idle_animation(eyes: Node3D, target: Marker3D) -> bool:
-	var player := eyes.get_node_or_null("AnimationPlayer") as AnimationPlayer
+func _check_eye_idle_animation(rig: Node, eyes: Node3D, target: Marker3D) -> bool:
+	var player := rig.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	if player == null or not player.has_animation("eye_idle"):
-		return _fail("Spider eyes require an eye_idle animation")
+		return _fail("Spider rig needs one shared idle AnimationPlayer at its root")
 	var idle := player.get_animation("eye_idle")
 	if idle.loop_mode == Animation.LOOP_NONE:
 		return _fail("Spider eye idle animation must loop")
@@ -367,6 +367,41 @@ func _check_eye_idle_animation(eyes: Node3D, target: Marker3D) -> bool:
 	player.advance(1.0)
 	if target.position.is_equal_approx(initial_target):
 		return _fail("Spider eye idle animation must move LookAtPos")
+	return await _check_body_sway(rig, player)
+
+
+func _check_body_sway(rig: Node, player: AnimationPlayer) -> bool:
+	var imported := rig.get_node("ImportedRig") as Node3D
+	var body := rig.get_node("BoneAttachment3D/BodyOffset/Body") as Sprite3D
+	var foot := rig.get_node("FootTargets/FootFrontLeft") as Marker3D
+	var strokes := rig.get_node("LegStrokes") as MeshInstance3D
+	var original_phase := player.current_animation_position
+	player.seek(0.0, true)
+	await process_frame
+	await process_frame
+	var initial := {
+		"imported": imported.position,
+		"body": body.global_position,
+		"foot": foot.global_position,
+		"tip": strokes.to_global(_ribbon_point(strokes.mesh, 2, 8)),
+	}
+	player.seek(1.0, true)
+	await process_frame
+	await process_frame
+	var moved := {
+		"imported": imported.position,
+		"body": body.global_position,
+		"foot": foot.global_position,
+		"tip": strokes.to_global(_ribbon_point(strokes.mesh, 2, 8)),
+	}
+	player.seek(original_phase, true)
+	if (moved["imported"].distance_to(initial["imported"]) < 0.01
+			or moved["body"].distance_to(initial["body"]) < 0.01):
+		return _fail("Shared idle clip must sway the body through the imported rig")
+	if moved["foot"].distance_to(initial["foot"]) > 0.001:
+		return _fail("Body sway must leave the foot targets planted")
+	if moved["tip"].distance_to(initial["tip"]) > 0.03:
+		return _fail("Body sway must adjust the leg instead of sliding its planted tip")
 	return true
 
 
@@ -428,7 +463,7 @@ func _check_eye_desync() -> bool:
 
 
 func _eye_player(rig: Node) -> AnimationPlayer:
-	return rig.get_node("BoneAttachment3D/BodyOffset/AnimationPlayer") as AnimationPlayer
+	return rig.get_node("AnimationPlayer") as AnimationPlayer
 
 
 func _check_ik_strokes(rig: Node) -> bool:

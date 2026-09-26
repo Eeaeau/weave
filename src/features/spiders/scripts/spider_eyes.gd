@@ -26,9 +26,7 @@ func _ready() -> void:
 		set_process(false)
 		return
 	if not Engine.is_editor_hint() and randomize_idle_phase:
-		var player := $AnimationPlayer as AnimationPlayer
-		if player.current_animation == "eye_idle":
-			player.seek(randf() * player.current_animation_length, true)
+		call_deferred("_offset_idle_phase")
 	_update_eye_positions()
 
 
@@ -44,6 +42,12 @@ func _notification(what: int) -> void:
 		right_eye.position = right_neutral_position
 	elif what == NOTIFICATION_EDITOR_POST_SAVE:
 		_update_eye_positions()
+
+
+func _offset_idle_phase() -> void:
+	var player := get_node("../../AnimationPlayer") as AnimationPlayer
+	if player.current_animation == "eye_idle":
+		player.seek(randf() * player.current_animation_length, true)
 
 
 func _update_eye_positions() -> void:
