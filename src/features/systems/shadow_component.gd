@@ -15,7 +15,7 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	global_position.y = 0
-	var parent_height = get_parent_node_3d().position.y
+	var parent_height = abs(get_parent_node_3d().position.y)
 	var radius = min(initial_radius, initial_radius / parent_height)
 	cylinder.top_radius = radius
 	cylinder.bottom_radius = radius

@@ -2,9 +2,15 @@
 
 [ext_resource type="Script" uid="uid://0iv5rhgshan2" path="res://src/features/collectibles/weapons/weapon_throw_pebble.gd" id="1_o4n05"]
 [ext_resource type="Texture2D" uid="uid://qedq4mdaomd6" path="res://src/features/collectibles/weapons/assets/pebble.svg" id="2_7h37y"]
+[ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_1bouw"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6q6db"]
 height = 0.5093994
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_gkjsn"]
+top_radius = 0.1821289
+bottom_radius = 0.1821289
+height = 0.001
 
 [node name="WeaponThrowPebble" type="Node3D" unique_id=1754921735 node_paths=PackedStringArray("pickup_area")]
 script = ExtResource("1_o4n05")
@@ -21,3 +27,9 @@ texture = ExtResource("2_7h37y")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea" unique_id=30624004]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34869385, 0)
 shape = SubResource("CylinderShape3D_6q6db")
+
+[node name="ShadowComponent" parent="." unique_id=1817632336 node_paths=PackedStringArray("mesh") instance=ExtResource("3_1bouw")]
+mesh = NodePath("ShadowMesh")
+
+[node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=973831158]
+mesh = SubResource("CylinderMesh_gkjsn")
