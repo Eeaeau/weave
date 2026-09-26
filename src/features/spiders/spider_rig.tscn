@@ -483,11 +483,11 @@ transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.95051
 texture = ExtResource("3_xagw3")
 
 [node name="LeftEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=170682879]
-transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.099202484, 0.5124047, -0.29688102)
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.1609689, 0.5124047, -0.24795955)
 texture = ExtResource("4_v4ffn")
 
 [node name="RightEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=1878592149]
-transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.22503239, 0.5124047, -0.3552975)
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.1609689, 0.5124047, -0.24795955)
 texture = ExtResource("5_6mje3")
 
 [node name="LeftEyeCenter" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=714602965]

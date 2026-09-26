@@ -13,8 +13,9 @@ extends Node3D
 @export_range(0.0, 0.5, 0.005, "or_greater") var eye_radius := 0.08
 @export_range(0.0, 1.0, 0.01) var influence := 1.0
 @export_group("Neutral Positions")
-@export var left_neutral_position := Vector3(-0.099202484, 0.5124047, -0.29688102)
-@export var right_neutral_position := Vector3(-0.22503239, 0.5124047, -0.3552975)
+# Both pupil textures use the same canvas as Body, so their sprite origins align.
+@export var left_neutral_position := Vector3(-0.1609689, 0.5124047, -0.24795955)
+@export var right_neutral_position := Vector3(-0.1609689, 0.5124047, -0.24795955)
 
 
 func _ready() -> void:

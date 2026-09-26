@@ -321,9 +321,10 @@ func _check_eye_tracking(rig: Node) -> bool:
 	var target := eyes.get_node_or_null("LookAtPos") as Marker3D
 	var left_eye := eyes.get_node_or_null("LeftEye") as Sprite3D
 	var right_eye := eyes.get_node_or_null("RightEye") as Sprite3D
+	var body := eyes.get_node_or_null("Body") as Sprite3D
 	var left_center := eyes.get_node_or_null("LeftEyeCenter") as Marker3D
 	var right_center := eyes.get_node_or_null("RightEyeCenter") as Marker3D
-	if (target == null or left_eye == null or right_eye == null
+	if (target == null or body == null or left_eye == null or right_eye == null
 			or left_center == null or right_center == null):
 		return _fail("Eye tracking requires two pupils and an animatable LookAtPos marker")
 	var radius_value: Variant = eyes.get("eye_radius")
@@ -332,6 +333,24 @@ func _check_eye_tracking(rig: Node) -> bool:
 	if not _check_eye_idle_animation(eyes, target):
 		return false
 	return await _check_eye_motion(eyes, radius_value)
+
+
+func _check_eye_alignment(
+	eyes: Node3D,
+	body: Sprite3D,
+	left_eye: Sprite3D,
+	right_eye: Sprite3D,
+) -> bool:
+	for pupil in [left_eye, right_eye]:
+		var property_name := "left_neutral_position"
+		if pupil == right_eye:
+			property_name = "right_neutral_position"
+		var neutral: Vector3 = eyes.get(property_name)
+		var neutral_plane := Vector2(neutral.x, neutral.z)
+		var body_plane := Vector2(body.position.x, body.position.z)
+		if neutral_plane.distance_to(body_plane) > 0.025:
+			return _fail("Pupil neutral position must align with its socket artwork")
+	return true
 
 
 func _check_eye_idle_animation(eyes: Node3D, target: Marker3D) -> bool:
@@ -351,11 +370,14 @@ func _check_eye_idle_animation(eyes: Node3D, target: Marker3D) -> bool:
 
 
 func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
+	var body := eyes.get_node("Body") as Sprite3D
 	var target := eyes.get_node("LookAtPos") as Marker3D
 	var left_eye := eyes.get_node("LeftEye") as Sprite3D
 	var right_eye := eyes.get_node("RightEye") as Sprite3D
 	var left_center := eyes.get_node("LeftEyeCenter") as Marker3D
 	var right_center := eyes.get_node("RightEyeCenter") as Marker3D
+	if not _check_eye_alignment(eyes, body, left_eye, right_eye):
+		return false
 	eyes.set("influence", 0.0)
 	await process_frame
 	var left_neutral := left_eye.position
