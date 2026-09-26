@@ -5,7 +5,7 @@ extends CanvasLayer
 var show_hints := true
 
 @onready var status: Label = $Margin/Panel/Status
-
+@onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 
 func _ready() -> void:
 	_update_status()
@@ -22,3 +22,11 @@ func _update_status() -> void:
 	status.text = "WEAVE  |  2.5D scene prototype"
 	if show_hints:
 		status.text += "\nBranches, spiders, webs, and collectibles are placeholders.\nEsc: pause"
+
+
+func update_energy(energy: float) -> void:
+	"""
+	Takes energy as a 0-1 float
+	"""
+	if energy_bar:
+		energy_bar.value = energy
