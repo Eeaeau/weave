@@ -20,6 +20,7 @@ var health: float = 1.0
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
+@onready var hitbox: Area3D = $Hitbox
 
 
 # Called when the node enters the scene tree for the first time.
@@ -123,7 +124,7 @@ func get_movement_direction() -> Vector3:
 
 
 func is_done() -> bool:
-	return n_remaining_actions <= 0
+	return n_remaining_actions <= 0 or is_dead()
 
 
 func pick_up(collectible: Collectible3D) -> bool:
@@ -134,7 +135,12 @@ func pick_up(collectible: Collectible3D) -> bool:
 
 
 func take_damage(damage: float) -> void:
+	print("ouch")
 	health -= damage
+	if is_dead():
+		visible = false
+		hitbox.monitorable = false
+		hitbox.monitoring = false
 
 
 func is_dead() -> bool:

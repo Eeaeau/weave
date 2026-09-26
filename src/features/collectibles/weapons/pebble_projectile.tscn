@@ -6,15 +6,23 @@
 [sub_resource type="SphereShape3D" id="SphereShape3D_6q6db"]
 radius = 0.35620385
 
+[sub_resource type="SphereMesh" id="SphereMesh_6q6db"]
+radius = 0.1
+height = 0.2
+
 [node name="PebbleProjectile" type="Node3D" unique_id=387750299]
 script = ExtResource("1_yybf2")
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
+visible = false
 texture = ExtResource("1_ii6dm")
 
 [node name="Area3D" type="Area3D" parent="." unique_id=164628878]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=247253188]
 shape = SubResource("SphereShape3D_6q6db")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1973022874]
+mesh = SubResource("SphereMesh_6q6db")
 
 [connection signal="area_entered" from="Area3D" to="." method="_on_area_3d_area_entered"]

@@ -10,7 +10,7 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	position += velocity * delta
+	global_position += velocity * delta
 	velocity.y -= 9.81 * delta
 	if position.y < 0:
 		queue_free()
@@ -24,3 +24,4 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 	var parent = area.get_parent_node_3d()
 	if parent and parent is PlayerSpider3D:
 		parent.take_damage(10)
+		queue_free()

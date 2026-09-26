@@ -30,8 +30,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36917466, 0, 0.0024330616)
 transform = Transform3D(1, 0, 0, 0, -4.371141e-08, 1.0000005, 0, -1.0000005, -4.371141e-08, 0.2735563, 0, 0.00019228458)
 texture = ExtResource("3_uju3x")
 
-[node name="PickupArea" type="Area3D" parent="." index="3" unique_id=1214358080]
+[node name="Hitbox" type="Area3D" parent="." index="3" unique_id=1214358080]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea" index="0" unique_id=1335947700]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" index="0" unique_id=1335947700]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3119725, 0)
 shape = SubResource("CylinderShape3D_6q6db")
