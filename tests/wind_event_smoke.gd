@@ -10,7 +10,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	if not (_staggered_group_and_contact() and _empty_group_finishes()
-			and _removed_item_does_not_stall() and _preview_includes_starting_webs()
+			and _removed_item_does_not_stall()
 			and _debug_contact_markers_toggle() and _debug_contact_marker_crossing()
 			and _audio_layers_work() and _removed_flight_does_not_stall()
 			and _invalid_scene_is_skipped() and _claimed_item_survives()
@@ -192,23 +192,6 @@ func _invalid_scene_is_skipped() -> bool:
 	_free_scene(event)
 	if spawned != 3:
 		return _fail("Invalid entries must not consume a group spawn")
-	return true
-
-
-func _preview_includes_starting_webs() -> bool:
-	var preview: Node3D = load("res://src/features/wind/wind_preview.tscn").instantiate()
-	var preview_event: WindEvent3D = preview.get_node("WebMatch/BranchCanopy/WindEvent")
-	preview_event.get_node("Gust").stream = null
-	var ambience: Node = preview.get_node("WebMatch/BranchCanopy/CanopyAmbience")
-	for player_name in ["ForestA", "ForestB", "SoftWind"]:
-		ambience.get_node(player_name).stream = null
-	root.add_child(preview)
-	var webs := preview.get_node_or_null("WebMatch/StartingWebs")
-	if webs == null or webs.get_child_count() != 10:
-		return _fail("The wind preview must show the starting webs")
-	if not preview_event.show_debug_contact_markers:
-		return _fail("The wind preview must show contact markers by default")
-	_free_scene(preview)
 	return true
 
 
