@@ -10,6 +10,11 @@ signal event_finished(round_number: int)
 @export_range(0.1, 5.0, 0.1) var spawn_interval: float = 0.8
 @export_range(1.0, 20.0, 0.1) var flight_duration_min: float = 7.0
 @export_range(1.0, 20.0, 0.1) var flight_duration_max: float = 9.0
+@export var show_debug_contact_markers: bool = false:
+	set(value):
+		show_debug_contact_markers = value
+		if is_inside_tree():
+			$DebugContacts.visible = value
 @export var random_seed: int = 0
 @export var spawn_entries: Array[WindSpawnEntry] = [
 	preload("res://src/features/wind/entries/pebble.tres"),
@@ -28,6 +33,10 @@ var _seeded: bool = false
 var _active_flights: Array[WindFlight3D] = []
 
 
+func _ready() -> void:
+	$DebugContacts.visible = show_debug_contact_markers
+
+
 func _process(delta: float) -> void:
 	advance(delta)
 
@@ -36,6 +45,7 @@ func start_round(round_number: int) -> void:
 	if is_active:
 		push_warning("Wind event is already active")
 		return
+	_clear_debug_contacts()
 	if not _seeded:
 		reset_match()
 	_round_number = round_number
@@ -111,7 +121,7 @@ func _spawn_next() -> WindFlight3D:
 		return null
 	item.collectible = entry.data
 	var duration := _path_random.randf_range(flight_duration_min, flight_duration_max)
-	var sway := _path_random.randf_range(0.2, 0.5)
+	var sway := _path_random.randf_range(0.7, 1.0)
 	if _path_random.randi_range(0, 1) == 0:
 		sway = -sway
 	var flight := WindFlight3D.new()
@@ -154,7 +164,33 @@ func _choose_lane(side: int) -> WindLane3D:
 
 func _on_plane_crossed(item: Collectible3D, side: int, world_point: Vector3) -> void:
 	var local: Vector3 = $WebPlane.to_local(world_point)
+	_add_debug_contact_marker(world_point, side)
 	item_contact.emit(item, side, Vector2(local.x, local.z), world_point)
+
+
+func _add_debug_contact_marker(world_point: Vector3, side: int) -> void:
+	var marker := Node3D.new()
+	$DebugContacts.add_child(marker)
+	var plane: Node3D = $WebPlane
+	marker.global_transform = Transform3D(plane.global_transform.basis, world_point)
+	var ring := MeshInstance3D.new()
+	ring.position.y = 0.08
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = 0.2
+	mesh.outer_radius = 0.3
+	ring.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.no_depth_test = true
+	material.albedo_color = Color(1.0, 0.48, 0.24, 0.9) if side == 0 else Color(0.3, 0.85, 1.0, 0.9)
+	ring.material_override = material
+	marker.add_child(ring)
+
+
+func _clear_debug_contacts() -> void:
+	for marker in $DebugContacts.get_children():
+		marker.free()
 
 
 func _on_flight_finished(flight: WindFlight3D) -> void:

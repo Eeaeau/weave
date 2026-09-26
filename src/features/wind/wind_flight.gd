@@ -95,8 +95,12 @@ func _quadratic(a: Vector3, control: Vector3, b: Vector3, t: float) -> Vector3:
 
 func _wobble(t: float) -> Vector3:
 	var envelope := sin(PI * t)
-	return Vector3(sin(t * TAU * 1.3 + _phase) * envelope * _sway * 0.4,
-		cos(t * TAU * 1.8 + _phase) * envelope * _sway * 0.1, 0.0)
+	var lateral := sin(t * TAU * 1.7 + _phase) * 0.65
+	lateral += sin(t * TAU * 4.3 + _phase * 1.71) * 0.3
+	lateral += sin(t * TAU * 7.1 + _phase * 0.43) * 0.15
+	var lift := absf(sin(t * TAU * 2.7 + _phase * 0.91)) * 0.2
+	var depth := sin(t * TAU * 2.2 + _phase * 1.23) * 0.25
+	return Vector3(lateral * _sway, lift * absf(_sway), depth * absf(_sway)) * envelope
 
 
 func _complete() -> void:

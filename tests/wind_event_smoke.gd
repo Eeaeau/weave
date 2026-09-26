@@ -11,6 +11,7 @@ func _initialize() -> void:
 func _run() -> void:
 	if not (_staggered_group_and_contact() and _empty_group_finishes()
 			and _removed_item_does_not_stall() and _preview_includes_starting_webs()
+			and _debug_contact_markers_toggle() and _debug_contact_marker_crossing()
 			and _audio_layers_work() and _removed_flight_does_not_stall()
 			and _invalid_scene_is_skipped() and _claimed_item_survives()
 			and _large_step_preserves_stagger() and _reset_restores_first_spawn()):
@@ -200,7 +201,61 @@ func _preview_includes_starting_webs() -> bool:
 	var webs := preview.get_node_or_null("WebMatch/StartingWebs")
 	if webs == null or webs.get_child_count() != 10:
 		return _fail("The wind preview must show the starting webs")
+	var preview_event: WindEvent3D = preview.get_node("WebMatch/BranchCanopy/WindEvent")
+	if not preview_event.show_debug_contact_markers:
+		return _fail("The wind preview must show contact markers by default")
 	_free_scene(preview)
+	return true
+
+
+func _debug_contact_markers_toggle() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	var markers: Node3D = event.get_node_or_null("DebugContacts")
+	if markers == null:
+		return _fail("The event needs a debug contact marker container")
+	if event.get("show_debug_contact_markers") != false or markers.visible:
+		return _fail("Contact markers must start hidden in a normal match")
+	event.set("show_debug_contact_markers", true)
+	if not markers.visible:
+		return _fail("The exported marker toggle must show the container")
+	event.set("show_debug_contact_markers", false)
+	var hidden := not markers.visible
+	_free_scene(event)
+	if not hidden:
+		return _fail("The exported toggle must hide existing markers")
+	return true
+
+
+func _debug_contact_marker_crossing() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	var markers: Node3D = event.get_node("DebugContacts")
+	var plane: Node3D = event.get_node("WebPlane")
+	plane.rotation = Vector3(0.15, 0.1, 0.05)
+	event.show_debug_contact_markers = true
+	event.group_size = 1
+	var contact_points: Array[Vector3] = []
+	event.item_contact.connect(func(_item: Collectible3D, _side: int,
+			_local: Vector2, point: Vector3) -> void: contact_points.append(point))
+	event.start_round(1)
+	for step in 100:
+		event.advance(0.1)
+	if markers.get_child_count() != 1 or contact_points.size() != 1:
+		return _fail("A crossing must leave one debug marker")
+	var marker: Node3D = markers.get_child(0)
+	if marker.get_child_count() != 1 or not marker.get_child(0) is MeshInstance3D:
+		return _fail("A debug contact marker must have visible geometry")
+	if (not marker.global_position.is_equal_approx(contact_points[0])
+			or not marker.global_transform.basis.is_equal_approx(plane.global_transform.basis)):
+		return _fail("The debug marker must match the reported point and web plane")
+	event.show_debug_contact_markers = false
+	if markers.visible:
+		return _fail("Turning off the toggle must hide existing markers")
+	event.start_round(2)
+	if markers.get_child_count() != 0:
+		return _fail("The next wind event must clear old contact markers")
+	_free_scene(event)
 	return true
 
 
