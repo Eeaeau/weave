@@ -139,8 +139,8 @@ func take_damage(damage: float) -> void:
 	health -= damage
 	if is_dead():
 		visible = false
-		hitbox.monitorable = false
-		hitbox.monitoring = false
+		hitbox.set_deferred("monitorable", false)
+		hitbox.set_deferred("monitoring", false)
 
 
 func is_dead() -> bool:
