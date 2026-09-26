@@ -1,11 +1,22 @@
 class_name ControlsMenu
 extends Control
-## Editable action catalog. Add or remove rows here when the jam game changes.
+## Player actions shown in the input settings page.
 
 signal closed
 
 const ACTIONS := [
 	{ "name": "Pause", "action": "pause" },
+	{ "name": "Move Left", "action": "move_left" },
+	{ "name": "Move Right", "action": "move_right" },
+	{ "name": "Move Up", "action": "move_up" },
+	{ "name": "Move Down", "action": "move_down" },
+	{ "name": "Aim Left", "action": "aim_left" },
+	{ "name": "Aim Right", "action": "aim_right" },
+	{ "name": "Use Weapon", "action": "action" },
+	{ "name": "Select Weapon 1", "action": "select_1" },
+	{ "name": "Select Weapon 2", "action": "select_2" },
+	{ "name": "Select Weapon 3", "action": "select_3" },
+	{ "name": "Select Weapon 4", "action": "select_4" },
 ]
 const BINDING_ROW: PackedScene = preload("res://src/features/ui/control_binding_row.tscn")
 

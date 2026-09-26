@@ -20,8 +20,8 @@ func _run() -> void:
 		return
 	settings.get_node("Hub/Center/Menu/InputButton").pressed.emit()
 	var controls: ControlsMenu = settings.get_node("ControlsMenu")
-	if not controls.visible or controls.rows.get_child_count() != 1:
-		_fail("Input page should document the working pause action")
+	if not _has_player_actions(controls):
+		_fail("Input page must show every player control")
 		return
 	controls.close_menu()
 	settings.close_menu()
@@ -53,6 +53,21 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	print("MENU PASS: title, settings, controls, play, pause, and return")
 	quit(0)
+
+
+func _has_player_actions(controls: ControlsMenu) -> bool:
+	var player_actions := [
+		"pause", "move_left", "move_right", "move_up", "move_down",
+		"aim_left", "aim_right", "action",
+		"select_1", "select_2", "select_3", "select_4",
+	]
+	if not controls.visible or controls.rows.get_child_count() != player_actions.size():
+		return false
+	for index in player_actions.size():
+		if (ControlsMenu.ACTIONS[index].action != player_actions[index]
+				or not InputMap.has_action(player_actions[index])):
+			return false
+	return true
 
 
 func _fail(message: String) -> void:
