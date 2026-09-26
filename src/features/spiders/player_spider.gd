@@ -81,6 +81,11 @@ func _process(delta: float) -> void:
 	else:
 		action_charged_time = 0
 
+	var number_input = get_number_input()
+	if number_input > 0 and not charging_action and number_input <= len(weapons):
+		selected_weapon_idx = number_input - 1
+		print("selected " + str(selected_weapon_idx))
+
 
 func activate() -> void:
 	is_active = true
@@ -88,6 +93,18 @@ func activate() -> void:
 
 func deactivate() -> void:
 	is_active = false
+
+
+func get_number_input() -> int:
+	if Input.is_action_just_pressed("select_1"):
+		return 1
+	if Input.is_action_just_pressed("select_2"):
+		return 2
+	if Input.is_action_just_pressed("select_3"):
+		return 3
+	if Input.is_action_just_pressed("select_4"):
+		return 4
+	return -1
 
 
 func get_movement_direction() -> Vector3:

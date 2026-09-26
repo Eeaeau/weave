@@ -48,7 +48,7 @@ func update_actions_remaining(n: int) -> void:
 		actions_remaining_label.text = "Actions remaining: " + str(n)
 
 
-func update_weapon(weapons: Array[Weapon3D]) -> void:
+func update_weapon(weapons: Array[Weapon3D], selected_weapon_idx: int) -> void:
 	var containers: Array[PanelContainer] = []
 	for child in weapons_container.get_children():
 		if child is PanelContainer:
@@ -74,3 +74,9 @@ func update_weapon(weapons: Array[Weapon3D]) -> void:
 			texture_rect.texture = weapon.icon
 			var number_label: Label = texture_rect.get_child(0)
 			number_label.text = str(i + 1)
+			if i == selected_weapon_idx:
+				w_container.self_modulate.r8 = 0
+				w_container.self_modulate.g8 = 0
+			else:
+				w_container.self_modulate.r8 = 0xff
+				w_container.self_modulate.g8 = 0xff

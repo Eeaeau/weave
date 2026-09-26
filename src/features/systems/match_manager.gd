@@ -32,7 +32,7 @@ func _process(delta: float) -> void:
 	if active_spider:
 		match_hud.update_energy(active_spider.remaining_movement / movement_per_turn)
 		match_hud.update_actions_remaining(active_spider.n_remaining_actions)
-		match_hud.update_weapon(active_spider.weapons)
+		match_hud.update_weapon(active_spider.weapons, active_spider.selected_weapon_idx)
 
 
 func give_turn_to(team_idx: int) -> Team:
