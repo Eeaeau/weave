@@ -59,6 +59,9 @@ func advance(delta: float) -> void:
 		_spawn_next()
 		if not is_active:
 			return
+	for index in range(_active_flights.size() - 1, -1, -1):
+		if not is_instance_valid(_active_flights[index]):
+			_active_flights.remove_at(index)
 	for flight in _active_flights.duplicate():
 		if is_instance_valid(flight):
 			flight.advance(delta)
@@ -74,18 +77,21 @@ func _spawn_next() -> void:
 		if _active_flights.is_empty():
 			_finish_event()
 		return
+	var instance := entry.scene.instantiate()
+	var item := instance as Collectible3D
+	if item == null:
+		push_warning("Wind entry scene must inherit Collectible3D")
+		if instance != null:
+			instance.free()
+		return
 	var side := _selection.next_side()
 	var lane := _choose_lane(side)
 	if lane == null:
 		push_warning("No wind lane for player side %d" % side)
+		item.free()
 		_spawned = group_size
 		if _active_flights.is_empty():
 			_finish_event()
-		return
-	var item := entry.scene.instantiate() as Collectible3D
-	if item == null:
-		push_warning("Wind entry scene must inherit Collectible3D")
-		_spawned += 1
 		return
 	item.collectible = entry.data
 	var duration := _path_random.randf_range(flight_duration_min, flight_duration_max)

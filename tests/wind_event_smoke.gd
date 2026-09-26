@@ -11,7 +11,8 @@ func _initialize() -> void:
 func _run() -> void:
 	if not (_staggered_group_and_contact() and _empty_group_finishes()
 			and _removed_item_does_not_stall() and _preview_includes_starting_webs()
-			and _audio_layers_work()):
+			and _audio_layers_work() and _removed_flight_does_not_stall()
+			and _invalid_scene_is_skipped()):
 		quit(1)
 		return
 	print("WIND EVENT PASS: staggered group, contact handoff, and lifecycle")
@@ -87,6 +88,42 @@ func _removed_item_does_not_stall() -> bool:
 	return true
 
 
+func _removed_flight_does_not_stall() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	event.start_round(1)
+	event.get_node("Flights").get_child(0).free()
+	for step in 120:
+		event.advance(0.1)
+	var completed := not event.is_active
+	event.free()
+	if not completed:
+		return _fail("Removing a flight must release the wind phase")
+	return true
+
+
+func _invalid_scene_is_skipped() -> bool:
+	var bad_root := Node3D.new()
+	var bad_scene := PackedScene.new()
+	bad_scene.pack(bad_root)
+	bad_root.free()
+	var bad_entry := WindSpawnEntry.new()
+	bad_entry.scene = bad_scene
+	bad_entry.data = preload("res://src/features/collectibles/weapons/pebble.tres")
+	bad_entry.base_weight = 100.0
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	event.random_seed = 42
+	event.spawn_entries.assign([bad_entry, event.spawn_entries[0]])
+	event.start_round(1)
+	event.advance(2.0)
+	var spawned := event.get_node("Flights").get_child_count()
+	event.free()
+	if spawned != 3:
+		return _fail("Invalid entries must not consume a group spawn")
+	return true
+
+
 func _preview_includes_starting_webs() -> bool:
 	var preview: Node3D = load("res://src/features/wind/wind_preview.tscn").instantiate()
 	root.add_child(preview)
@@ -120,14 +157,28 @@ func _check_ambience(ambience: Node) -> bool:
 			return _fail("Ambience players must use the SFX bus")
 	if not ambience.get_node("ForestA").playing:
 		return _fail("Forest ambience must begin with the map")
-	var first_interval: float = ambience.sample_soft_wind_interval()
-	var second_interval: float = ambience.sample_soft_wind_interval()
-	if is_equal_approx(first_interval, second_interval):
-		return _fail("Soft wind intervals must vary")
+	if not _check_soft_wind(ambience.get_node("SoftWind")):
+		return false
 	var loop_length: float = ambience.get_node("ForestA").stream.get_length()
 	ambience.advance(loop_length - ambience.crossfade_seconds + 0.1)
 	if not ambience.get_node("ForestB").playing:
 		return _fail("Forest tracks must alternate at loop boundary")
+	return true
+
+
+func _check_soft_wind(soft_wind: SoftWindLayer) -> bool:
+	var first_interval: float = soft_wind.sample_interval()
+	var second_interval: float = soft_wind.sample_interval()
+	if is_equal_approx(first_interval, second_interval):
+		return _fail("Soft wind intervals must vary")
+	soft_wind.trigger()
+	var starting_level: float = soft_wind.volume_db
+	soft_wind.advance(soft_wind.fade_seconds)
+	if not soft_wind.playing or soft_wind.volume_db <= starting_level:
+		return _fail("Soft wind must fade in")
+	soft_wind.advance(soft_wind.stream.get_length())
+	if soft_wind.playing:
+		return _fail("Soft wind must fade out and stop")
 	return true
 
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
 [ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/parallax_camera.gd" id="2"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
 [ext_resource type="AudioStream" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
 [ext_resource type="AudioStream" path="res://src/features/world/maps/branch_canopy/assets/audio/soft_wind.mp3" id="8"]
+[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/soft_wind_layer.gd" id="9"]
 
 [node name="BranchCanopy" type="Node3D"]
 script = ExtResource("1")
@@ -92,5 +93,6 @@ bus = &"SFX"
 [node name="SoftWind" type="AudioStreamPlayer" parent="CanopyAmbience"]
 stream = ExtResource("8")
 bus = &"SFX"
+script = ExtResource("9")
 
 [node name="WindEvent" parent="." instance=ExtResource("5")]

@@ -31,6 +31,13 @@ func choose_entry(round_number: int, entries: Array[WindSpawnEntry]) -> WindSpaw
 		var weight := entry.weight_at(round_number)
 		if weight <= 0.0:
 			continue
+		var instance := entry.scene.instantiate()
+		var valid := instance is Collectible3D
+		if instance != null:
+			instance.free()
+		if not valid:
+			push_warning("Wind entry scene must inherit Collectible3D")
+			continue
 		eligible.append(entry)
 		total_weight += weight
 	if eligible.is_empty():
