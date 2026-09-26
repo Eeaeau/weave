@@ -14,6 +14,7 @@ var aim_angle: float = 0
 var action_charged_time: float = 0
 var charging_action: bool = false
 var aim_arrow_offset: Vector3 = Vector3(0.75, 0, 0)
+var weapon: Weapon3D
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -22,6 +23,8 @@ var aim_arrow_offset: Vector3 = Vector3(0.75, 0, 0)
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	aim_arrow_offset = aim_arrow.position
+	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
+	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -30,12 +33,16 @@ func _process(delta: float) -> void:
 		selected_indicator.visible = false
 		aim_arrow.visible = false
 		return
-	if selected_indicator:
-		selected_indicator.visible = true
-	if aim_arrow:
+
+	selected_indicator.visible = true
+
+	var aim_magnitude: float = 0.2 + (sin(action_charged_time * 2) + 1)
+
+	if not weapon:
+		aim_arrow.visible = false
+	else:
 		aim_arrow.visible = true
 		aim_arrow.position = aim_arrow_offset.rotated(Vector3(0, 1, 0), aim_angle)
-		var aim_magnitude: float = 0.2 + (sin(action_charged_time * 2) + 1)
 		aim_arrow.scale.x = aim_magnitude
 		aim_arrow.rotation.y = aim_angle
 
@@ -56,6 +63,12 @@ func _process(delta: float) -> void:
 		charging_action = true
 	if Input.is_action_just_released("action"):
 		charging_action = false
+		if weapon:
+			weapon.fire(aim_angle, aim_magnitude)
+			if weapon.is_used_up():
+				remove_child(weapon)
+				weapon = null
+
 		n_remaining_actions -= 1
 
 	if charging_action:
@@ -87,3 +100,15 @@ func get_movement_direction() -> Vector3:
 
 func is_done() -> bool:
 	return n_remaining_actions <= 0
+
+
+func pick_up(collectible: Collectible3D) -> bool:
+	if collectible is Weapon3D:
+		if weapon:
+			return false  # already have a weapon
+		print("Picked up weapon: " + collectible.name)
+		collectible.call_deferred("reparent", self)
+		weapon = collectible
+	else:
+		print("Picked up: " + collectible.name)
+	return true

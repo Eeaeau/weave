@@ -8,6 +8,7 @@ var show_hints := true
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 @onready var team_label: Label = $LowerLeftPanel/TeamLabel
 @onready var actions_remaining_label: Label = $LowerLeftPanel/ActionsRemainingLabel
+@onready var weapon_container: PanelContainer = $WeaponsContainer/WeaponContainer1
 
 
 func _ready() -> void:
@@ -43,3 +44,13 @@ func update_team_label(text: String) -> void:
 func update_actions_remaining(n: int) -> void:
 	if actions_remaining_label:
 		actions_remaining_label.text = "Actions remaining: " + str(n)
+
+
+func update_weapon(weapon: Weapon3D) -> void:
+	if weapon_container:
+		if not weapon:
+			weapon_container.visible = false
+		else:
+			weapon_container.visible = true
+			var texture_rect: TextureRect = weapon_container.get_child(0)
+			texture_rect.texture = weapon.icon
