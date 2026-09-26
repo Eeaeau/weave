@@ -11,16 +11,6 @@ const EXPECTED_FOOT_TARGETS := [
 	"FootMidFrontLeft",
 	"FootMidFrontRight",
 ]
-const TARGET_BONES := {
-	"FootBackLeft": "CTRL_foot_back.L",
-	"FootBackRight": "CTRL_foot_back.R",
-	"FootFrontLeft": "CTRL_foot_front.L",
-	"FootFrontRight": "CTRL_foot_front.R",
-	"FootMidBackLeft": "CTRL_foot_mid_back.L",
-	"FootMidBackRight": "CTRL_foot_mid_back.R",
-	"FootMidFrontLeft": "CTRL_foot_mid_front.L",
-	"FootMidFrontRight": "CTRL_foot_mid_front.R",
-}
 const EXPECTED_LEFT_LEG_ROOTS := {
 	"DEF_leg_front_01.L": Vector3(-0.662302, 0.5, 0.544667),
 	"DEF_leg_mid_front_01.L": Vector3(-0.732124, 0.5, 0.123694),
@@ -28,14 +18,94 @@ const EXPECTED_LEFT_LEG_ROOTS := {
 	"DEF_leg_back_01.L": Vector3(-0.486562, 0.5, -0.656935),
 }
 const IK_SPECS := [
-	["FootFrontLeft", "DEF_leg_front_01.L", "DEF_leg_front_08.L", 2],
-	["FootFrontRight", "DEF_leg_front_01.R", "DEF_leg_front_08.R", 3],
-	["FootMidFrontLeft", "DEF_leg_mid_front_01.L", "DEF_leg_mid_front_08.L", 6],
-	["FootMidFrontRight", "DEF_leg_mid_front_01.R", "DEF_leg_mid_front_08.R", 7],
-	["FootMidBackLeft", "DEF_leg_mid_back_01.L", "DEF_leg_mid_back_08.L", 4],
-	["FootMidBackRight", "DEF_leg_mid_back_01.R", "DEF_leg_mid_back_08.R", 5],
-	["FootBackLeft", "DEF_leg_back_01.L", "DEF_leg_back_07.L", 0],
-	["FootBackRight", "DEF_leg_back_01.R", "DEF_leg_back_07.R", 1],
+	[
+		"FrontLeft",
+		"FootFrontLeft",
+		"LiftFrontLeft",
+		"DEF_leg_front_01.L",
+		"DEF_leg_front_04.L",
+		"DEF_leg_front_08.L",
+		2,
+		8,
+		0.2471447,
+	],
+	[
+		"FrontRight",
+		"FootFrontRight",
+		"LiftFrontRight",
+		"DEF_leg_front_01.R",
+		"DEF_leg_front_04.R",
+		"DEF_leg_front_08.R",
+		3,
+		8,
+		0.2471447,
+	],
+	[
+		"MidFrontLeft",
+		"FootMidFrontLeft",
+		"LiftMidFrontLeft",
+		"DEF_leg_mid_front_01.L",
+		"DEF_leg_mid_front_04.L",
+		"DEF_leg_mid_front_08.L",
+		6,
+		8,
+		0.2464449,
+	],
+	[
+		"MidFrontRight",
+		"FootMidFrontRight",
+		"LiftMidFrontRight",
+		"DEF_leg_mid_front_01.R",
+		"DEF_leg_mid_front_04.R",
+		"DEF_leg_mid_front_08.R",
+		7,
+		8,
+		0.2464449,
+	],
+	[
+		"MidBackLeft",
+		"FootMidBackLeft",
+		"LiftMidBackLeft",
+		"DEF_leg_mid_back_01.L",
+		"DEF_leg_mid_back_04.L",
+		"DEF_leg_mid_back_08.L",
+		4,
+		8,
+		0.2512192,
+	],
+	[
+		"MidBackRight",
+		"FootMidBackRight",
+		"LiftMidBackRight",
+		"DEF_leg_mid_back_01.R",
+		"DEF_leg_mid_back_04.R",
+		"DEF_leg_mid_back_08.R",
+		5,
+		8,
+		0.2512192,
+	],
+	[
+		"BackLeft",
+		"FootBackLeft",
+		"LiftBackLeft",
+		"DEF_leg_back_01.L",
+		"DEF_leg_back_04.L",
+		"DEF_leg_back_07.L",
+		0,
+		7,
+		0.2292308,
+	],
+	[
+		"BackRight",
+		"FootBackRight",
+		"LiftBackRight",
+		"DEF_leg_back_01.R",
+		"DEF_leg_back_04.R",
+		"DEF_leg_back_07.R",
+		1,
+		7,
+		0.2292308,
+	],
 ]
 
 
@@ -72,17 +142,29 @@ func _check_imported_rig(rig: Node) -> bool:
 	var targets := rig.get_node("FootTargets")
 	if targets.get_child_count() != EXPECTED_FOOT_TARGETS.size():
 		return _fail("Spider rig must expose exactly eight foot targets")
+	var lift_targets := rig.get_node_or_null("LiftTargets")
+	if lift_targets == null or lift_targets.get_child_count() != IK_SPECS.size():
+		return _fail("Spider rig must expose exactly eight leg lift targets")
 	for target_name in EXPECTED_FOOT_TARGETS:
 		var target := rig.get_node_or_null("FootTargets/" + target_name) as Marker3D
 		if target == null:
 			return _fail("Missing external foot target: " + target_name)
-		var bone_index := skeleton.find_bone(TARGET_BONES[target_name])
-		if bone_index < 0:
-			return _fail("Missing controller bone for target: " + target_name)
-		var rest_position := skeleton.get_bone_global_rest(bone_index).origin
-		if not target.position.is_equal_approx(rest_position):
-			return _fail("Foot target no longer matches controller rest pose: " + target_name)
+	if not _check_body_attachment(rig, skeleton):
+		return false
 	return _check_leg_roots(skeleton)
+
+
+func _check_body_attachment(rig: Node, skeleton: Skeleton3D) -> bool:
+	var attachment := rig.get_node_or_null("BoneAttachment3D") as BoneAttachment3D
+	if attachment == null or not attachment.use_external_skeleton:
+		return _fail("Spider body must use an external Skeleton3D attachment")
+	if attachment.external_skeleton != NodePath("../ImportedRig/RIG_spider/Skeleton3D"):
+		return _fail("Spider body attachment must reference the imported skeleton")
+	if attachment.bone_name != "CTRL_root":
+		return _fail("Spider body attachment must follow CTRL_root")
+	if attachment.get_skeleton() != skeleton:
+		return _fail("Spider body attachment did not resolve its external skeleton")
+	return true
 
 
 func _check_leg_roots(skeleton: Skeleton3D) -> bool:
@@ -123,21 +205,46 @@ func _check_leg_strokes(rig: Node) -> bool:
 
 
 func _check_ik_setup(rig: Node) -> bool:
-	var ik := rig.get_node_or_null(
-		"ImportedRig/RIG_spider/Skeleton3D/CCDIK3D"
-	) as CCDIK3D
-	if ik == null or ik.setting_count != IK_SPECS.size():
-		return _fail("Spider rig must configure one CCDIK setting per leg")
-	for setting_index in range(IK_SPECS.size()):
-		var spec: Array = IK_SPECS[setting_index]
-		var prefix := "settings/%d/" % setting_index
-		if ik.get(prefix + "root_bone_name") != spec[1]:
-			return _fail("Wrong IK root bone for " + spec[0])
-		if ik.get(prefix + "end_bone_name") != spec[2]:
-			return _fail("Wrong IK end bone for " + spec[0])
-		var expected_path := NodePath("../../../../FootTargets/" + spec[0])
-		if ik.get(prefix + "target_node") != expected_path:
-			return _fail("Wrong IK foot target for " + spec[0])
+	var skeleton_path := "ImportedRig/RIG_spider/Skeleton3D/"
+	var skeleton := rig.get_node("ImportedRig/RIG_spider/Skeleton3D") as Skeleton3D
+	var modifier_count := 0
+	for child in skeleton.get_children():
+		if child is CCDIK3D:
+			modifier_count += 1
+	if modifier_count != IK_SPECS.size():
+		return _fail("Spider rig must contain exactly one CCDIK modifier per leg")
+	for spec in IK_SPECS:
+		if not _check_ik_spec(rig, skeleton_path, spec):
+			return false
+	return true
+
+
+func _check_ik_spec(rig: Node, skeleton_path: String, spec: Array) -> bool:
+	var ik := rig.get_node_or_null(skeleton_path + "CCDIK3D_" + spec[0]) as CCDIK3D
+	if ik == null or ik.setting_count != 2:
+		return _fail("Each leg must have a two-stage CCDIK modifier: " + spec[0])
+	if (ik.get("settings/0/root_bone_name") != spec[3]
+		or ik.get("settings/0/end_bone_name") != spec[4]):
+		return _fail("Wrong upper IK chain for " + spec[0])
+	if (ik.get("settings/1/root_bone_name") != spec[4]
+		or ik.get("settings/1/end_bone_name") != spec[5]):
+		return _fail("Wrong lower IK chain for " + spec[0])
+	return _check_ik_targets(ik, spec)
+
+
+func _check_ik_targets(ik: CCDIK3D, spec: Array) -> bool:
+	var lift_path := NodePath("../../../../LiftTargets/" + spec[2])
+	var foot_path := NodePath("../../../../FootTargets/" + spec[1])
+	if ik.get("settings/0/target_node") != lift_path:
+		return _fail("Wrong lift target for " + spec[0])
+	if ik.get("settings/1/target_node") != foot_path:
+		return _fail("Wrong foot target for " + spec[0])
+	if not ik.get("settings/1/extend_end_bone"):
+		return _fail("Lower IK chain must extend to the foot target for " + spec[0])
+	if ik.get("settings/1/end_bone/direction") != 6:
+		return _fail("Lower IK chain must extend from the authored tail for " + spec[0])
+	if not is_equal_approx(ik.get("settings/1/end_bone/length"), spec[8]):
+		return _fail("Wrong lower IK tail length for " + spec[0])
 	return true
 
 
@@ -193,25 +300,57 @@ func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
 
 func _check_ik_strokes(rig: Node) -> bool:
 	var strokes := rig.get_node("LegStrokes") as MeshInstance3D
-	var before_points: Array[Vector3] = []
-	var original_positions: Array[Vector3] = []
-	for spec in IK_SPECS:
-		var target := rig.get_node("FootTargets/" + spec[0]) as Marker3D
-		var surface: int = spec[3]
-		before_points.append(_ribbon_point(strokes.mesh, surface, 4))
-		original_positions.append(target.position)
-		var tangent := Vector3(-target.position.z, 0.0, target.position.x).normalized()
-		target.position += tangent * 0.3
+	return await _check_leg_stroke(rig, strokes, 0)
+
+
+func _check_leg_stroke(rig: Node, strokes: MeshInstance3D, spec_index: int) -> bool:
+	if spec_index >= IK_SPECS.size():
+		return true
+	var spec: Array = IK_SPECS[spec_index]
+	if not await _check_lift_control(rig, strokes, spec):
+		return false
+	if not await _check_foot_control(rig, strokes, spec):
+		return false
+	return await _check_leg_stroke(rig, strokes, spec_index + 1)
+
+
+func _check_lift_control(rig: Node, strokes: MeshInstance3D, spec: Array) -> bool:
+	var lift := rig.get_node("LiftTargets/" + spec[2]) as Marker3D
+	var original_position := lift.position
+	var before := _ribbon_point(strokes.mesh, spec[6], 3)
+	lift.position += Vector3.UP * 0.2
 	await process_frame
 	await process_frame
-	for spec_index in range(IK_SPECS.size()):
-		var spec: Array = IK_SPECS[spec_index]
-		var target := rig.get_node("FootTargets/" + spec[0]) as Marker3D
-		var surface: int = spec[3]
-		var after := _ribbon_point(strokes.mesh, surface, 4)
-		if before_points[spec_index].distance_to(after) < 0.01:
-			return _fail("Middle leg-stroke joint did not follow IK for " + spec[0])
-		target.position = original_positions[spec_index]
+	var after := _ribbon_point(strokes.mesh, spec[6], 3)
+	lift.position = original_position
+	await process_frame
+	await process_frame
+	if before.distance_to(after) < 0.005:
+		return _fail("Middle leg joint did not follow lift target for " + spec[0])
+	return true
+
+
+func _check_foot_control(rig: Node, strokes: MeshInstance3D, spec: Array) -> bool:
+	var foot := rig.get_node("FootTargets/" + spec[1]) as Marker3D
+	var original_position := foot.position
+	var before := _ribbon_point(strokes.mesh, spec[6], spec[7] - 1)
+	var tangent := Vector3(-foot.position.z, 0.0, foot.position.x).normalized()
+	foot.position += tangent * 0.2
+	await process_frame
+	await process_frame
+	var after := _ribbon_point(strokes.mesh, spec[6], spec[7] - 1)
+	var rendered_tip := strokes.to_global(_ribbon_point(strokes.mesh, spec[6], spec[7]))
+	var target_distance := rendered_tip.distance_to(foot.global_position)
+	if target_distance > 0.03:
+		return _fail(
+			"Rendered leg missed foot target for %s by %.4f"
+			% [spec[0], target_distance]
+		)
+	foot.position = original_position
+	await process_frame
+	await process_frame
+	if before.distance_to(after) < 0.005:
+		return _fail("End leg joint did not follow foot target for " + spec[0])
 	return true
 
 
