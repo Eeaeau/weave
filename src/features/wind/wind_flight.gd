@@ -30,7 +30,7 @@ func configure(collectible: Collectible3D, path_points: PackedVector3Array,
 	_contact = path_points[1]
 	_exit = path_points[2]
 	_duration = maxf(duration, 0.01)
-	_sway = maxf(sway, 0.0)
+	_sway = sway
 	_elapsed = 0.0
 	_crossed = false
 	_done = false
@@ -62,6 +62,14 @@ func advance(delta: float) -> void:
 	global_position = _position_at(_elapsed / _duration)
 	if _elapsed >= _duration:
 		_complete()
+
+
+func claim_item(target_parent: Node3D) -> bool:
+	if _done or not is_instance_valid(item) or item.get_parent() != self:
+		return false
+	item.reparent(target_parent, true)
+	_complete()
+	return true
 
 
 func _position_at(progress: float) -> Vector3:

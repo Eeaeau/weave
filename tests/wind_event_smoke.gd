@@ -12,7 +12,8 @@ func _run() -> void:
 	if not (_staggered_group_and_contact() and _empty_group_finishes()
 			and _removed_item_does_not_stall() and _preview_includes_starting_webs()
 			and _audio_layers_work() and _removed_flight_does_not_stall()
-			and _invalid_scene_is_skipped()):
+			and _invalid_scene_is_skipped() and _claimed_item_survives()
+			and _large_step_preserves_stagger() and _reset_restores_first_spawn()):
 		quit(1)
 		return
 	print("WIND EVENT PASS: staggered group, contact handoff, and lifecycle")
@@ -68,9 +69,71 @@ func _empty_group_finishes() -> bool:
 	var finished: Array[int] = []
 	event.event_finished.connect(func(round_number: int) -> void: finished.append(round_number))
 	event.start_round(2)
+	if not event.is_active or not finished.is_empty() or event.get_node("Gust").playing:
+		return _fail("Empty wind must not finish or play a gust inside start_round")
+	event.advance(0.0)
 	if event.is_active or finished != [2]:
-		return _fail("An empty catalog must end its wind event immediately")
+		return _fail("An empty catalog must finish on the next event tick")
 	event.free()
+	return true
+
+
+func _claimed_item_survives() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	var caught := Node3D.new()
+	root.add_child(caught)
+	root.add_child(event)
+	event.group_size = 1
+	var claimed: Array[bool] = []
+	event.item_contact.connect(func(item: Collectible3D, _side: int,
+			_local: Vector2, _world: Vector3) -> void: claimed.append(event.claim(item, caught)))
+	event.start_round(1)
+	for step in 90:
+		event.advance(0.1)
+	var success := claimed == [true] and caught.get_child_count() == 1 and not event.is_active
+	event.free()
+	caught.free()
+	if not success:
+		return _fail("A claimed contact must survive and complete its flight")
+	return true
+
+
+func _large_step_preserves_stagger() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	event.start_round(1)
+	event.advance(2.0)
+	var flights: Node3D = event.get_node("Flights")
+	if flights.get_child_count() != 3:
+		return _fail("A large frame must still spawn the group")
+	var times: Array[float] = []
+	for flight in flights.get_children():
+		times.append(flight._elapsed)
+	event.free()
+	if not (is_equal_approx(times[0], 2.0) and is_equal_approx(times[1], 1.2)
+			and is_equal_approx(times[2], 0.4)):
+		return _fail("A large frame must retain staggered flight progress")
+	return true
+
+
+func _reset_restores_first_spawn() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	event.reset_match(42)
+	event.start_round(1)
+	var first: WindFlight3D = event.get_node("Flights").get_children().back()
+	var first_item := first.item.collectible
+	var first_start := first.global_position
+	for step in 120:
+		event.advance(0.1)
+	event.reset_match(42)
+	event.start_round(1)
+	var repeated: WindFlight3D = event.get_node("Flights").get_children().back()
+	var same := repeated.item.collectible == first_item
+	same = same and repeated.global_position.is_equal_approx(first_start)
+	event.free()
+	if not same:
+		return _fail("Match reset must restore the seeded first spawn")
 	return true
 
 
@@ -185,6 +248,9 @@ func _check_soft_wind(soft_wind: SoftWindLayer) -> bool:
 func _check_gust(event: WindEvent3D) -> bool:
 	if event.get_node("Gust").bus != &"SFX":
 		return _fail("Wind gust must use the SFX bus")
+	var stream: AudioStreamMP3 = event.get_node("Gust").stream
+	if not stream.loop:
+		return _fail("Gust must cover tunable long groups")
 	event.start_round(1)
 	if not event.get_node("Gust").playing:
 		return _fail("One gust must start with the group")

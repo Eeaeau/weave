@@ -37,65 +37,81 @@ func start_round(round_number: int) -> void:
 		push_warning("Wind event is already active")
 		return
 	if not _seeded:
-		var seed_value := random_seed if random_seed != 0 else randi()
-		_selection.reset(seed_value)
-		_path_random.seed = seed_value + 1
-		_seeded = true
+		reset_match()
 	_round_number = round_number
 	_elapsed = 0.0
 	_spawned = 0
 	is_active = true
 	event_started.emit(round_number)
-	$Gust.start_gust()
 	_spawn_next()
+
+
+## Reset the side bag and random streams before the first round of a new match.
+func reset_match(seed: int = 0) -> void:
+	if is_active:
+		push_warning("Cannot reset wind selection during an event")
+		return
+	var seed_value := seed if seed != 0 else (random_seed if random_seed != 0 else randi())
+	_selection.reset(seed_value)
+	_path_random.seed = seed_value + 1
+	_round_number = 0
+	_seeded = true
+
+
+## Call from item_contact when a web decides to keep the item.
+func claim(item: Collectible3D, target_parent: Node3D) -> bool:
+	for flight in _active_flights:
+		if is_instance_valid(flight) and flight.item == item:
+			return flight.claim_item(target_parent)
+	return false
 
 
 func advance(delta: float) -> void:
 	$Gust.advance(delta)
 	if not is_active:
 		return
-	_elapsed += maxf(delta, 0.0)
-	while _spawned < group_size and _elapsed >= _spawned * spawn_interval:
-		_spawn_next()
-		if not is_active:
-			return
+	var step := maxf(delta, 0.0)
+	_elapsed += step
 	for index in range(_active_flights.size() - 1, -1, -1):
 		if not is_instance_valid(_active_flights[index]):
 			_active_flights.remove_at(index)
 	for flight in _active_flights.duplicate():
 		if is_instance_valid(flight):
-			flight.advance(delta)
+			flight.advance(step)
+	while _spawned < group_size and _elapsed >= _spawned * spawn_interval:
+		var flight := _spawn_next()
+		if flight != null and is_instance_valid(flight):
+			flight.advance(_elapsed - (_spawned - 1) * spawn_interval)
 	if _spawned >= group_size and _active_flights.is_empty():
 		_finish_event()
 
 
-func _spawn_next() -> void:
+func _spawn_next() -> WindFlight3D:
 	var entry := _selection.choose_entry(_round_number, spawn_entries)
 	if entry == null:
 		push_warning("No eligible wind collectibles for round %d" % _round_number)
 		_spawned = group_size
-		if _active_flights.is_empty():
-			_finish_event()
-		return
+		return null
 	var instance := entry.scene.instantiate()
 	var item := instance as Collectible3D
 	if item == null:
 		push_warning("Wind entry scene must inherit Collectible3D")
 		if instance != null:
 			instance.free()
-		return
+		_spawned = group_size
+		return null
 	var side := _selection.next_side()
 	var lane := _choose_lane(side)
 	if lane == null:
 		push_warning("No wind lane for player side %d" % side)
 		item.free()
 		_spawned = group_size
-		if _active_flights.is_empty():
-			_finish_event()
-		return
+		return null
 	item.collectible = entry.data
 	var duration := _path_random.randf_range(flight_duration_min, flight_duration_max)
 	var sway := _path_random.randf_range(0.2, 0.5)
+	if _path_random.randi_range(0, 1) == 0:
+		sway = -sway
 	var flight := WindFlight3D.new()
 	$Flights.add_child(flight)
 	flight.plane_crossed.connect(func(crossing_item: Collectible3D,
@@ -105,6 +121,9 @@ func _spawn_next() -> void:
 	flight.configure(item, _sample_path(lane), duration, sway)
 	flight.set_process(false)
 	_spawned += 1
+	if _spawned == 1:
+		$Gust.start_gust()
+	return flight
 
 
 func _sample_path(lane: WindLane3D) -> PackedVector3Array:
