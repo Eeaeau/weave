@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dkeimb46pht1e" path="res://src/features/ui/match_hud.tscn" id="2_jxtdx"]
 [ext_resource type="PackedScene" uid="uid://ca8cqbxxkmgnw" path="res://src/features/systems/team.tscn" id="3_68q8q"]
 [ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="3_x3kcl"]
+[ext_resource type="PackedScene" uid="uid://5q78y45hys3h" path="res://src/features/collectibles/weapons/weapon_throw_pebble.tscn" id="5_vo601"]
 
 [node name="TorjusTestScene" type="Node3D" unique_id=1972552716]
 
@@ -17,7 +18,6 @@ script = ExtResource("3_x3kcl")
 teams = [NodePath("../TeamA"), NodePath("../TeamB")]
 match_hud = NodePath("../MatchHud")
 n_spiders_per_team = 2
-movement_per_turn = 2.0
 metadata/_custom_type_script = "uid://vjxl4iy367xq"
 
 [node name="TeamA" parent="." unique_id=1437638294 instance=ExtResource("3_68q8q")]
@@ -27,3 +27,9 @@ spider_scene = ExtResource("1_6rc11")
 [node name="TeamB" parent="." unique_id=1935928191 instance=ExtResource("3_68q8q")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.66284835, 0, 0.36684728)
 spider_scene = ExtResource("1_6rc11")
+
+[node name="WeaponThrowPebble" parent="." unique_id=1754921735 instance=ExtResource("5_vo601")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07861447, 0, -0.80688095)
+
+[node name="WeaponThrowPebble2" parent="." unique_id=2065555181 instance=ExtResource("5_vo601")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8082619, 0, -1.307636)
