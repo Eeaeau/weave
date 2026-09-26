@@ -29,12 +29,15 @@ func next_team() -> void:
 		spiderB.remaining_movement = movement_per_turn
 		active_spider = spiderB
 		active_team = Team.B
+		match_hud.update_team_label("Team B")
+
 	elif active_team == Team.B:
 		spiderB.is_active = false
 		spiderA.is_active = true
 		spiderA.remaining_movement = movement_per_turn
 		active_spider = spiderA
 		active_team = Team.A
+		match_hud.update_team_label("Team A")
 	else:
 		print("Unknown active team: {active_team}")
 

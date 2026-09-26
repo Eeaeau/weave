@@ -32,10 +32,18 @@ offset_bottom = 69.0
 max_value = 1.0
 show_percentage = false
 
-[node name="Label" type="Label" parent="LowerLeftPanel" unique_id=1425132707]
+[node name="TeamLabel" type="Label" parent="LowerLeftPanel" unique_id=264985052]
 layout_mode = 0
-offset_left = 23.0
-offset_top = 13.0
-offset_right = 76.0
-offset_bottom = 36.0
+offset_left = 216.0
+offset_top = 12.0
+offset_right = 269.0
+offset_bottom = 35.0
+text = "Team A"
+
+[node name="EnergyLabel" type="Label" parent="LowerLeftPanel" unique_id=1425132707]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 12.0
+offset_right = 74.0
+offset_bottom = 35.0
 text = "Energy"
