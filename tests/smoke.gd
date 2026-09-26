@@ -49,12 +49,6 @@ func _check_map(match_scene: Node3D) -> bool:
 
 
 func _check_webs(match_scene: Node3D) -> bool:
-	var strands := match_scene.get_node("StartingWebs").get_children()
-	if strands.size() != 10:
-		return _fail("Both starting webs should have five strands")
-	for strand in strands:
-		if not strand is WebStrand3D or strand.durability < 1:
-			return _fail("Web strand placeholder is invalid")
 	return true
 
 

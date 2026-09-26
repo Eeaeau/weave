@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://i7kjn0i4b10b"]
+
+[ext_resource type="Script" uid="uid://e305ev1q6d0r" path="res://src/features/web/web_polygon_3d.gd" id="1_us87o"]
+
+[node name="WebPolygon3D" type="Node3D" unique_id=1619405312]
+script = ExtResource("1_us87o")
+points = Array[Vector3]([Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(1, 0, 1)])

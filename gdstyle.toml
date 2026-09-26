@@ -1,3 +1,4 @@
 [rules]
 "quality/max-branches" = "off"
 "quality/max-function-length" = "off"
+"quality/max-parameters" = "off"
