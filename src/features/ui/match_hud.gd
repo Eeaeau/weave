@@ -7,6 +7,7 @@ var show_hints := true
 @onready var status: Label = $Margin/Panel/Status
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 @onready var team_label: Label = $LowerLeftPanel/TeamLabel
+@onready var actions_remaining_label: Label = $LowerLeftPanel/ActionsRemainingLabel
 
 
 func _ready() -> void:
@@ -37,3 +38,8 @@ func update_energy(energy: float) -> void:
 func update_team_label(text: String) -> void:
 	if team_label:
 		team_label.text = text
+
+
+func update_actions_remaining(n: int) -> void:
+	if actions_remaining_label:
+		actions_remaining_label.text = "Actions remaining: " + str(n)

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="64"
+   height="64"
+   viewBox="0 0 16.933333 16.933333"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   sodipodi:docname="arrow.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="28.046875"
+     inkscape:cx="46.475766"
+     inkscape:cy="33.479666"
+     inkscape:window-width="2560"
+     inkscape:window-height="1415"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="path1"
+       transform="translate(0,0.27520567)">
+      <path
+         style="fill:#fa0f29"
+         d="M 1.0664062,7.6914062 V 8.6914063 H 15.316406 V 7.6914062 Z"
+         id="path4" />
+      <g
+         id="g3">
+        <path
+           style="fill:none;stroke:context-stroke"
+           d="m 12.565631,11.191461 3,-3 -3,-3"
+           sodipodi:nodetypes="ccc"
+           id="path3" />
+      </g>
+    </g>
+    <g
+       id="g5"
+       transform="translate(0,0.00578025)">
+      <path
+         style="fill:none;stroke:#fa0f29;stroke-width:1"
+         d="M 15.687184,8.7617888 C 15.233585,8.1480958 12.965591,5.6933258 12.965591,5.6933258"
+         id="path5" />
+      <path
+         style="fill:none;stroke:#fa0f29;stroke-width:1"
+         d="M 15.687184,8.1599848 C 15.233585,8.7736774 12.965591,11.228447 12.965591,11.228447"
+         id="path5-5" />
+    </g>
+  </g>
+</svg>

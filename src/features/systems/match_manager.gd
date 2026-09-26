@@ -26,6 +26,7 @@ func _process(delta: float) -> void:
 	var active_spider: PlayerSpider3D = active_team.get_active_spider()
 	if active_spider:
 		match_hud.update_energy(active_spider.remaining_movement / movement_per_turn)
+		match_hud.update_actions_remaining(active_spider.n_remaining_actions)
 
 
 func give_turn_to(team_idx: int) -> Team:

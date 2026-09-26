@@ -8,7 +8,7 @@
 [node name="TorjusTestScene" type="Node3D" unique_id=1972552716]
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1837678052]
-transform = Transform3D(1, 0, 0, 0, 0.3941756, 0.91903514, 0, -0.91903514, 0.3941756, 0.08541453, 2.559826, 1.2526708)
+transform = Transform3D(1, 0, 0, 0, 0.7054415, 0.7087682, 0, -0.7087682, 0.7054415, 0.11112571, 2.559826, 2.1959646)
 
 [node name="MatchHud" parent="." unique_id=1154433575 instance=ExtResource("2_jxtdx")]
 

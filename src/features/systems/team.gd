@@ -17,7 +17,7 @@ func _process(delta: float) -> void:
 	var active_spider: PlayerSpider3D = get_active_spider()
 	if not active_spider:
 		return
-	if active_spider.remaining_movement <= 0:
+	if active_spider.is_done():
 		active_spider.is_active = false
 		active_spider_idx += 1
 	else:
@@ -49,6 +49,7 @@ func start_turn(energy_budget_per_spider: float) -> void:
 	for spider in spiders:
 		spider.is_active = false
 		spider.remaining_movement = energy_budget_per_spider
+		spider.n_remaining_actions = 1
 	active_spider_idx = 0
 	if len(spiders) > 0:
 		spiders[active_spider_idx].is_active = true
