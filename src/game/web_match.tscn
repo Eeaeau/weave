@@ -86,3 +86,5 @@ spider_scene = ExtResource("3")
 [node name="TeamB" parent="." unique_id=1203086720 instance=ExtResource("11_pd16p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1016297, -4.7683716e-07, 0.14235687)
 spider_scene = ExtResource("3")
+
+[connection signal="team_changed" from="MatchManager" to="." method="_on_match_manager_team_changed"]

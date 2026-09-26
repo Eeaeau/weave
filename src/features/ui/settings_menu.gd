@@ -144,9 +144,9 @@ func _populate_display_options() -> void:
 	if not OS.has_feature("web"):
 		display_mode_option.add_item("Exclusive fullscreen", 2)
 	var usable := DisplayServer.screen_get_usable_rect(get_window().current_screen).size
-	for size in WINDOW_SIZES:
-		if usable == Vector2i.ZERO or (size.x <= usable.x and size.y <= usable.y):
-			_add_window_size(size)
+	for resolution in WINDOW_SIZES:
+		if usable == Vector2i.ZERO or (resolution.x <= usable.x and resolution.y <= usable.y):
+			_add_window_size(resolution)
 	var current_size := get_window().size
 	if usable == Vector2i.ZERO or (current_size.x <= usable.x and current_size.y <= usable.y):
 		_add_window_size(current_size)
@@ -163,13 +163,13 @@ func _populate_display_options() -> void:
 		$DisplayPage/Center/Menu/DisplayHint.text = "Browser fullscreen starts when you choose it."
 
 
-func _add_window_size(size: Vector2i) -> void:
+func _add_window_size(resolution: Vector2i) -> void:
 	for index in window_size_option.item_count:
-		if window_size_option.get_item_metadata(index) == size:
+		if window_size_option.get_item_metadata(index) == resolution:
 			return
 	var index := window_size_option.item_count
-	window_size_option.add_item("%d × %d" % [size.x, size.y])
-	window_size_option.set_item_metadata(index, size)
+	window_size_option.add_item("%d × %d" % [resolution.x, resolution.y])
+	window_size_option.set_item_metadata(index, resolution)
 
 
 func _load_display_options() -> void:
@@ -190,9 +190,9 @@ func _load_display_options() -> void:
 	_apply_fps_limit(fps_limit_option.get_selected_id())
 
 
-func _find_window_size(size: Variant) -> int:
+func _find_window_size(resolution: Variant) -> int:
 	for index in window_size_option.item_count:
-		if window_size_option.get_item_metadata(index) == size:
+		if window_size_option.get_item_metadata(index) == resolution:
 			return index
 	for index in window_size_option.item_count:
 		if window_size_option.get_item_metadata(index) == Vector2i(1280, 720):

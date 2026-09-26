@@ -25,6 +25,8 @@ func _run() -> void:
 		return
 	match_scene.queue_free()
 	await process_frame
+	# Let the stopped map audio release its playback buffer before exiting Godot.
+	await create_timer(0.2).timeout
 	print("SMOKE PASS: sprites, camera, spiders, webs, collectibles, and audio slots")
 	quit(0)
 

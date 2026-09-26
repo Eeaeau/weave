@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/features/wind/wind_event.gd" id="1"]
+[ext_resource type="Script" path="res://src/features/wind/wind_lane.gd" id="2"]
+[ext_resource type="AudioStream" path="res://src/features/wind/assets/audio/wind_gust.mp3" id="3"]
+[ext_resource type="Script" path="res://src/features/wind/wind_gust.gd" id="4"]
+
+[node name="WindEvent" type="Node3D"]
+script = ExtResource("1")
+
+[node name="WebPlane" type="Marker3D" parent="."]
+position = Vector3(0, 0.1, 0)
+
+[node name="Lanes" type="Node3D" parent="."]
+
+[node name="PlayerLane" type="Marker3D" parent="Lanes"]
+position = Vector3(-4.3, 2.8, -8)
+script = ExtResource("2")
+contact_rect = Rect2(-5.8, -1.3, 2.8, 2.6)
+
+[node name="OpponentLane" type="Marker3D" parent="Lanes"]
+position = Vector3(4.3, 2.8, -8)
+script = ExtResource("2")
+side = 1
+contact_rect = Rect2(3, -1.3, 2.8, 2.6)
+
+[node name="Flights" type="Node3D" parent="."]
+
+[node name="DebugContacts" type="Node3D" parent="."]
+visible = false
+
+[node name="Gust" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3")
+bus = &"SFX"
+script = ExtResource("4")

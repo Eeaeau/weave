@@ -158,6 +158,11 @@ def run(
         for error in ("SCRIPT ERROR:", "Parse Error:", "Failed loading resource", "Failed to load script")
     ):
         raise RuntimeError(f"Godot reported a script or resource error: {display}")
+    if godot and any(
+        warning in output
+        for warning in ("ObjectDB instances were leaked at exit", "resources still in use at exit")
+    ):
+        raise RuntimeError(f"Godot reported leaked resources at exit: {display}")
     return output.strip()
 
 
@@ -185,6 +190,10 @@ def main() -> int:
         ("resource_smoke", "RESOURCE PASS:"),
         ("smoke", "SMOKE PASS:"),
         ("menu_smoke", "MENU PASS:"),
+        ("wind_selection_smoke", "WIND SELECTION PASS:"),
+        ("wind_flight_smoke", "WIND FLIGHT PASS:"),
+        ("wind_match_smoke", "WIND MATCH PASS:"),
+        ("wind_event_smoke", "WIND EVENT PASS:"),
     ):
         run(
             base + ["--script", f"res://tests/{script}.gd", "--log-file", str(check_dir / f"{script}.log")],

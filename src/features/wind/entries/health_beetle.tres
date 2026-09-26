@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WindSpawnEntry" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/features/wind/wind_spawn_entry.gd" id="1"]
+[ext_resource type="PackedScene" path="res://src/features/collectibles/insects/windborne_insect.tscn" id="2"]
+[ext_resource type="Resource" path="res://src/features/collectibles/insects/health_beetle.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+scene = ExtResource("2")
+data = ExtResource("3")
+base_weight = 1.0
+earliest_round = 5
+weight_growth_per_round = 1.0

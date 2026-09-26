@@ -1,0 +1,111 @@
+class_name WindFlight3D
+extends Node3D
+## Moves one flat collectible on a curved path through the web plane.
+
+signal plane_crossed(item: Collectible3D, world_point: Vector3)
+signal finished
+
+const CONTACT_FRACTION := 0.72
+
+var item: Collectible3D
+var _start: Vector3
+var _contact: Vector3
+var _exit: Vector3
+var _duration: float
+var _sway: float
+var _elapsed: float = 0.0
+var _crossed: bool = false
+var _done: bool = false
+var _phase: float = 0.0
+
+
+func _process(delta: float) -> void:
+	advance(delta)
+
+
+func configure(collectible: Collectible3D, path_points: PackedVector3Array,
+		duration: float, sway: float) -> void:
+	item = collectible
+	_start = path_points[0]
+	_contact = path_points[1]
+	_exit = path_points[2]
+	_duration = maxf(duration, 0.01)
+	_sway = sway
+	_elapsed = 0.0
+	_crossed = false
+	_done = false
+	_phase = _start.x * 1.37 + _contact.z
+	add_child(item)
+	item.position = Vector3.ZERO
+	global_position = _start
+	set_process(true)
+
+
+func advance(delta: float) -> void:
+	if _done:
+		return
+	if not is_instance_valid(item):
+		_complete()
+		return
+	var previous := _elapsed
+	_elapsed = minf(_elapsed + maxf(delta, 0.0), _duration)
+	if is_equal_approx(_elapsed, _duration):
+		_elapsed = _duration
+	var contact_time := _duration * CONTACT_FRACTION
+	if not _crossed and previous < contact_time and _elapsed >= contact_time:
+		_crossed = true
+		global_position = _contact
+		plane_crossed.emit(item, _contact)
+		if _done:
+			return
+		if not is_instance_valid(item):
+			_complete()
+			return
+	global_position = _position_at(_elapsed / _duration)
+	if _elapsed >= _duration:
+		_complete()
+
+
+func claim_item(target_parent: Node3D) -> bool:
+	if _done or not is_instance_valid(item) or item.get_parent() != self:
+		return false
+	item.reparent(target_parent, true)
+	_complete()
+	return true
+
+
+func _position_at(progress: float) -> Vector3:
+	if progress <= CONTACT_FRACTION:
+		var approach_step := progress / CONTACT_FRACTION
+		var approach_control := _start.lerp(_contact, 0.5) + Vector3(_sway, 0.5, 0.0)
+		return _quadratic(
+			_start,
+			approach_control,
+			_contact,
+			approach_step,
+		) + _wobble(approach_step)
+	var departure_step := (progress - CONTACT_FRACTION) / (1.0 - CONTACT_FRACTION)
+	var departure_control := _contact.lerp(_exit, 0.5) + Vector3(-_sway, 0.25, 0.0)
+	return _quadratic(_contact, departure_control, _exit, departure_step) + _wobble(departure_step)
+
+
+func _quadratic(a: Vector3, control: Vector3, b: Vector3, t: float) -> Vector3:
+	return a * (1.0 - t) * (1.0 - t) + control * 2.0 * (1.0 - t) * t + b * t * t
+
+
+func _wobble(t: float) -> Vector3:
+	var envelope := sin(PI * t)
+	var lateral := sin(t * TAU * 1.7 + _phase) * 0.65
+	lateral += sin(t * TAU * 4.3 + _phase * 1.71) * 0.3
+	lateral += sin(t * TAU * 7.1 + _phase * 0.43) * 0.15
+	var lift := absf(sin(t * TAU * 2.7 + _phase * 0.91)) * 0.2
+	var depth := sin(t * TAU * 2.2 + _phase * 1.23) * 0.25
+	return Vector3(lateral * _sway, lift * absf(_sway), depth * absf(_sway)) * envelope
+
+
+func _complete() -> void:
+	if _done:
+		return
+	_done = true
+	set_process(false)
+	finished.emit()
