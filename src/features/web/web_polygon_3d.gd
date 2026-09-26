@@ -10,6 +10,9 @@ var rings: int = 8
 @export_range(2, 20)
 var curve_segments: int = 8
 
+@export_range(0.0001, 0.01)
+var web_width: float = 0.0025
+
 @export_range(0.0, 1.0)
 var ring_curvature: float = 0.25
 
@@ -32,16 +35,17 @@ func draw() -> void:
 	if points.size() < 3:
 		return
 
-	var mesh := ImmediateMesh.new()
-
-	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-
 	var center := Vector3.ZERO
 
 	for point in points:
 		center += point
 
 	center /= points.size()
+
+	# Create one material shared by all cylinders.
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = line_color
 
 	# -------------------------------------------------
 	# Outer polygon
@@ -52,12 +56,12 @@ func draw() -> void:
 		var b := points[(i + 1) % points.size()]
 
 		add_curved_line(
-			mesh,
 			a,
 			b,
 			center,
 			outer_curvature,
-			curve_segments
+			curve_segments,
+			material
 		)
 
 	# -------------------------------------------------
@@ -77,44 +81,37 @@ func draw() -> void:
 			var b := ring_points[(i + 1) % ring_points.size()]
 
 			add_curved_line(
-				mesh,
 				a,
 				b,
 				center,
 				ring_curvature,
-				curve_segments
+				curve_segments,
+				material
 			)
 
 	# -------------------------------------------------
-	# Strands from center to the outer points 
+	# Strands from center to outer points
 	# -------------------------------------------------
 
 	for point in points:
-		mesh.surface_add_vertex(point)
-		mesh.surface_add_vertex(center)
+		add_cylinder_between(
+			point,
+			center,
+			material
+		)
 
-	mesh.surface_end()
-
-	mesh_instance.mesh = mesh
-
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = line_color
-
-	mesh_instance.material_override = material
 
 func add_curved_line(
-	mesh: ImmediateMesh,
 	start: Vector3,
 	end: Vector3,
 	center: Vector3,
 	bend: float,
-	segments: int
+	segments: int,
+	material: Material
 ) -> void:
 
 	var midpoint := (start + end) / 2.0
 
-	# Pull the control point toward the center.
 	var control := midpoint.lerp(center, bend)
 
 	var previous := start
@@ -127,7 +124,49 @@ func add_curved_line(
 			.lerp(control.lerp(end, t), t)
 		)
 
-		mesh.surface_add_vertex(previous)
-		mesh.surface_add_vertex(p)
+		add_cylinder_between(
+			previous,
+			p,
+			material
+		)
 
 		previous = p
+
+
+func add_cylinder_between(
+	a: Vector3,
+	b: Vector3,
+	material: Material
+) -> void:
+
+	var direction := b - a
+	var length := direction.length()
+
+	if length <= 0.00001:
+		return
+
+	var cylinder := CylinderMesh.new()
+
+	cylinder.top_radius = web_width
+	cylinder.bottom_radius = web_width
+	cylinder.height = length
+
+	cylinder.radial_segments = 6
+	cylinder.rings = 1
+
+	var instance := MeshInstance3D.new()
+	instance.mesh = cylinder
+	instance.material_override = material
+
+	add_child(instance)
+
+	# CylinderMesh is aligned along Y.
+	instance.position = (a + b) * 0.5
+	instance.look_at(
+		instance.position + direction,
+		Vector3.UP
+	)
+
+	# look_at() points -Z toward the target, whereas the cylinder
+	# extends along Y, so rotate Y onto the segment direction.
+	instance.rotation += Vector3(PI / 2.0, 0.0, 0.0)

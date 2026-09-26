@@ -1,6 +1,12 @@
 [gd_scene format=3 uid="uid://bu81h1e2g7ldm"]
 
 [ext_resource type="Script" uid="uid://c1ila5j2187bu" path="res://src/features/web/web_3d.gd" id="1_nkqqs"]
+[ext_resource type="Script" uid="uid://e305ev1q6d0r" path="res://src/features/web/web_polygon_3d.gd" id="2_14ikt"]
 
-[node name="Web" type="Node3D" unique_id=1225174860]
+[node name="Web3D" type="Node3D" unique_id=1225174860]
 script = ExtResource("1_nkqqs")
+
+[node name="WebPolygon3D" type="Node3D" parent="." unique_id=1333363733]
+script = ExtResource("2_14ikt")
+points = Array[Vector3]([Vector3(0, 0, 0), Vector3(1, 0, 1), Vector3(0, 0, 1)])
+metadata/_custom_type_script = "uid://e305ev1q6d0r"
