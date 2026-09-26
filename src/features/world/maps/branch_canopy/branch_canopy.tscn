@@ -16,6 +16,7 @@
 [ext_resource type="Texture2D" uid="uid://bklsgsbf6of8u" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/background.png" id="14_6diav"]
 [ext_resource type="Texture2D" uid="uid://bk1fwk56vjxh6" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/foreground.png" id="15_lyog6"]
 [ext_resource type="Texture2D" uid="uid://cki0sfwbmnew3" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/far_background.png" id="16_owa7m"]
+[ext_resource type="Texture2D" uid="uid://d1ep2utqq105v" path="res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png" id="17_sun"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 script = ExtResource("1")
@@ -130,3 +131,8 @@ bus = &"SFX"
 script = ExtResource("9")
 
 [node name="WindEvent" parent="." unique_id=1552486683 instance=ExtResource("5")]
+
+[node name="Sun" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.667912, 1.088747, -100.64688)
+billboard = 1
+texture = ExtResource("17_sun")
