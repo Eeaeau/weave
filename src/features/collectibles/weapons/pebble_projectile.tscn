@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://qedq4mdaomd6" path="res://src/features/collectibles/weapons/assets/pebble.svg" id="1_ii6dm"]
 [ext_resource type="Script" uid="uid://dnkvwxmnh2yko" path="res://src/features/collectibles/weapons/pebble_projectile.gd" id="1_yybf2"]
+[ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_aq3jo"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_6q6db"]
 radius = 0.35620385
@@ -10,11 +11,16 @@ radius = 0.35620385
 radius = 0.1
 height = 0.2
 
+[sub_resource type="CylinderMesh" id="CylinderMesh_6q6db"]
+top_radius = 0.16455078
+bottom_radius = 0.16455078
+height = 0.001
+
 [node name="PebbleProjectile" type="Node3D" unique_id=387750299]
 script = ExtResource("1_yybf2")
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
-visible = false
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 texture = ExtResource("1_ii6dm")
 
 [node name="Area3D" type="Area3D" parent="." unique_id=164628878]
@@ -23,6 +29,13 @@ texture = ExtResource("1_ii6dm")
 shape = SubResource("SphereShape3D_6q6db")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1973022874]
+visible = false
 mesh = SubResource("SphereMesh_6q6db")
+
+[node name="ShadowComponent" parent="." unique_id=1817632336 node_paths=PackedStringArray("mesh") instance=ExtResource("3_aq3jo")]
+mesh = NodePath("ShadowMesh")
+
+[node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=268478568]
+mesh = SubResource("CylinderMesh_6q6db")
 
 [connection signal="area_entered" from="Area3D" to="." method="_on_area_3d_area_entered"]
