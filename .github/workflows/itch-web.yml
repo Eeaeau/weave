@@ -32,6 +32,22 @@ jobs:
           use-dotnet: false
           include-templates: true
 
+      - name: Install Blender
+        uses: BradyAJohnston/setup-blender@v5
+        with:
+          version: "4.5"
+
+      - name: Configure Godot Blender importer
+        run: |
+          blender_path="$(command -v blender)"
+          mkdir -p "$HOME/.config/godot"
+          printf '%s\n' \
+            '[gd_resource type="EditorSettings" format=3]' \
+            '' \
+            '[resource]' \
+            "filesystem/import/blender/blender_path = \"$blender_path\"" \
+            > "$HOME/.config/godot/editor_settings-4.7.tres"
+
       - name: Run local quality gate
         run: python3 tools/check.py
 
