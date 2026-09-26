@@ -21,12 +21,13 @@ func _initialize() -> void:
 func _run() -> void:
 	var spider := SPIDER_SCENE.instantiate()
 	root.add_child(spider)
-	await process_frame
 	var controller := spider.get_node_or_null("SpiderRig/LegController") as Node3D
 	if controller == null:
 		_fail("Spider rig has no leg movement controller")
 		return
 	controller.set_process(false)
+	await process_frame
+	(spider.get_node("SpiderRig/AnimationPlayer") as AnimationPlayer).seek(0.0, true)
 	controller.set("step_distance", 0.2)
 	controller.set("step_lead", 0.1)
 	var targets := spider.get_node("SpiderRig/FootTargets")
@@ -39,7 +40,7 @@ func _run() -> void:
 		return
 	if not _check_emergency_release():
 		return
-	if not _check_preview():
+	if not _check_preview() or not _check_idle_pose_steps():
 		return
 	print("SPIDER FREE STEP PASS: planted feet and alternating diagonal steps")
 	quit(0)
@@ -76,8 +77,10 @@ func _check_steps(controller: Node3D, targets: Node, spider: Node3D) -> bool:
 	var initial := _positions(targets)
 	spider.position.z += 0.14
 	controller.call("advance", 0.016)
-	if not _same_positions(targets, initial):
-		return _fail("Step lead must not shorten the movement threshold")
+	var moved_during_short_travel := not _same_positions(targets, initial)
+	controller.call("advance", 0.016)
+	if moved_during_short_travel or not _same_positions(targets, initial):
+		return _fail("Short movement must not step during travel or after stopping")
 	spider.position.z += 0.14
 	controller.call("advance", 0.05)
 	if not _moved_group(targets, initial, GROUP_A):
@@ -118,6 +121,37 @@ func _check_preview() -> bool:
 	if _same_positions(preview_targets, planted):
 		return _fail("Preview movement must drive the spider's feet")
 	preview.free()
+	return true
+
+
+func _check_idle_pose_steps() -> bool:
+	var spider := SPIDER_SCENE.instantiate()
+	root.add_child(spider)
+	var rig := spider.get_node("SpiderRig") as Node3D
+	var controller := rig.get_node("LegController") as Node3D
+	var player := rig.get_node("AnimationPlayer") as AnimationPlayer
+	var imported := rig.get_node("ImportedRig") as Node3D
+	var targets := rig.get_node("FootTargets")
+	controller.set_process(false)
+	player.seek(0.0, true)
+	controller.call("advance", 0.016)
+	var planted := _positions(targets)
+	var root_position := rig.global_position
+	player.seek(1.0, true)
+	controller.call("advance", 0.05)
+	if absf(imported.rotation.y) < 0.05:
+		spider.free()
+		return _fail("Idle body pose must rotate enough to stretch its legs")
+	if not rig.global_position.is_equal_approx(root_position):
+		spider.free()
+		return _fail("Idle pose must not move the gameplay rig")
+	if not _moved_group(targets, planted, GROUP_A):
+		spider.free()
+		return _fail("Body rotation must trigger a planted foot step")
+	if not _still_group(targets, planted, GROUP_B):
+		spider.free()
+		return _fail("Idle pose must retain alternating leg groups")
+	spider.free()
 	return true
 
 

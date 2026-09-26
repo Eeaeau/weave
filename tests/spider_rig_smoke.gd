@@ -371,6 +371,8 @@ func _check_eye_idle_animation(rig: Node, eyes: Node3D, target: Marker3D) -> boo
 
 
 func _check_body_sway(rig: Node, player: AnimationPlayer) -> bool:
+	var controller := rig.get_node("LegController") as Node3D
+	controller.set_process(false)
 	var imported := rig.get_node("ImportedRig") as Node3D
 	var body := rig.get_node("BoneAttachment3D/BodyOffset/Body") as Sprite3D
 	var foot := rig.get_node("FootTargets/FootFrontLeft") as Marker3D
@@ -395,6 +397,7 @@ func _check_body_sway(rig: Node, player: AnimationPlayer) -> bool:
 		"tip": strokes.to_global(_ribbon_point(strokes.mesh, 2, 8)),
 	}
 	player.seek(original_phase, true)
+	controller.set_process(true)
 	if (moved["imported"].distance_to(initial["imported"]) < 0.01
 			or moved["body"].distance_to(initial["body"]) < 0.01):
 		return _fail("Shared idle clip must sway the body through the imported rig")

@@ -15,29 +15,33 @@ const FOOT_NAMES := [
 const STEP_GROUPS := [[0, 3, 4, 7], [1, 2, 5, 6]]
 
 @export_range(0.05, 2.0, 0.01) var step_distance := 0.35
+@export_range(0.02, 1.0, 0.01) var idle_pose_step_distance := 0.07
 @export_range(0.05, 1.0, 0.01) var step_duration := 0.22
 @export_range(0.0, 1.0, 0.01) var step_height := 0.2
 @export_range(0.0, 1.0, 0.01) var step_lead := 0.2
 
 var _rig: Node3D
+var _visual_pose: VisualPose
+var _cycle: StepCycle
 var _feet: Array[Marker3D] = []
 var _rest_offsets: Array[Vector3] = []
 var _ground_heights: Array[float] = []
 var _last_rig_position := Vector3.ZERO
 var _travel_direction := Vector3.ZERO
-var _next_group := 0
 var _steps: Array[Dictionary] = []
 var _dangling: Array[bool] = []
-var _step_elapsed := 0.0
 
 
 func _ready() -> void:
 	_rig = get_parent() as Node3D
+	_visual_pose = VisualPose.new(_rig.get_node("ImportedRig") as Node3D)
+	_cycle = StepCycle.new()
 	var targets := _rig.get_node("FootTargets")
 	for foot_name in FOOT_NAMES:
 		var foot := targets.get_node(foot_name) as Marker3D
 		var planted_position := foot.global_position
 		_rest_offsets.append(_rig.to_local(planted_position))
+		_visual_pose.anchors.append(_rest_offsets.back())
 		_ground_heights.append(planted_position.y)
 		foot.top_level = true
 		foot.global_position = planted_position
@@ -55,7 +59,8 @@ func advance(delta: float) -> void:
 		return
 	var travel := _rig.global_position - _last_rig_position
 	travel.y = 0.0
-	if not travel.is_zero_approx():
+	_cycle.rig_moved = not travel.is_zero_approx()
+	if _cycle.rig_moved:
 		_travel_direction = travel.normalized()
 	_last_rig_position = _rig.global_position
 	_update_dangling()
@@ -63,8 +68,8 @@ func advance(delta: float) -> void:
 	if not _steps.is_empty():
 		_animate_step(delta)
 		return
-	if not _start_group(_next_group):
-		_start_group(1 - _next_group)
+	if not _start_group(_cycle.next_group):
+		_start_group(1 - _cycle.next_group)
 	if not _steps.is_empty():
 		_animate_step(delta)
 
@@ -77,19 +82,25 @@ func _start_group(group_index: int) -> bool:
 			_feet[foot_index].global_position = _dangling_position(foot_index)
 			continue
 		var destination: Vector3 = landing["point"]
-		var gap := _rig.to_global(_rest_offsets[foot_index]) - _feet[foot_index].global_position
-		gap.y = 0.0
-		if gap.length() <= step_distance and not _dangling[foot_index]:
+		var old_anchor := _rig.to_global(_visual_pose.anchors[foot_index])
+		var walking_gap := old_anchor - _feet[foot_index].global_position
+		walking_gap.y = 0.0
+		var pose_gap := _pose_rest_position(foot_index) - old_anchor
+		pose_gap.y = 0.0
+		if (walking_gap.length() <= step_distance
+				and pose_gap.length() <= idle_pose_step_distance
+				and not _dangling[foot_index]):
 			continue
 		_steps.append({
 			"index": foot_index,
 			"start": _feet[foot_index].global_position,
 			"end": destination,
+			"pose_anchor": _pose_rest_local(foot_index),
 		})
 	if _steps.is_empty():
 		return false
-	_step_elapsed = 0.0
-	_next_group = 1 - group_index
+	_cycle.elapsed = 0.0
+	_cycle.next_group = 1 - group_index
 	return true
 
 
@@ -191,15 +202,25 @@ func _paths_cross(a: Vector2, b: Vector2, c: Vector2, d: Vector2) -> bool:
 
 
 func _rest_destination(foot_index: int) -> Vector3:
-	var destination := _rig.to_global(_rest_offsets[foot_index])
-	destination += _travel_direction * step_lead
+	var destination := _pose_rest_position(foot_index)
+	if _cycle.rig_moved:
+		destination += _travel_direction * step_lead
 	destination.y = _ground_heights[foot_index]
 	return destination
 
 
+func _pose_rest_position(foot_index: int) -> Vector3:
+	return _rig.to_global(_pose_rest_local(foot_index))
+
+
+func _pose_rest_local(foot_index: int) -> Vector3:
+	var pose_delta := _visual_pose.node.transform * _visual_pose.rest_transform.affine_inverse()
+	return pose_delta * _rest_offsets[foot_index]
+
+
 func _animate_step(delta: float) -> void:
-	_step_elapsed += delta
-	var progress := minf(_step_elapsed / step_duration, 1.0)
+	_cycle.elapsed += delta
+	var progress := minf(_cycle.elapsed / step_duration, 1.0)
 	var eased := progress * progress * (3.0 - 2.0 * progress)
 	for active_step in _steps:
 		var start: Vector3 = active_step["start"]
@@ -212,4 +233,21 @@ func _animate_step(delta: float) -> void:
 		for active_step in _steps:
 			var foot_index: int = active_step["index"]
 			_dangling[foot_index] = false
+			_visual_pose.anchors[foot_index] = active_step["pose_anchor"]
 		_steps.clear()
+
+
+class VisualPose:
+	var node: Node3D
+	var rest_transform: Transform3D
+	var anchors: Array[Vector3] = []
+
+	func _init(visual_node: Node3D) -> void:
+		node = visual_node
+		rest_transform = visual_node.transform
+
+
+class StepCycle:
+	var next_group := 0
+	var elapsed := 0.0
+	var rig_moved := false
