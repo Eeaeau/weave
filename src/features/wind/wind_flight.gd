@@ -56,6 +56,8 @@ func advance(delta: float) -> void:
 		_crossed = true
 		global_position = _contact
 		plane_crossed.emit(item, _contact)
+		if _done:
+			return
 		if not is_instance_valid(item):
 			_complete()
 			return

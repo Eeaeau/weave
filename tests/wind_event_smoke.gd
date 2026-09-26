@@ -56,7 +56,7 @@ func _staggered_group_and_contact() -> bool:
 		event.advance(0.1)
 	if contacts.size() != 3 or finished != [1] or event.is_active:
 		contact_errors.append("Three items must cross once before the event finishes")
-	event.free()
+	_free_scene(event)
 	if not contact_errors.is_empty():
 		return _fail(contact_errors[0])
 	return true
@@ -74,7 +74,7 @@ func _empty_group_finishes() -> bool:
 	event.advance(0.0)
 	if event.is_active or finished != [2]:
 		return _fail("An empty catalog must finish on the next event tick")
-	event.free()
+	_free_scene(event)
 	return true
 
 
@@ -85,13 +85,18 @@ func _claimed_item_survives() -> bool:
 	root.add_child(event)
 	event.group_size = 1
 	var claimed: Array[bool] = []
+	var claimed_world: Array[Vector3] = []
 	event.item_contact.connect(func(item: Collectible3D, _side: int,
-			_local: Vector2, _world: Vector3) -> void: claimed.append(event.claim(item, caught)))
+			_local: Vector2, _world: Vector3) -> void:
+		claimed.append(event.claim(item, caught))
+		claimed_world.append(item.global_position))
 	event.start_round(1)
 	for step in 90:
 		event.advance(0.1)
 	var success := claimed == [true] and caught.get_child_count() == 1 and not event.is_active
-	event.free()
+	if success:
+		success = caught.get_child(0).global_position.is_equal_approx(claimed_world[0])
+	_free_scene(event)
 	caught.free()
 	if not success:
 		return _fail("A claimed contact must survive and complete its flight")
@@ -109,7 +114,7 @@ func _large_step_preserves_stagger() -> bool:
 	var times: Array[float] = []
 	for flight in flights.get_children():
 		times.append(flight._elapsed)
-	event.free()
+	_free_scene(event)
 	if not (is_equal_approx(times[0], 2.0) and is_equal_approx(times[1], 1.2)
 			and is_equal_approx(times[2], 0.4)):
 		return _fail("A large frame must retain staggered flight progress")
@@ -131,7 +136,7 @@ func _reset_restores_first_spawn() -> bool:
 	var repeated: WindFlight3D = event.get_node("Flights").get_children().back()
 	var same := repeated.item.collectible == first_item
 	same = same and repeated.global_position.is_equal_approx(first_start)
-	event.free()
+	_free_scene(event)
 	if not same:
 		return _fail("Match reset must restore the seeded first spawn")
 	return true
@@ -147,7 +152,7 @@ func _removed_item_does_not_stall() -> bool:
 		event.advance(0.1)
 	if event.is_active:
 		return _fail("Removing an item must not stall the wind phase")
-	event.free()
+	_free_scene(event)
 	return true
 
 
@@ -159,7 +164,7 @@ func _removed_flight_does_not_stall() -> bool:
 	for step in 120:
 		event.advance(0.1)
 	var completed := not event.is_active
-	event.free()
+	_free_scene(event)
 	if not completed:
 		return _fail("Removing a flight must release the wind phase")
 	return true
@@ -181,7 +186,7 @@ func _invalid_scene_is_skipped() -> bool:
 	event.start_round(1)
 	event.advance(2.0)
 	var spawned := event.get_node("Flights").get_child_count()
-	event.free()
+	_free_scene(event)
 	if spawned != 3:
 		return _fail("Invalid entries must not consume a group spawn")
 	return true
@@ -193,7 +198,7 @@ func _preview_includes_starting_webs() -> bool:
 	var webs := preview.get_node_or_null("WebMatch/StartingWebs")
 	if webs == null or webs.get_child_count() != 10:
 		return _fail("The wind preview must show the starting webs")
-	preview.free()
+	_free_scene(preview)
 	return true
 
 
@@ -208,7 +213,7 @@ func _audio_layers_work() -> bool:
 		return _fail("Map ambience and event gust players must exist")
 	var ambience_ok := _check_ambience(ambience)
 	var gust_ok := _check_gust(event)
-	map.free()
+	_free_scene(map)
 	return ambience_ok and gust_ok and _check_missing_gust()
 
 
@@ -271,8 +276,20 @@ func _check_missing_gust() -> bool:
 		silent_event.advance(0.1)
 	if silent_event.is_active:
 		return _fail("A missing gust stream must not stall the event")
-	silent_event.free()
+	_free_scene(silent_event)
 	return true
+
+
+func _free_scene(node: Node) -> void:
+	_stop_audio(node)
+	node.free()
+
+
+func _stop_audio(node: Node) -> void:
+	if node is AudioStreamPlayer:
+		node.stop()
+	for child in node.get_children():
+		_stop_audio(child)
 
 
 func _fail(message: String) -> bool:
