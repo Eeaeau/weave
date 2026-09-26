@@ -17,6 +17,11 @@ const EXPECTED_LEFT_LEG_ROOTS := {
 	"DEF_leg_mid_back_01.L": Vector3(-0.602005, 0.5, -0.366899),
 	"DEF_leg_back_01.L": Vector3(-0.486562, 0.5, -0.656935),
 }
+const GAMEPLAY_SPIDER_SCENES := [
+	"res://src/features/spiders/base_spider.tscn",
+	"res://src/features/spiders/player_spider.tscn",
+	"res://src/features/spiders/opponent_spider.tscn",
+]
 const IK_SPECS := [
 	[
 		"FrontLeft",
@@ -126,6 +131,8 @@ func _run() -> void:
 			or not _check_ik_setup(rig)
 			or not _check_base_spider()):
 		return
+	if not await _check_gameplay_spiders():
+		return
 	if not await _check_eye_tracking(rig):
 		return
 	if not await _check_ik_strokes(rig):
@@ -177,12 +184,38 @@ func _check_leg_roots(skeleton: Skeleton3D) -> bool:
 
 
 func _check_base_spider() -> bool:
-	var base_scene := load("res://src/features/spiders/base_spider.tscn") as PackedScene
-	var spider := base_scene.instantiate()
-	if spider.get_node_or_null("SpiderRig") == null:
-		return _fail("Base spider does not contain the armature wrapper")
-	spider.free()
+	for scene_path in GAMEPLAY_SPIDER_SCENES:
+		var scene := load(scene_path) as PackedScene
+		var spider := scene.instantiate()
+		if spider.get_node_or_null("SpiderRig") == null:
+			spider.free()
+			return _fail("Gameplay spider does not contain the armature wrapper")
+		if spider.get_node_or_null("Sprite3D") != null:
+			spider.free()
+			return _fail("Gameplay spider still contains the legacy placeholder sprite")
+		spider.free()
 	return true
+
+
+func _check_gameplay_spiders(scene_index: int = 0) -> bool:
+	if scene_index >= GAMEPLAY_SPIDER_SCENES.size():
+		return true
+	var scene := load(GAMEPLAY_SPIDER_SCENES[scene_index]) as PackedScene
+	var spider := scene.instantiate() as BaseSpider3D
+	root.add_child(spider)
+	await process_frame
+	var body := spider.get_node_or_null(
+		"SpiderRig/BoneAttachment3D/BodyOffset/Body"
+	) as Sprite3D
+	if body == null or not body.modulate.is_equal_approx(spider.body_color):
+		spider.queue_free()
+		return _fail(
+			"Gameplay spider color did not reach the armature body: "
+			+ GAMEPLAY_SPIDER_SCENES[scene_index]
+		)
+	spider.queue_free()
+	await process_frame
+	return await _check_gameplay_spiders(scene_index + 1)
 
 
 func _check_leg_strokes(rig: Node) -> bool:
