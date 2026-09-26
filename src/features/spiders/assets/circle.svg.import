@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ccsdepia2rl4"
 path.s3tc="res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.s3tc.ctex"
+path.etc2="res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://src/features/spiders/assets/circle.svg"
-dest_files=["res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.s3tc.ctex"]
+dest_files=["res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.s3tc.ctex", "res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.etc2.ctex"]
 
 [params]
 
