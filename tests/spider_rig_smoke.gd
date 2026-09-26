@@ -118,36 +118,40 @@ func _check_eye_tracking(rig: Node) -> bool:
 	var target := eyes.get_node_or_null("LookAtPos") as Marker3D
 	var left_eye := eyes.get_node_or_null("LeftEye") as Sprite3D
 	var right_eye := eyes.get_node_or_null("RightEye") as Sprite3D
-	if target == null or left_eye == null or right_eye == null:
+	var left_center := eyes.get_node_or_null("LeftEyeCenter") as Marker3D
+	var right_center := eyes.get_node_or_null("RightEyeCenter") as Marker3D
+	if (target == null or left_eye == null or right_eye == null
+			or left_center == null or right_center == null):
 		return _fail("Eye tracking requires two pupils and an animatable LookAtPos marker")
 	var radius_value: Variant = eyes.get("eye_radius")
 	if not radius_value is float or radius_value <= 0.0:
 		return _fail("Eye movement radius must be adjustable")
-	return await _check_eye_motion(target, left_eye, right_eye, radius_value)
+	return await _check_eye_motion(eyes, radius_value)
 
 
-func _check_eye_motion(
-		target: Marker3D,
-		left_eye: Sprite3D,
-		right_eye: Sprite3D,
-		eye_radius: float,
-) -> bool:
-	target.position = Vector3.ZERO
+func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
+	var target := eyes.get_node("LookAtPos") as Marker3D
+	var left_eye := eyes.get_node("LeftEye") as Sprite3D
+	var right_eye := eyes.get_node("RightEye") as Sprite3D
+	var left_center := eyes.get_node("LeftEyeCenter") as Marker3D
+	var right_center := eyes.get_node("RightEyeCenter") as Marker3D
+	eyes.set("influence", 0.0)
 	await process_frame
 	var left_neutral := left_eye.position
 	var right_neutral := right_eye.position
-	target.position = Vector3(10.0, 0.0, 0.0)
+	target.position = (left_center.position + right_center.position) * 0.5
+	eyes.set("influence", 1.0)
 	await process_frame
 	var left_offset := left_eye.position - left_neutral
 	var right_offset := right_eye.position - right_neutral
-	if not left_offset.is_equal_approx(right_offset):
-		return _fail("Both pupils must follow the same look direction")
-	if not is_equal_approx(left_offset.length(), eye_radius):
+	if left_offset.x <= 0.0 or right_offset.x >= 0.0:
+		return _fail("Pupils must converge toward a nearby centered target")
+	if (not is_equal_approx(left_offset.length(), eye_radius)
+			or not is_equal_approx(right_offset.length(), eye_radius)):
 		return _fail(
-			"Pupil movement must clamp to the configured radius (expected %.4f, got %.4f)"
-			% [eye_radius, left_offset.length()]
+			"Each pupil must clamp to the configured movement radius"
 		)
-	target.position = Vector3.ZERO
+	eyes.set("influence", 0.0)
 	await process_frame
 	if (not left_eye.position.is_equal_approx(left_neutral)
 			or not right_eye.position.is_equal_approx(right_neutral)):

@@ -7,23 +7,23 @@
 [ext_resource type="Texture2D" uid="uid://dq1q7xnd4lige" path="res://src/features/spiders/assets/body/spider_pupile1.png" id="4_v4ffn"]
 [ext_resource type="Texture2D" uid="uid://dxmuc6viet353" path="res://src/features/spiders/assets/body/spider_pupile2.png" id="5_6mje3"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hjatl"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6mje3"]
 transparency = 1
 cull_mode = 2
 shading_mode = 0
 vertex_color_use_as_albedo = true
 albedo_color = Color(0.09019608, 0.07450981, 0.07450981, 1)
 
-[sub_resource type="ImmediateMesh" id="ImmediateMesh_v4ffn"]
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_abrnf"]
 
 [node name="SpiderRig" type="Node3D" unique_id=1588032234]
 
 [node name="ImportedRig" parent="." unique_id=1157697690 instance=ExtResource("1_rig")]
 
 [node name="LegStrokes" type="MeshInstance3D" parent="." unique_id=1763659197]
-material_override = SubResource("StandardMaterial3D_hjatl")
+material_override = SubResource("StandardMaterial3D_6mje3")
 cast_shadow = 0
-mesh = SubResource("ImmediateMesh_v4ffn")
+mesh = SubResource("ImmediateMesh_abrnf")
 script = ExtResource("2_strokes")
 
 [node name="FootTargets" type="Node3D" parent="." unique_id=775124396]
@@ -62,11 +62,15 @@ gizmo_extents = 0.12
 
 [node name="BoneAttachment3D" type="BoneAttachment3D" parent="." unique_id=1951212813]
 
-[node name="BodyOffset" type="Node3D" parent="BoneAttachment3D" unique_id=786587160 node_paths=PackedStringArray("left_eye", "right_eye", "look_at_pos")]
+[node name="BodyOffset" type="Node3D" parent="BoneAttachment3D" unique_id=786587160 node_paths=PackedStringArray("left_eye", "right_eye", "look_at_pos", "left_eye_center", "right_eye_center")]
 script = ExtResource("3_6mje3")
 left_eye = NodePath("LeftEye")
 right_eye = NodePath("RightEye")
 look_at_pos = NodePath("LookAtPos")
+left_eye_center = NodePath("LeftEyeCenter")
+right_eye_center = NodePath("RightEyeCenter")
+eye_radius = 0.16
+influence = 0.3
 
 [node name="Body" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=301050122]
 transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.1609689, 0.40651894, -0.24795955)
@@ -80,5 +84,14 @@ texture = ExtResource("4_v4ffn")
 transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.22503239, 0.5124047, -0.3552975)
 texture = ExtResource("5_6mje3")
 
+[node name="LeftEyeCenter" type="Marker3D" parent="BoneAttachment3D/BodyOffset"]
+position = Vector3(-0.512, 0, -0.761)
+gizmo_extents = 0.07
+
+[node name="RightEyeCenter" type="Marker3D" parent="BoneAttachment3D/BodyOffset"]
+position = Vector3(0.744, 0, -0.761)
+gizmo_extents = 0.07
+
 [node name="LookAtPos" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=805047784]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.048672587, 0, -2.9079037)
 gizmo_extents = 0.1
