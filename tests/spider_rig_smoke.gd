@@ -113,6 +113,8 @@ func _check_eye_tracking(rig: Node) -> bool:
 	var eyes := rig.get_node_or_null("BoneAttachment3D/BodyOffset") as Node3D
 	if eyes == null or eyes.get_script() == null:
 		return _fail("Spider body must have a valid eye-tracking script")
+	if not eyes.get_script().is_tool():
+		return _fail("Spider eyes must preview while editing the scene")
 	var target := eyes.get_node_or_null("LookAtPos") as Marker3D
 	var left_eye := eyes.get_node_or_null("LeftEye") as Sprite3D
 	var right_eye := eyes.get_node_or_null("RightEye") as Sprite3D
@@ -130,6 +132,8 @@ func _check_eye_motion(
 		right_eye: Sprite3D,
 		eye_radius: float,
 ) -> bool:
+	target.position = Vector3.ZERO
+	await process_frame
 	var left_neutral := left_eye.position
 	var right_neutral := right_eye.position
 	target.position = Vector3(10.0, 0.0, 0.0)
@@ -139,7 +143,10 @@ func _check_eye_motion(
 	if not left_offset.is_equal_approx(right_offset):
 		return _fail("Both pupils must follow the same look direction")
 	if not is_equal_approx(left_offset.length(), eye_radius):
-		return _fail("Pupil movement must clamp to the configured radius")
+		return _fail(
+			"Pupil movement must clamp to the configured radius (expected %.4f, got %.4f)"
+			% [eye_radius, left_offset.length()]
+		)
 	target.position = Vector3.ZERO
 	await process_frame
 	if (not left_eye.position.is_equal_approx(left_neutral)
