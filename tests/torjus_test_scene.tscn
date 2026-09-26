@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://bqoj2nihvg7hd"]
+
+[ext_resource type="PackedScene" uid="uid://baf408x8r2h8j" path="res://src/features/spiders/player_spider.tscn" id="1_6rc11"]
+[ext_resource type="PackedScene" uid="uid://dkeimb46pht1e" path="res://src/features/ui/match_hud.tscn" id="2_jxtdx"]
+[ext_resource type="PackedScene" uid="uid://ca8cqbxxkmgnw" path="res://src/features/systems/team.tscn" id="3_68q8q"]
+[ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="3_x3kcl"]
+
+[node name="TorjusTestScene" type="Node3D" unique_id=1972552716]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1837678052]
+transform = Transform3D(1, 0, 0, 0, 0.3941756, 0.91903514, 0, -0.91903514, 0.3941756, 0.08541453, 2.559826, 1.2526708)
+
+[node name="MatchHud" parent="." unique_id=1154433575 instance=ExtResource("2_jxtdx")]
+
+[node name="MatchManager" type="Node" parent="." unique_id=1506693532 node_paths=PackedStringArray("teams", "match_hud")]
+script = ExtResource("3_x3kcl")
+teams = [NodePath("../TeamA"), NodePath("../TeamB")]
+match_hud = NodePath("../MatchHud")
+n_spiders_per_team = 2
+movement_per_turn = 2.0
+metadata/_custom_type_script = "uid://vjxl4iy367xq"
+
+[node name="TeamA" parent="." unique_id=1437638294 instance=ExtResource("3_68q8q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.96625924, -2.3841858e-07, -0.6495352)
+spider_scene = ExtResource("1_6rc11")
+
+[node name="TeamB" parent="." unique_id=1935928191 instance=ExtResource("3_68q8q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.66284835, 0, 0.36684728)
+spider_scene = ExtResource("1_6rc11")

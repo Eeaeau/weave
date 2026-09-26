@@ -1,78 +1,88 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3 uid="uid://bb7vd5vu3vj05"]
 
-[ext_resource type="Script" path="res://src/game/web_match.gd" id="1"]
+[ext_resource type="Script" uid="uid://dfm7bd8aacsp0" path="res://src/game/web_match.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/branch_canopy.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://src/features/spiders/player_spider.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://src/features/spiders/opponent_spider.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://baf408x8r2h8j" path="res://src/features/spiders/player_spider.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://src/features/web/web_strand.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://src/features/collectibles/weapons/windborne_weapon.tscn" id="6"]
 [ext_resource type="Resource" path="res://src/features/collectibles/weapons/pebble.tres" id="7"]
-[ext_resource type="PackedScene" path="res://src/features/ui/match_hud.tscn" id="8"]
+[ext_resource type="PackedScene" uid="uid://dkeimb46pht1e" path="res://src/features/ui/match_hud.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://src/features/ui/pause_menu.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://src/features/collectibles/insects/windborne_insect.tscn" id="10"]
 [ext_resource type="Resource" path="res://src/features/collectibles/insects/silk_moth.tres" id="11"]
+[ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="11_m5no2"]
+[ext_resource type="PackedScene" uid="uid://ca8cqbxxkmgnw" path="res://src/features/systems/team.tscn" id="11_pd16p"]
 
-[node name="WebMatch" type="Node3D"]
+[node name="WebMatch" type="Node3D" unique_id=1817038654]
 script = ExtResource("1")
 
-[node name="BranchCanopy" parent="." instance=ExtResource("2")]
+[node name="BranchCanopy" parent="." unique_id=2083914664 instance=ExtResource("2")]
 
-[node name="StartingWebs" type="Node3D" parent="."]
+[node name="StartingWebs" type="Node3D" parent="." unique_id=2029822293]
 
-[node name="PlayerRadialA" parent="StartingWebs" instance=ExtResource("5")]
+[node name="PlayerRadialA" parent="StartingWebs" unique_id=1021636659 instance=ExtResource("5")]
 endpoint_a = Vector3(-5, 0.1, 0)
 endpoint_b = Vector3(-3.5, 0.1, -1.3)
 
-[node name="PlayerRadialB" parent="StartingWebs" instance=ExtResource("5")]
+[node name="PlayerRadialB" parent="StartingWebs" unique_id=806572919 instance=ExtResource("5")]
 endpoint_a = Vector3(-5, 0.1, 0)
 endpoint_b = Vector3(-3, 0.1, 0)
 
-[node name="PlayerRadialC" parent="StartingWebs" instance=ExtResource("5")]
+[node name="PlayerRadialC" parent="StartingWebs" unique_id=590166805 instance=ExtResource("5")]
 endpoint_a = Vector3(-5, 0.1, 0)
 endpoint_b = Vector3(-3.3, 0.1, 1.3)
 
-[node name="PlayerCrossA" parent="StartingWebs" instance=ExtResource("5")]
+[node name="PlayerCrossA" parent="StartingWebs" unique_id=1533473181 instance=ExtResource("5")]
 endpoint_a = Vector3(-3.5, 0.1, -1.3)
 endpoint_b = Vector3(-3, 0.1, 0)
 
-[node name="PlayerCrossB" parent="StartingWebs" instance=ExtResource("5")]
+[node name="PlayerCrossB" parent="StartingWebs" unique_id=1839971892 instance=ExtResource("5")]
 endpoint_a = Vector3(-3, 0.1, 0)
 endpoint_b = Vector3(-3.3, 0.1, 1.3)
 
-[node name="OpponentRadialA" parent="StartingWebs" instance=ExtResource("5")]
+[node name="OpponentRadialA" parent="StartingWebs" unique_id=250196557 instance=ExtResource("5")]
 endpoint_a = Vector3(5, 0.1, 0)
 endpoint_b = Vector3(3.5, 0.1, -1.3)
 
-[node name="OpponentRadialB" parent="StartingWebs" instance=ExtResource("5")]
+[node name="OpponentRadialB" parent="StartingWebs" unique_id=1564121818 instance=ExtResource("5")]
 endpoint_a = Vector3(5, 0.1, 0)
 endpoint_b = Vector3(3, 0.1, 0)
 
-[node name="OpponentRadialC" parent="StartingWebs" instance=ExtResource("5")]
+[node name="OpponentRadialC" parent="StartingWebs" unique_id=1777431105 instance=ExtResource("5")]
 endpoint_a = Vector3(5, 0.1, 0)
 endpoint_b = Vector3(3.3, 0.1, 1.3)
 
-[node name="OpponentCrossA" parent="StartingWebs" instance=ExtResource("5")]
+[node name="OpponentCrossA" parent="StartingWebs" unique_id=1222056175 instance=ExtResource("5")]
 endpoint_a = Vector3(3.5, 0.1, -1.3)
 endpoint_b = Vector3(3, 0.1, 0)
 
-[node name="OpponentCrossB" parent="StartingWebs" instance=ExtResource("5")]
+[node name="OpponentCrossB" parent="StartingWebs" unique_id=626282593 instance=ExtResource("5")]
 endpoint_a = Vector3(3, 0.1, 0)
 endpoint_b = Vector3(3.3, 0.1, 1.3)
 
-[node name="PlayerSpider" parent="." instance=ExtResource("3")]
-position = Vector3(-5, 0.15, 0)
-
-[node name="OpponentSpider" parent="." instance=ExtResource("4")]
-position = Vector3(5, 0.15, 0)
-
-[node name="WindbornePebble" parent="." instance=ExtResource("6")]
-position = Vector3(-1.5, 0.8, -2)
+[node name="WindbornePebble" parent="." unique_id=1505872068 instance=ExtResource("6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.8, -2)
 collectible = ExtResource("7")
 
-[node name="WindborneMoth" parent="." instance=ExtResource("10")]
-position = Vector3(1.5, 0.9, -3)
+[node name="WindborneMoth" parent="." unique_id=214741206 instance=ExtResource("10")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.9, -3)
 collectible = ExtResource("11")
 
-[node name="MatchHud" parent="." instance=ExtResource("8")]
+[node name="MatchHud" parent="." unique_id=1199369611 instance=ExtResource("8")]
 
-[node name="PauseMenu" parent="." instance=ExtResource("9")]
+[node name="PauseMenu" parent="." unique_id=2111747350 instance=ExtResource("9")]
+
+[node name="MatchManager" type="Node" parent="." unique_id=819919269 node_paths=PackedStringArray("teams", "match_hud")]
+script = ExtResource("11_m5no2")
+teams = [NodePath("../TeamA"), NodePath("../TeamB")]
+match_hud = NodePath("../MatchHud")
+n_spiders_per_team = 2
+metadata/_custom_type_script = "uid://vjxl4iy367xq"
+
+[node name="TeamA" parent="." unique_id=1437638294 instance=ExtResource("11_pd16p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.593088, -4.7683716e-07, 0.62834454)
+spider_scene = ExtResource("3")
+
+[node name="TeamB" parent="." unique_id=1203086720 instance=ExtResource("11_pd16p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1016297, -4.7683716e-07, 0.14235687)
+spider_scene = ExtResource("3")

@@ -3,19 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ge0nla7e2i62"
-path="res://.godot/imported/branch.svg-874b4d2937fde3608f38869c8e073bff.ctex"
+path.s3tc="res://.godot/imported/branch.svg-874b4d2937fde3608f38869c8e073bff.s3tc.ctex"
+path.etc2="res://.godot/imported/branch.svg-874b4d2937fde3608f38869c8e073bff.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://src/features/world/maps/branch_canopy/assets/branch.svg"
-dest_files=["res://.godot/imported/branch.svg-874b4d2937fde3608f38869c8e073bff.ctex"]
+dest_files=["res://.godot/imported/branch.svg-874b4d2937fde3608f38869c8e073bff.s3tc.ctex", "res://.godot/imported/branch.svg-874b4d2937fde3608f38869c8e073bff.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -19,7 +19,7 @@ func _run() -> void:
 		_fail("Match root is not 3D")
 		return
 	var map_ok: bool = await _check_map(match_scene)
-	if not (_check_spiders(match_scene) and map_ok
+	if not (map_ok
 			and _check_webs(match_scene) and _check_collectibles(match_scene)
 			and _check_sprite_visuals(match_scene) and _check_audio()):
 		return
@@ -27,14 +27,6 @@ func _run() -> void:
 	await process_frame
 	print("SMOKE PASS: sprites, camera, spiders, webs, collectibles, and audio slots")
 	quit(0)
-
-
-func _check_spiders(match_scene: Node3D) -> bool:
-	var player: PlayerSpider3D = match_scene.get_node("PlayerSpider")
-	var opponent: OpponentSpider3D = match_scene.get_node("OpponentSpider")
-	if not player is BaseSpider3D or not opponent is BaseSpider3D:
-		return _fail("Spider scene inheritance is broken")
-	return true
 
 
 func _check_map(match_scene: Node3D) -> bool:

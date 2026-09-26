@@ -1,18 +1,49 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dkeimb46pht1e"]
 
-[ext_resource type="Script" path="res://src/features/ui/match_hud.gd" id="1"]
+[ext_resource type="Script" uid="uid://bsu5gpwe4x7n8" path="res://src/features/ui/match_hud.gd" id="1"]
 
-[node name="MatchHud" type="CanvasLayer"]
+[node name="MatchHud" type="CanvasLayer" unique_id=1154433575]
 script = ExtResource("1")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=477415005]
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 460.0
 offset_bottom = 125.0
 
-[node name="Panel" type="PanelContainer" parent="Margin"]
+[node name="Panel" type="PanelContainer" parent="Margin" unique_id=2088223683]
 layout_mode = 2
 
-[node name="Status" type="Label" parent="Margin/Panel"]
+[node name="Status" type="Label" parent="Margin/Panel" unique_id=1792860261]
 layout_mode = 2
+
+[node name="LowerLeftPanel" type="Panel" parent="." unique_id=751979801]
+offset_left = 10.0
+offset_top = 615.0
+offset_right = 305.0
+offset_bottom = 699.0
+
+[node name="EnergyBar" type="ProgressBar" parent="LowerLeftPanel" unique_id=1586190303]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 42.0
+offset_right = 275.0
+offset_bottom = 69.0
+max_value = 1.0
+show_percentage = false
+
+[node name="TeamLabel" type="Label" parent="LowerLeftPanel" unique_id=264985052]
+layout_mode = 0
+offset_left = 216.0
+offset_top = 12.0
+offset_right = 269.0
+offset_bottom = 35.0
+text = "Team A"
+
+[node name="EnergyLabel" type="Label" parent="LowerLeftPanel" unique_id=1425132707]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 12.0
+offset_right = 74.0
+offset_bottom = 35.0
+text = "Energy"

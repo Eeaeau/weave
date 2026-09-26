@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://chk164cpwdd50"]
+
+[ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="1_g602s"]
+
+[node name="MatchManager" type="Node" unique_id=940578904]
+script = ExtResource("1_g602s")
+is_active = null
+movement_per_turn = null

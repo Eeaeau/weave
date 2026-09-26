@@ -2,9 +2,9 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://x2neo2nate03"
-path.s3tc="res://.godot/imported/spider.svg-1c26f0be4263a9c5c41672cec2088a56.s3tc.ctex"
-path.etc2="res://.godot/imported/spider.svg-1c26f0be4263a9c5c41672cec2088a56.etc2.ctex"
+uid="uid://ccsdepia2rl4"
+path.s3tc="res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.s3tc.ctex"
+path.etc2="res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.etc2.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://src/features/spiders/assets/spider.svg"
-dest_files=["res://.godot/imported/spider.svg-1c26f0be4263a9c5c41672cec2088a56.s3tc.ctex", "res://.godot/imported/spider.svg-1c26f0be4263a9c5c41672cec2088a56.etc2.ctex"]
+source_file="res://src/features/spiders/assets/circle.svg"
+dest_files=["res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.s3tc.ctex", "res://.godot/imported/circle.svg-2b9e932bb25058e11a9f0267166e9e59.etc2.ctex"]
 
 [params]
 
