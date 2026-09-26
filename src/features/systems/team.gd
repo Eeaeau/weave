@@ -18,10 +18,11 @@ func _process(delta: float) -> void:
 	if not active_spider:
 		return
 	if active_spider.is_done():
-		active_spider.is_active = false
+		active_spider.deactivate()
 		active_spider_idx += 1
-	else:
-		active_spider.is_active = true
+		active_spider = get_active_spider()
+		if active_spider:
+			active_spider.activate()
 
 
 func spawn_spiders(number: int) -> void:
@@ -31,6 +32,7 @@ func spawn_spiders(number: int) -> void:
 		instance.position = spawn_position
 		add_child(instance)
 		spiders.append(instance)
+		instance.deactivate()
 		spawn_position += spawn_offset
 
 

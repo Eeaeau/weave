@@ -7,20 +7,22 @@
 
 [node name="PlayerSpider" unique_id=257841478 instance=ExtResource("1")]
 script = ExtResource("2")
-is_active = true
-speed = 2
-n_remaining_actions = 0
+is_active = null
+speed = null
+n_remaining_actions = null
 team_name = "Player"
 body_color = Color(0.48, 0.91, 0.69, 1)
 
 [node name="Sprite3D" parent="." index="0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3867036, 0)
 
-[node name="AimingArrow" type="Sprite3D" parent="." index="1" unique_id=367122176]
-transform = Transform3D(1, 0, 0, 0, -4.371141e-08, 1.0000005, 0, -1.0000005, -4.371141e-08, 0.6987769, 0, 0.024347067)
-visible = false
-texture = ExtResource("3_uju3x")
-
-[node name="SelectedIndicator" type="Sprite3D" parent="." index="2" unique_id=593006096]
+[node name="SelectedIndicator" type="Sprite3D" parent="." index="1" unique_id=593006096]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1.0000002, 0, -1.0000002, -4.37114e-08, 0, -0.00037801266, 0)
 texture = ExtResource("3_gntsc")
+
+[node name="AimingArrow" type="Node3D" parent="." index="2" unique_id=33312656]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36917466, 0, 0.0024330616)
+
+[node name="TheAimingArrow" type="Sprite3D" parent="AimingArrow" index="0" unique_id=367122176]
+transform = Transform3D(1, 0, 0, 0, -4.371141e-08, 1.0000005, 0, -1.0000005, -4.371141e-08, 0.2735563, 0, 0.00019228458)
+texture = ExtResource("3_uju3x")
