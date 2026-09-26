@@ -190,6 +190,7 @@ def main() -> int:
         ("resource_smoke", "RESOURCE PASS:"),
         ("smoke", "SMOKE PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
+        ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),

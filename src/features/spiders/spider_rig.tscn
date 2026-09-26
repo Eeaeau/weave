@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://ds762u7onoc57" path="res://src/features/spiders/assets/spider_rig.blend" id="1_rig"]
 [ext_resource type="Script" uid="uid://dt5g3hfdicxts" path="res://src/features/spiders/spider_leg_stroke_3d.gd" id="2_strokes"]
 [ext_resource type="Script" uid="uid://7mv2mpgfki4d" path="res://src/features/spiders/scripts/spider_eyes.gd" id="3_6mje3"]
+[ext_resource type="Script" path="res://src/features/spiders/spider_leg_controller_3d.gd" id="6_gait"]
 [ext_resource type="Texture2D" uid="uid://b1mvhdg4qhbur" path="res://src/features/spiders/assets/body/spider_body.png" id="3_xagw3"]
 [ext_resource type="Texture2D" uid="uid://dq1q7xnd4lige" path="res://src/features/spiders/assets/body/spider_pupile1.png" id="4_v4ffn"]
 [ext_resource type="Texture2D" uid="uid://dxmuc6viet353" path="res://src/features/spiders/assets/body/spider_pupile2.png" id="5_6mje3"]
@@ -55,6 +56,9 @@ _data = {
 }
 
 [node name="SpiderRig" type="Node3D" unique_id=1588032234]
+
+[node name="LegController" type="Node3D" parent="."]
+script = ExtResource("6_gait")
 
 [node name="ImportedRig" parent="." unique_id=1157697690 instance=ExtResource("1_rig")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8090404, 0)
