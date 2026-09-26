@@ -1,5 +1,8 @@
 class_name MatchManager extends Node
 
+signal team_changed(previous_team, new_team)
+signal new_round_started
+
 @export var teams: Array[Team]
 @export var match_hud: MatchHud
 @export var n_spiders_per_team: int = 1
@@ -22,17 +25,22 @@ func _process(delta: float) -> void:
 	if active_team.turn_is_done():
 		var next_team_idx: int = (active_team_idx + 1) % len(teams)
 		active_team = give_turn_to(next_team_idx)
+		if active_team_idx == 0:
+			new_round_started.emit()
 
 	var active_spider: PlayerSpider3D = active_team.get_active_spider()
 	if active_spider:
 		match_hud.update_energy(active_spider.remaining_movement / movement_per_turn)
+		match_hud.update_actions_remaining(active_spider.n_remaining_actions)
 
 
 func give_turn_to(team_idx: int) -> Team:
+	var previous_team_idx = active_team_idx
 	teams[active_team_idx].end_turn()
 	assert(team_idx < len(teams))
 	active_team_idx = team_idx
 	teams[active_team_idx].start_turn(movement_per_turn)
 	var active_team: Team = teams[active_team_idx]
 	match_hud.update_team_label(active_team.name)
+	team_changed.emit(previous_team_idx, active_team_idx)
 	return active_team

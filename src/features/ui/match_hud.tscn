@@ -19,31 +19,39 @@ layout_mode = 2
 
 [node name="LowerLeftPanel" type="Panel" parent="." unique_id=751979801]
 offset_left = 10.0
-offset_top = 615.0
+offset_top = 568.0
 offset_right = 305.0
 offset_bottom = 699.0
 
+[node name="ActionsRemainingLabel" type="Label" parent="LowerLeftPanel" unique_id=1403894836]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 54.0
+offset_right = 178.0
+offset_bottom = 77.0
+text = "Actions remaining: 0"
+
 [node name="EnergyBar" type="ProgressBar" parent="LowerLeftPanel" unique_id=1586190303]
 layout_mode = 0
-offset_left = 18.0
-offset_top = 42.0
-offset_right = 275.0
-offset_bottom = 69.0
+offset_left = 98.0
+offset_top = 87.0
+offset_right = 276.0
+offset_bottom = 114.0
 max_value = 1.0
 show_percentage = false
 
 [node name="TeamLabel" type="Label" parent="LowerLeftPanel" unique_id=264985052]
 layout_mode = 0
-offset_left = 216.0
-offset_top = 12.0
-offset_right = 269.0
-offset_bottom = 35.0
+offset_left = 227.0
+offset_top = 9.0
+offset_right = 285.0
+offset_bottom = 32.0
 text = "Team A"
 
 [node name="EnergyLabel" type="Label" parent="LowerLeftPanel" unique_id=1425132707]
 layout_mode = 0
-offset_left = 21.0
-offset_top = 12.0
-offset_right = 74.0
-offset_bottom = 35.0
+offset_left = 20.0
+offset_top = 86.0
+offset_right = 73.0
+offset_bottom = 109.0
 text = "Energy"

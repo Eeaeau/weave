@@ -17,11 +17,12 @@ func _process(delta: float) -> void:
 	var active_spider: PlayerSpider3D = get_active_spider()
 	if not active_spider:
 		return
-	if active_spider.remaining_movement <= 0:
-		active_spider.is_active = false
+	if active_spider.is_done():
+		active_spider.deactivate()
 		active_spider_idx += 1
-	else:
-		active_spider.is_active = true
+		active_spider = get_active_spider()
+		if active_spider:
+			active_spider.activate()
 
 
 func spawn_spiders(number: int) -> void:
@@ -31,6 +32,7 @@ func spawn_spiders(number: int) -> void:
 		instance.position = spawn_position
 		add_child(instance)
 		spiders.append(instance)
+		instance.deactivate()
 		spawn_position += spawn_offset
 
 
@@ -49,6 +51,7 @@ func start_turn(energy_budget_per_spider: float) -> void:
 	for spider in spiders:
 		spider.is_active = false
 		spider.remaining_movement = energy_budget_per_spider
+		spider.n_remaining_actions = 1
 	active_spider_idx = 0
 	if len(spiders) > 0:
 		spiders[active_spider_idx].is_active = true
