@@ -1,6 +1,7 @@
 extends SceneTree
 ## Verify the Blender-authored rig is wrapped with external foot targets.
 
+const RIG_SCENE := preload("res://src/features/spiders/spider_rig.tscn")
 const EXPECTED_FOOT_TARGETS := [
 	"FootBackLeft",
 	"FootBackRight",
@@ -119,7 +120,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var wrapper := load("res://src/features/spiders/spider_rig.tscn") as PackedScene
+	var wrapper := RIG_SCENE
 	if wrapper == null:
 		_fail("Spider rig wrapper did not load")
 		return
@@ -399,7 +400,35 @@ func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
 	if (not left_eye.position.is_equal_approx(left_neutral)
 			or not right_eye.position.is_equal_approx(right_neutral)):
 		return _fail("Pupils must return to their neutral positions")
+	return await _check_eye_desync()
+
+
+func _check_eye_desync() -> bool:
+	var first := RIG_SCENE.instantiate()
+	var second := RIG_SCENE.instantiate()
+	root.add_child(first)
+	root.add_child(second)
+	await process_frame
+	var first_phase := _eye_player(first).current_animation_position
+	var second_phase := _eye_player(second).current_animation_position
+	var phase_gap := absf(first_phase - second_phase)
+	first.free()
+	second.free()
+	if phase_gap < 0.001:
+		return _fail("Separate spiders must not start the eye loop in sync")
+	var fixed := RIG_SCENE.instantiate()
+	fixed.get_node("BoneAttachment3D/BodyOffset").set("randomize_idle_phase", false)
+	root.add_child(fixed)
+	await process_frame
+	var fixed_phase := _eye_player(fixed).current_animation_position
+	fixed.free()
+	if fixed_phase > 0.1:
+		return _fail("Disabling the idle offset must start the loop at the beginning")
 	return true
+
+
+func _eye_player(rig: Node) -> AnimationPlayer:
+	return rig.get_node("BoneAttachment3D/BodyOffset/AnimationPlayer") as AnimationPlayer
 
 
 func _check_ik_strokes(rig: Node) -> bool:
