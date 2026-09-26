@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" uid="uid://ds762u7onoc57" path="res://src/features/spiders/assets/spider_rig.blend" id="1_rig"]
+
+[node name="SpiderRig" type="Node3D"]
+
+[node name="ImportedRig" parent="." instance=ExtResource("1_rig")]
+
+[node name="FootTargets" type="Node3D" parent="."]
+
+[node name="FootBackLeft" type="Marker3D" parent="FootTargets"]
+position = Vector3(-1.394384, 0.5, -1.980057)
+gizmo_extents = 0.12
+
+[node name="FootBackRight" type="Marker3D" parent="FootTargets"]
+position = Vector3(1.394384, 0.5, -1.980057)
+gizmo_extents = 0.12
+
+[node name="FootFrontLeft" type="Marker3D" parent="FootTargets"]
+position = Vector3(-0.928994, 0.500027, 2.503755)
+gizmo_extents = 0.12
+
+[node name="FootFrontRight" type="Marker3D" parent="FootTargets"]
+position = Vector3(0.928994, 0.500027, 2.503755)
+gizmo_extents = 0.12
+
+[node name="FootMidBackLeft" type="Marker3D" parent="FootTargets"]
+position = Vector3(-2.348166, 0.5, -1.361902)
+gizmo_extents = 0.12
+
+[node name="FootMidBackRight" type="Marker3D" parent="FootTargets"]
+position = Vector3(2.348166, 0.5, -1.361902)
+gizmo_extents = 0.12
+
+[node name="FootMidFrontLeft" type="Marker3D" parent="FootTargets"]
+position = Vector3(-2.333005, 0.5, 1.274444)
+gizmo_extents = 0.12
+
+[node name="FootMidFrontRight" type="Marker3D" parent="FootTargets"]
+position = Vector3(2.333005, 0.5, 1.274444)
+gizmo_extents = 0.12
