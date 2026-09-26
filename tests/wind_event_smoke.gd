@@ -18,7 +18,7 @@ func _run() -> void:
 		quit(1)
 		return
 	# Godot's audio mixer releases stopped MP3 playback after its next buffer cycle.
-	await create_timer(0.2).timeout
+	await create_timer(0.5).timeout
 	print("WIND EVENT PASS: staggered group, contact handoff, and lifecycle")
 	quit(0)
 
@@ -197,11 +197,15 @@ func _invalid_scene_is_skipped() -> bool:
 
 func _preview_includes_starting_webs() -> bool:
 	var preview: Node3D = load("res://src/features/wind/wind_preview.tscn").instantiate()
+	var preview_event: WindEvent3D = preview.get_node("WebMatch/BranchCanopy/WindEvent")
+	preview_event.get_node("Gust").stream = null
+	var ambience: Node = preview.get_node("WebMatch/BranchCanopy/CanopyAmbience")
+	for player_name in ["ForestA", "ForestB", "SoftWind"]:
+		ambience.get_node(player_name).stream = null
 	root.add_child(preview)
 	var webs := preview.get_node_or_null("WebMatch/StartingWebs")
 	if webs == null or webs.get_child_count() != 10:
 		return _fail("The wind preview must show the starting webs")
-	var preview_event: WindEvent3D = preview.get_node("WebMatch/BranchCanopy/WindEvent")
 	if not preview_event.show_debug_contact_markers:
 		return _fail("The wind preview must show contact markers by default")
 	_free_scene(preview)

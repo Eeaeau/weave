@@ -192,6 +192,7 @@ def main() -> int:
         ("menu_smoke", "MENU PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),
+        ("wind_match_smoke", "WIND MATCH PASS:"),
         ("wind_event_smoke", "WIND EVENT PASS:"),
     ):
         run(

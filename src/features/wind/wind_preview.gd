@@ -15,4 +15,3 @@ func _ready() -> void:
 			item.collectible.display_name, side, local_point]))
 	event.event_finished.connect(func(round_number: int) -> void:
 		print("WIND FINISHED: round=%d" % round_number))
-	event.start_round(1)
