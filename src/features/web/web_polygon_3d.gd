@@ -1,38 +1,76 @@
+@tool
+class_name WebPolygon3D
 extends Node3D
 
-class_name WebPolygon3D
-
-@export var points: Array[Vector3] = []
-
+@export var points: Array[Vector3] = []:
+	set(value):
+		points = value
+		if is_inside_tree():
+			draw()
 @export_range(1, 30)
-var rings: int = 8
-
+var rings: int = 8:
+	set(value):
+		rings = value
+		if is_inside_tree():
+			draw()
 @export_range(2, 20)
-var curve_segments: int = 8
-
+var curve_segments: int = 8:
+	set(value):
+		curve_segments = value
+		if is_inside_tree():
+			draw()
 @export_range(0.0001, 0.01)
-var web_width: float = 0.0025
-
+var web_width: float = 0.0025:
+	set(value):
+		web_width = value
+		if is_inside_tree():
+			draw()
 @export_range(0.0, 1.0)
-var ring_curvature: float = 0.25
-
+var ring_curvature: float = 0.25:
+	set(value):
+		ring_curvature = value
+		if is_inside_tree():
+			draw()
 @export_range(0.0, 1.0)
-var outer_curvature: float = 0.15
+var outer_curvature: float = 0.15:
+	set(value):
+		outer_curvature = value
+		if is_inside_tree():
+			draw()
+@export var line_color := Color.WHITE:
+	set(value):
+		line_color = value
+		if is_inside_tree():
+			draw()
+@export var filled := true:
+	set(value):
+		filled = value
+		if is_inside_tree():
+			draw()
 
-@export var line_color := Color.WHITE
-
-var mesh_instance: MeshInstance3D
+var mesh_container: Node3D
 
 
 func _ready() -> void:
-	mesh_instance = MeshInstance3D.new()
-	add_child(mesh_instance)
-
-	draw()
+	if Engine.is_editor_hint():
+		call_deferred("draw")
+	else:
+		draw()
 
 
 func draw() -> void:
-	if points.size() < 3:
+	if not is_inside_tree():
+		return
+
+	# Don't let the editor continuously create geometry.
+	if mesh_container:
+		mesh_container.queue_free()
+
+	mesh_container = Node3D.new()
+	mesh_container.name = "GeneratedWeb"
+	add_child(mesh_container)
+
+	if points.size() < 2:
 		return
 
 	var center := Vector3.ZERO
@@ -64,11 +102,15 @@ func draw() -> void:
 			material
 		)
 
+	if not filled:
+		return
+
 	# -------------------------------------------------
 	# Inner rings
 	# -------------------------------------------------
 
 	for ring in range(1, rings + 1):
+
 		var t := float(ring) / float(rings + 1)
 
 		var ring_points: Array[Vector3] = []
@@ -77,6 +119,7 @@ func draw() -> void:
 			ring_points.append(point.lerp(center, t))
 
 		for i in range(ring_points.size()):
+
 			var a := ring_points[i]
 			var b := ring_points[(i + 1) % ring_points.size()]
 
@@ -150,23 +193,22 @@ func add_cylinder_between(
 	cylinder.top_radius = web_width
 	cylinder.bottom_radius = web_width
 	cylinder.height = length
-
 	cylinder.radial_segments = 6
 	cylinder.rings = 1
 
 	var instance := MeshInstance3D.new()
+
 	instance.mesh = cylinder
 	instance.material_override = material
 
-	add_child(instance)
-
-	# CylinderMesh is aligned along Y.
+	# Put the cylinder halfway between the endpoints.
 	instance.position = (a + b) * 0.5
-	instance.look_at(
-		instance.position + direction,
-		Vector3.UP
+
+	# CylinderMesh points along local +Y.
+	# Rotate +Y so that it follows the segment.
+	instance.quaternion = Quaternion(
+		Vector3.UP,
+		direction.normalized()
 	)
 
-	# look_at() points -Z toward the target, whereas the cylinder
-	# extends along Y, so rotate Y onto the segment direction.
-	instance.rotation += Vector3(PI / 2.0, 0.0, 0.0)
+	mesh_container.add_child(instance)
