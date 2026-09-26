@@ -4,5 +4,3 @@
 
 [node name="MatchManager" type="Node" unique_id=940578904]
 script = ExtResource("1_g602s")
-is_active = null
-movement_per_turn = null
