@@ -1,2 +1,3 @@
 [rules]
 "quality/max-branches" = "off"
+"quality/max-function-length" = "off"
