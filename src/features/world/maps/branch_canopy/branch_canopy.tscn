@@ -1,98 +1,139 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene format=3 uid="uid://cjr2bhdata12b"]
 
-[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
-[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/parallax_camera.gd" id="2"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/branch.svg" id="3"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/canopy.svg" id="4"]
+[ext_resource type="Script" uid="uid://c7qoxha3sjtqr" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
+[ext_resource type="Script" uid="uid://brhk4mdjy55q6" path="res://src/features/world/maps/branch_canopy/parallax_camera.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://b2mkwsmlcm53m" path="res://src/features/world/maps/branch_canopy/assets/canopy.svg" id="4"]
 [ext_resource type="PackedScene" path="res://src/features/wind/wind_event.tscn" id="5"]
-[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
-[ext_resource type="AudioStream" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
-[ext_resource type="AudioStream" path="res://src/features/world/maps/branch_canopy/assets/audio/soft_wind.mp3" id="8"]
-[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/soft_wind_layer.gd" id="9"]
+[ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
+[ext_resource type="AudioStream" uid="uid://dvecvqgunvqet" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
+[ext_resource type="AudioStream" uid="uid://dugi670rbirir" path="res://src/features/world/maps/branch_canopy/assets/audio/soft_wind.mp3" id="8"]
+[ext_resource type="Script" uid="uid://drmrmaw5eynfc" path="res://src/features/world/maps/branch_canopy/soft_wind_layer.gd" id="9"]
+[ext_resource type="Texture2D" uid="uid://b2xdc62dmssvo" path="res://src/features/world/maps/branch_canopy/assets/sprites/right_branch/midground.png" id="10_na7lp"]
+[ext_resource type="Texture2D" uid="uid://bosorf8h3enqh" path="res://src/features/world/maps/branch_canopy/assets/sprites/right_branch/background.png" id="11_swqb0"]
+[ext_resource type="Texture2D" uid="uid://bftiwc2dw6su" path="res://src/features/world/maps/branch_canopy/assets/sprites/right_branch/foreground.png" id="12_nukbw"]
+[ext_resource type="Texture2D" uid="uid://dli7o8q2v3fmt" path="res://src/features/world/maps/branch_canopy/assets/sprites/right_branch/far_background.png" id="13_6diav"]
+[ext_resource type="Texture2D" uid="uid://cuuxwfrssjae4" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/midground.png" id="13_na7lp"]
+[ext_resource type="Texture2D" uid="uid://bklsgsbf6of8u" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/background.png" id="14_6diav"]
+[ext_resource type="Texture2D" uid="uid://bk1fwk56vjxh6" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/foreground.png" id="15_lyog6"]
+[ext_resource type="Texture2D" uid="uid://cki0sfwbmnew3" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/far_background.png" id="16_owa7m"]
 
-[node name="BranchCanopy" type="Node3D"]
+[node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 script = ExtResource("1")
 
-[node name="PlayerBranchStart" type="Marker3D" parent="."]
-position = Vector3(-5, 0, 0)
+[node name="PlayerBranchStart" type="Marker3D" parent="." unique_id=1827103423]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 0)
 
-[node name="OpponentBranchStart" type="Marker3D" parent="."]
-position = Vector3(5, 0, 0)
+[node name="OpponentBranchStart" type="Marker3D" parent="." unique_id=2052515087]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
 
-[node name="LeftBranch" type="Sprite3D" parent="."]
-position = Vector3(-7.3, 0, 0)
+[node name="RightBranch" type="Node3D" parent="." unique_id=1951663678]
+
+[node name="Midground" type="Sprite3D" parent="RightBranch" unique_id=1495854347]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5243998, 0.5648395, 0)
 billboard = 1
-texture = ExtResource("3")
+texture = ExtResource("10_na7lp")
 
-[node name="RightBranch" type="Sprite3D" parent="."]
-position = Vector3(7.3, 0, 0)
+[node name="Background" type="Sprite3D" parent="RightBranch" unique_id=1025281712]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.651025, 0.5332709, -0.37074828)
 billboard = 1
-flip_h = true
-texture = ExtResource("3")
+texture = ExtResource("11_swqb0")
 
-[node name="FarCanopyLeft" type="Sprite3D" parent="."]
-position = Vector3(-8, -2, -7)
+[node name="Foreground" type="Sprite3D" parent="RightBranch" unique_id=1013775426]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6307135, 1.1424023, 1.1057911)
+billboard = 1
+texture = ExtResource("12_nukbw")
+
+[node name="FarBackground" type="Sprite3D" parent="RightBranch" unique_id=1321757632]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5243998, 0.46367395, -1.1354756)
+billboard = 1
+texture = ExtResource("13_6diav")
+
+[node name="LeftBranch" type="Node3D" parent="." unique_id=148347526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.3, 0, 0)
+
+[node name="Midground" type="Sprite3D" parent="LeftBranch" unique_id=142453769]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.13982153)
+billboard = 1
+texture = ExtResource("13_na7lp")
+
+[node name="Background" type="Sprite3D" parent="LeftBranch" unique_id=1796231141]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.7314515)
+billboard = 1
+texture = ExtResource("14_6diav")
+
+[node name="Foreground" type="Sprite3D" parent="LeftBranch" unique_id=1518102136]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2696848, 0.08513379, 0.5269489)
+billboard = 1
+texture = ExtResource("15_lyog6")
+
+[node name="FarBackground" type="Sprite3D" parent="LeftBranch" unique_id=2017132181]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
+billboard = 1
+texture = ExtResource("16_owa7m")
+
+[node name="FarCanopyLeft" type="Sprite3D" parent="." unique_id=799557180]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -2, -7)
 pixel_size = 0.02
 billboard = 1
 texture = ExtResource("4")
 
-[node name="FarCanopyMidLeft" type="Sprite3D" parent="."]
-position = Vector3(-3, -3, -9)
+[node name="FarCanopyMidLeft" type="Sprite3D" parent="." unique_id=265498937]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -3, -9)
 pixel_size = 0.02
 billboard = 1
 texture = ExtResource("4")
 
-[node name="FarCanopyMidRight" type="Sprite3D" parent="."]
-position = Vector3(4, -3, -9)
+[node name="FarCanopyMidRight" type="Sprite3D" parent="." unique_id=1672102757]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -3, -9)
 pixel_size = 0.02
 billboard = 1
 texture = ExtResource("4")
 
-[node name="FarCanopyRight" type="Sprite3D" parent="."]
-position = Vector3(9, -2, -7)
+[node name="FarCanopyRight" type="Sprite3D" parent="." unique_id=1947325975]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -2, -7)
 pixel_size = 0.02
 billboard = 1
 texture = ExtResource("4")
 
-[node name="NearCanopyLeft" type="Sprite3D" parent="."]
-position = Vector3(-10, 1, 5)
+[node name="NearCanopyLeft" type="Sprite3D" parent="." unique_id=1228035049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 5)
+modulate = Color(0.75, 0.88, 0.8, 1)
 pixel_size = 0.018
 billboard = 1
-modulate = Color(0.75, 0.88, 0.8, 1)
 texture = ExtResource("4")
 
-[node name="NearCanopyRight" type="Sprite3D" parent="."]
-position = Vector3(10, 1, 5)
+[node name="NearCanopyRight" type="Sprite3D" parent="." unique_id=880988051]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 5)
+modulate = Color(0.75, 0.88, 0.8, 1)
 pixel_size = 0.018
 billboard = 1
-modulate = Color(0.75, 0.88, 0.8, 1)
 texture = ExtResource("4")
 
-[node name="ParallaxCamera" type="Camera3D" parent="."]
-position = Vector3(0, 10, 14)
-fov = 65.0
+[node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 14)
 current = true
+fov = 65.0
 script = ExtResource("2")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1916680696]
 
-[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="." unique_id=2081326814]
 bus = &"Music"
 
-[node name="CanopyAmbience" type="Node" parent="."]
+[node name="CanopyAmbience" type="Node" parent="." unique_id=433179603]
 script = ExtResource("6")
 
-[node name="ForestA" type="AudioStreamPlayer" parent="CanopyAmbience"]
+[node name="ForestA" type="AudioStreamPlayer" parent="CanopyAmbience" unique_id=1138850869]
 stream = ExtResource("7")
 bus = &"SFX"
 
-[node name="ForestB" type="AudioStreamPlayer" parent="CanopyAmbience"]
+[node name="ForestB" type="AudioStreamPlayer" parent="CanopyAmbience" unique_id=882184835]
 stream = ExtResource("7")
 bus = &"SFX"
 
-[node name="SoftWind" type="AudioStreamPlayer" parent="CanopyAmbience"]
+[node name="SoftWind" type="AudioStreamPlayer" parent="CanopyAmbience" unique_id=1065399937]
 stream = ExtResource("8")
 bus = &"SFX"
 script = ExtResource("9")
 
-[node name="WindEvent" parent="." instance=ExtResource("5")]
+[node name="WindEvent" parent="." unique_id=1552486683 instance=ExtResource("5")]
