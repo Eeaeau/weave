@@ -21,10 +21,12 @@ var health: float = 1.0
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
 @onready var hitbox: Area3D = $Hitbox
+@onready var spider_rig: Node3D = $SpiderRig
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	super._ready()
 	aim_arrow_offset = aim_arrow.position
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
@@ -53,7 +55,10 @@ func _process(delta: float) -> void:
 		aim_arrow.scale.x = aim_magnitude
 		aim_arrow.rotation.y = aim_angle
 
-	var velocity = get_movement_direction() * MOVE_SPEED
+	var movement_direction := get_movement_direction()
+	if not movement_direction.is_zero_approx():
+		spider_rig.rotation.y = atan2(movement_direction.x, movement_direction.z)
+	var velocity = movement_direction * MOVE_SPEED
 	if velocity.length() > 0:
 		if remaining_movement > 0:
 			var to_move = velocity * delta

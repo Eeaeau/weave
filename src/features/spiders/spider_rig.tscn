@@ -1,0 +1,505 @@
+[gd_scene format=3 uid="uid://s2t6xr80ccug"]
+
+[ext_resource type="PackedScene" uid="uid://ds762u7onoc57" path="res://src/features/spiders/assets/spider_rig.blend" id="1_rig"]
+[ext_resource type="Script" uid="uid://dt5g3hfdicxts" path="res://src/features/spiders/spider_leg_stroke_3d.gd" id="2_strokes"]
+[ext_resource type="Script" uid="uid://7mv2mpgfki4d" path="res://src/features/spiders/scripts/spider_eyes.gd" id="3_6mje3"]
+[ext_resource type="Texture2D" uid="uid://b1mvhdg4qhbur" path="res://src/features/spiders/assets/body/spider_body.png" id="3_xagw3"]
+[ext_resource type="Texture2D" uid="uid://dq1q7xnd4lige" path="res://src/features/spiders/assets/body/spider_pupile1.png" id="4_v4ffn"]
+[ext_resource type="Texture2D" uid="uid://dxmuc6viet353" path="res://src/features/spiders/assets/body/spider_pupile2.png" id="5_6mje3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6mje3"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.09019608, 0.07450981, 0.07450981, 1)
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_abrnf"]
+
+[sub_resource type="Animation" id="Animation_6mje3"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("LookAtPos:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-0.22418164, 0, -3.3086417)]
+}
+
+[sub_resource type="Animation" id="Animation_abrnf"]
+resource_name = "eye_idle"
+length = 4.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("LookAtPos:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.93, 1.79, 2.99),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.22418164, 0, -3.3086417), Vector3(1.9624949, 0, -1.9107451), Vector3(1.5702254, 0, -1.5608478), Vector3(-2.707295, 0, -1.4103186)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_rparr"]
+_data = {
+&"RESET": SubResource("Animation_6mje3"),
+&"eye_idle": SubResource("Animation_abrnf")
+}
+
+[node name="SpiderRig" type="Node3D" unique_id=1588032234]
+
+[node name="ImportedRig" parent="." unique_id=1157697690 instance=ExtResource("1_rig")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8090404, 0)
+
+[node name="CCDIK3D_FrontLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftFrontLeft")
+settings/1/target_node = NodePath("../../../../FootTargets/FootFrontLeft")
+settings/0/root_bone_name = "DEF_leg_front_01.L"
+settings/0/root_bone = 23
+settings/0/end_bone_name = "DEF_leg_front_04.L"
+settings/0/end_bone = 26
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_front_04.L"
+settings/1/root_bone = 26
+settings/1/end_bone_name = "DEF_leg_front_08.L"
+settings/1/end_bone = 30
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2471447
+settings/1/joint_count = 5
+settings/0/joints/0/rotation_axis = 0
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+settings/1/joints/4/rotation_axis = 3
+settings/1/joints/4/limitation = null
+
+[node name="CCDIK3D_FrontRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftFrontRight")
+settings/1/target_node = NodePath("../../../../FootTargets/FootFrontRight")
+settings/0/root_bone_name = "DEF_leg_front_01.R"
+settings/0/root_bone = 31
+settings/0/end_bone_name = "DEF_leg_front_04.R"
+settings/0/end_bone = 34
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_front_04.R"
+settings/1/root_bone = 34
+settings/1/end_bone_name = "DEF_leg_front_08.R"
+settings/1/end_bone = 38
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2471447
+settings/1/joint_count = 5
+settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+settings/1/joints/4/rotation_axis = 3
+settings/1/joints/4/limitation = null
+
+[node name="CCDIK3D_MidFrontLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftMidFrontLeft")
+settings/1/target_node = NodePath("../../../../FootTargets/FootMidFrontLeft")
+settings/0/root_bone_name = "DEF_leg_mid_front_01.L"
+settings/0/root_bone = 55
+settings/0/end_bone_name = "DEF_leg_mid_front_04.L"
+settings/0/end_bone = 58
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_mid_front_04.L"
+settings/1/root_bone = 58
+settings/1/end_bone_name = "DEF_leg_mid_front_08.L"
+settings/1/end_bone = 62
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2464449
+settings/1/joint_count = 5
+settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+settings/1/joints/4/rotation_axis = 3
+settings/1/joints/4/limitation = null
+
+[node name="CCDIK3D_MidFrontRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftMidFrontRight")
+settings/1/target_node = NodePath("../../../../FootTargets/FootMidFrontRight")
+settings/0/root_bone_name = "DEF_leg_mid_front_01.R"
+settings/0/root_bone = 63
+settings/0/end_bone_name = "DEF_leg_mid_front_04.R"
+settings/0/end_bone = 66
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_mid_front_04.R"
+settings/1/root_bone = 66
+settings/1/end_bone_name = "DEF_leg_mid_front_08.R"
+settings/1/end_bone = 70
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2464449
+settings/1/joint_count = 5
+settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+settings/1/joints/4/rotation_axis = 3
+settings/1/joints/4/limitation = null
+
+[node name="CCDIK3D_MidBackLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftMidBackLeft")
+settings/1/target_node = NodePath("../../../../FootTargets/FootMidBackLeft")
+settings/0/root_bone_name = "DEF_leg_mid_back_01.L"
+settings/0/root_bone = 39
+settings/0/end_bone_name = "DEF_leg_mid_back_04.L"
+settings/0/end_bone = 42
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_mid_back_04.L"
+settings/1/root_bone = 42
+settings/1/end_bone_name = "DEF_leg_mid_back_08.L"
+settings/1/end_bone = 46
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2512192
+settings/1/joint_count = 5
+settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+settings/1/joints/4/rotation_axis = 3
+settings/1/joints/4/limitation = null
+
+[node name="CCDIK3D_MidBackRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftMidBackRight")
+settings/1/target_node = NodePath("../../../../FootTargets/FootMidBackRight")
+settings/0/root_bone_name = "DEF_leg_mid_back_01.R"
+settings/0/root_bone = 47
+settings/0/end_bone_name = "DEF_leg_mid_back_04.R"
+settings/0/end_bone = 50
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_mid_back_04.R"
+settings/1/root_bone = 50
+settings/1/end_bone_name = "DEF_leg_mid_back_08.R"
+settings/1/end_bone = 54
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2512192
+settings/1/joint_count = 5
+settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+settings/1/joints/4/rotation_axis = 3
+settings/1/joints/4/limitation = null
+
+[node name="CCDIK3D_BackLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftBackLeft")
+settings/1/target_node = NodePath("../../../../FootTargets/FootBackLeft")
+settings/0/root_bone_name = "DEF_leg_back_01.L"
+settings/0/root_bone = 9
+settings/0/end_bone_name = "DEF_leg_back_04.L"
+settings/0/end_bone = 12
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_back_04.L"
+settings/1/root_bone = 12
+settings/1/end_bone_name = "DEF_leg_back_07.L"
+settings/1/end_bone = 15
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2292308
+settings/1/joint_count = 4
+settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+
+[node name="CCDIK3D_BackRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
+max_iterations = 24
+min_distance = 0.005
+angular_delta_limit = 0.08726646259971647
+deterministic = true
+setting_count = 2
+settings/0/target_node = NodePath("../../../../LiftTargets/LiftBackRight")
+settings/1/target_node = NodePath("../../../../FootTargets/FootBackRight")
+settings/0/root_bone_name = "DEF_leg_back_01.R"
+settings/0/root_bone = 16
+settings/0/end_bone_name = "DEF_leg_back_04.R"
+settings/0/end_bone = 19
+settings/0/extend_end_bone = false
+settings/0/joint_count = 4
+settings/1/root_bone_name = "DEF_leg_back_04.R"
+settings/1/root_bone = 19
+settings/1/end_bone_name = "DEF_leg_back_07.R"
+settings/1/end_bone = 22
+settings/1/extend_end_bone = true
+settings/1/end_bone/direction = 6
+settings/1/end_bone/length = 0.2292308
+settings/1/joint_count = 4
+settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 3
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 3
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 3
+settings/0/joints/3/limitation = null
+settings/1/joints/0/rotation_axis = 3
+settings/1/joints/0/limitation = null
+settings/1/joints/1/rotation_axis = 3
+settings/1/joints/1/limitation = null
+settings/1/joints/2/rotation_axis = 3
+settings/1/joints/2/limitation = null
+settings/1/joints/3/rotation_axis = 3
+settings/1/joints/3/limitation = null
+
+[node name="LegStrokes" type="MeshInstance3D" parent="." unique_id=1763659197]
+material_override = SubResource("StandardMaterial3D_6mje3")
+cast_shadow = 0
+mesh = SubResource("ImmediateMesh_abrnf")
+script = ExtResource("2_strokes")
+
+[node name="FootTargets" type="Node3D" parent="." unique_id=775124396]
+
+[node name="FootBackLeft" type="Marker3D" parent="FootTargets" unique_id=2084766856]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.216023, 0.5, -1.683889)
+gizmo_extents = 0.12
+
+[node name="FootBackRight" type="Marker3D" parent="FootTargets" unique_id=548359014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8664572, 0.5, -1.6848155)
+gizmo_extents = 0.12
+
+[node name="FootFrontLeft" type="Marker3D" parent="FootTargets" unique_id=858526737]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9606522, 0.50002736, 2.0292728)
+gizmo_extents = 0.12
+
+[node name="FootFrontRight" type="Marker3D" parent="FootTargets" unique_id=1246736733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.51757836, 0.500027, 2.0908637)
+gizmo_extents = 0.12
+
+[node name="FootMidBackLeft" type="Marker3D" parent="FootTargets" unique_id=442144950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8915062, 0.5, -1.2299219)
+gizmo_extents = 0.12
+
+[node name="FootMidBackRight" type="Marker3D" parent="FootTargets" unique_id=316131591]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8359015, 0.5, -0.9453686)
+gizmo_extents = 0.12
+
+[node name="FootMidFrontLeft" type="Marker3D" parent="FootTargets" unique_id=427923149]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7966254, 0.5, 0.93660545)
+gizmo_extents = 0.12
+
+[node name="FootMidFrontRight" type="Marker3D" parent="FootTargets" unique_id=1728433374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6313721, 0.5, 0.893468)
+gizmo_extents = 0.12
+
+[node name="LiftTargets" type="Node3D" parent="."]
+
+[node name="LiftFrontLeft" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8028837, 1.4135311, 1.4438746)
+gizmo_extents = 0.1
+
+[node name="LiftFrontRight" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5640344, 1.1684328, 1.2410624)
+gizmo_extents = 0.1
+
+[node name="LiftMidFrontLeft" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.320447, 1.0213535, 0.546594)
+gizmo_extents = 0.1
+
+[node name="LiftMidFrontRight" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2059113, 1.4054416, 0.48137552)
+gizmo_extents = 0.1
+
+[node name="LiftMidBackLeft" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.243719, 1.0223683, -0.732562)
+gizmo_extents = 0.1
+
+[node name="LiftMidBackRight" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0949509, 1.4038942, -0.66610795)
+gizmo_extents = 0.1
+
+[node name="LiftBackLeft" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88072765, 1.0492538, -1.294074)
+gizmo_extents = 0.1
+
+[node name="LiftBackRight" type="Marker3D" parent="LiftTargets"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7240806, 1.2097051, -1.4448448)
+gizmo_extents = 0.1
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="." unique_id=1951212813]
+transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 0, 0.8058373, 0)
+bone_name = "CTRL_root"
+bone_idx = 0
+use_external_skeleton = true
+external_skeleton = NodePath("../ImportedRig/RIG_spider/Skeleton3D")
+
+[node name="BodyOffset" type="Node3D" parent="BoneAttachment3D" unique_id=786587160 node_paths=PackedStringArray("left_eye", "right_eye", "look_at_pos", "left_eye_center", "right_eye_center")]
+transform = Transform3D(0.7865238, 0, 0, 0, 1, 0, 0, 0, 0.7865238, 0, 0, 0)
+script = ExtResource("3_6mje3")
+left_eye = NodePath("LeftEye")
+right_eye = NodePath("RightEye")
+look_at_pos = NodePath("LookAtPos")
+left_eye_center = NodePath("LeftEyeCenter")
+right_eye_center = NodePath("RightEyeCenter")
+eye_radius = 0.16
+
+[node name="Body" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=301050122]
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.1609689, 0.40651894, -0.24795955)
+texture = ExtResource("3_xagw3")
+
+[node name="LeftEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=170682879]
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.099202484, 0.5124047, -0.29688102)
+texture = ExtResource("4_v4ffn")
+
+[node name="RightEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=1878592149]
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.22503239, 0.5124047, -0.3552975)
+texture = ExtResource("5_6mje3")
+
+[node name="LeftEyeCenter" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=714602965]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.512, 0, -0.761)
+gizmo_extents = 0.07
+
+[node name="RightEyeCenter" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=1614796929]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.744, 0, -0.761)
+gizmo_extents = 0.07
+
+[node name="LookAtPos" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=805047784]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22418164, 0, -3.3086417)
+gizmo_extents = 0.1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="BoneAttachment3D/BodyOffset" unique_id=1309729961]
+libraries/ = SubResource("AnimationLibrary_rparr")
+autoplay = &"eye_idle"
+
+[editable path="ImportedRig"]

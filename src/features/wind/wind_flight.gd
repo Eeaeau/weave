@@ -75,9 +75,11 @@ func claim_item(target_parent: Node3D) -> bool:
 
 
 func _position_at(progress: float) -> Vector3:
+	var motion_basis := global_basis.orthonormalized()
 	if progress <= CONTACT_FRACTION:
 		var approach_step := progress / CONTACT_FRACTION
-		var approach_control := _start.lerp(_contact, 0.5) + Vector3(_sway, 0.5, 0.0)
+		var approach_control := _start.lerp(_contact, 0.5)
+		approach_control += motion_basis.x * _sway + motion_basis.y * 0.5
 		return _quadratic(
 			_start,
 			approach_control,
@@ -85,7 +87,9 @@ func _position_at(progress: float) -> Vector3:
 			approach_step,
 		) + _wobble(approach_step)
 	var departure_step := (progress - CONTACT_FRACTION) / (1.0 - CONTACT_FRACTION)
-	var departure_control := _contact.lerp(_exit, 0.5) + Vector3(-_sway, 0.25, 0.0)
+	var departure_control := _contact.lerp(_exit, 0.5)
+	departure_control -= motion_basis.x * _sway
+	departure_control += motion_basis.y * 0.25
 	return _quadratic(_contact, departure_control, _exit, departure_step) + _wobble(departure_step)
 
 
@@ -94,13 +98,17 @@ func _quadratic(a: Vector3, control: Vector3, b: Vector3, t: float) -> Vector3:
 
 
 func _wobble(t: float) -> Vector3:
+	var motion_basis := global_basis.orthonormalized()
 	var envelope := sin(PI * t)
 	var lateral := sin(t * TAU * 1.7 + _phase) * 0.65
 	lateral += sin(t * TAU * 4.3 + _phase * 1.71) * 0.3
 	lateral += sin(t * TAU * 7.1 + _phase * 0.43) * 0.15
 	var lift := absf(sin(t * TAU * 2.7 + _phase * 0.91)) * 0.2
 	var depth := sin(t * TAU * 2.2 + _phase * 1.23) * 0.25
-	return Vector3(lateral * _sway, lift * absf(_sway), depth * absf(_sway)) * envelope
+	var offset := motion_basis.x * lateral * _sway
+	offset += motion_basis.y * lift * absf(_sway)
+	offset += motion_basis.z * depth * absf(_sway)
+	return offset * envelope
 
 
 func _complete() -> void:

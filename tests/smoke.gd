@@ -20,6 +20,7 @@ func _run() -> void:
 		return
 	var map_ok: bool = await _check_map(match_scene)
 	if not (map_ok
+			and _check_local_camera_sway()
 			and _check_webs(match_scene) and _check_collectibles(match_scene)
 			and _check_sprite_visuals(match_scene) and _check_audio()):
 		return
@@ -45,6 +46,32 @@ func _check_map(match_scene: Node3D) -> bool:
 	await create_timer(0.1).timeout
 	if is_equal_approx(camera.position.x, camera_x):
 		return _fail("Camera parallax is not moving")
+	return true
+
+
+func _check_local_camera_sway() -> bool:
+	var camera := Camera3D.new()
+	camera.set_script(load(
+		"res://src/features/world/maps/branch_canopy/parallax_camera.gd"
+	))
+	camera.transform = Transform3D(
+		Basis.from_euler(Vector3(-0.6, 0.4, 0.2)), Vector3(3.0, 5.0, 7.0)
+	)
+	camera.set("sway_distance", 1.0)
+	camera.set("sway_speed", PI * 0.5)
+	var authored_transform := camera.transform
+	root.add_child(camera)
+	camera.set_process(false)
+	if not camera.basis.is_equal_approx(authored_transform.basis):
+		camera.free()
+		return _fail("Camera sway must preserve its authored orientation")
+	camera.call("_process", 1.0)
+	var expected_position := authored_transform.origin + authored_transform.basis.x
+	var is_local := camera.position.distance_to(expected_position) < 0.001
+	var kept_orientation := camera.basis.is_equal_approx(authored_transform.basis)
+	camera.free()
+	if not is_local or not kept_orientation:
+		return _fail("Camera sway must use the camera's local coordinate system")
 	return true
 
 
@@ -78,8 +105,11 @@ func _check_audio() -> bool:
 func _check_sprite_visuals(match_scene: Node3D) -> bool:
 	var sprites := match_scene.find_children("*", "Sprite3D", true, false)
 	var meshes := match_scene.find_children("*", "MeshInstance3D", true, false)
-	if sprites.size() < 20 or not meshes.is_empty():
-		return _fail("World placeholders must be 2D sprites in the 3D scene")
+	for mesh in meshes:
+		if not mesh is SpiderLegStroke3D:
+			return _fail("Only procedural spider leg strokes may use 3D meshes")
+	if sprites.size() < 20:
+		return _fail("World placeholders must remain 2D sprites in the 3D scene")
 	return true
 
 
