@@ -27,6 +27,16 @@ const EXPECTED_LEFT_LEG_ROOTS := {
 	"DEF_leg_mid_back_01.L": Vector3(-0.602005, 0.5, -0.366899),
 	"DEF_leg_back_01.L": Vector3(-0.486562, 0.5, -0.656935),
 }
+const IK_SPECS := [
+	["FootFrontLeft", "DEF_leg_front_01.L", "DEF_leg_front_08.L", 2],
+	["FootFrontRight", "DEF_leg_front_01.R", "DEF_leg_front_08.R", 3],
+	["FootMidFrontLeft", "DEF_leg_mid_front_01.L", "DEF_leg_mid_front_08.L", 6],
+	["FootMidFrontRight", "DEF_leg_mid_front_01.R", "DEF_leg_mid_front_08.R", 7],
+	["FootMidBackLeft", "DEF_leg_mid_back_01.L", "DEF_leg_mid_back_08.L", 4],
+	["FootMidBackRight", "DEF_leg_mid_back_01.R", "DEF_leg_mid_back_08.R", 5],
+	["FootBackLeft", "DEF_leg_back_01.L", "DEF_leg_back_07.L", 0],
+	["FootBackRight", "DEF_leg_back_01.R", "DEF_leg_back_07.R", 1],
+]
 
 
 func _initialize() -> void:
@@ -43,11 +53,12 @@ func _run() -> void:
 	await process_frame
 	if (not _check_imported_rig(rig)
 			or not _check_leg_strokes(rig)
+			or not _check_ik_setup(rig)
 			or not _check_base_spider()):
 		return
 	if not await _check_eye_tracking(rig):
 		return
-	if not await _check_ik_stroke(rig):
+	if not await _check_ik_strokes(rig):
 		return
 	rig.free()
 	print("SPIDER RIG PASS: armature, IK-driven leg strokes, and animated eye tracking")
@@ -111,6 +122,25 @@ func _check_leg_strokes(rig: Node) -> bool:
 	return true
 
 
+func _check_ik_setup(rig: Node) -> bool:
+	var ik := rig.get_node_or_null(
+		"ImportedRig/RIG_spider/Skeleton3D/CCDIK3D"
+	) as CCDIK3D
+	if ik == null or ik.setting_count != IK_SPECS.size():
+		return _fail("Spider rig must configure one CCDIK setting per leg")
+	for setting_index in range(IK_SPECS.size()):
+		var spec: Array = IK_SPECS[setting_index]
+		var prefix := "settings/%d/" % setting_index
+		if ik.get(prefix + "root_bone_name") != spec[1]:
+			return _fail("Wrong IK root bone for " + spec[0])
+		if ik.get(prefix + "end_bone_name") != spec[2]:
+			return _fail("Wrong IK end bone for " + spec[0])
+		var expected_path := NodePath("../../../../FootTargets/" + spec[0])
+		if ik.get(prefix + "target_node") != expected_path:
+			return _fail("Wrong IK foot target for " + spec[0])
+	return true
+
+
 func _check_eye_tracking(rig: Node) -> bool:
 	var eyes := rig.get_node_or_null("BoneAttachment3D/BodyOffset") as Node3D
 	if eyes == null or eyes.get_script() == null:
@@ -161,16 +191,27 @@ func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
 	return true
 
 
-func _check_ik_stroke(rig: Node) -> bool:
-	var target := rig.get_node("FootTargets/FootFrontLeft") as Marker3D
+func _check_ik_strokes(rig: Node) -> bool:
 	var strokes := rig.get_node("LegStrokes") as MeshInstance3D
-	var before := _ribbon_point(strokes.mesh, 2, 4)
-	target.position += Vector3(0.4, 0.0, 0.3)
+	var before_points: Array[Vector3] = []
+	var original_positions: Array[Vector3] = []
+	for spec in IK_SPECS:
+		var target := rig.get_node("FootTargets/" + spec[0]) as Marker3D
+		var surface: int = spec[3]
+		before_points.append(_ribbon_point(strokes.mesh, surface, 4))
+		original_positions.append(target.position)
+		var tangent := Vector3(-target.position.z, 0.0, target.position.x).normalized()
+		target.position += tangent * 0.3
 	await process_frame
 	await process_frame
-	var after := _ribbon_point(strokes.mesh, 2, 4)
-	if before.distance_to(after) < 0.01:
-		return _fail("A middle leg-stroke joint must follow the completed IK pose")
+	for spec_index in range(IK_SPECS.size()):
+		var spec: Array = IK_SPECS[spec_index]
+		var target := rig.get_node("FootTargets/" + spec[0]) as Marker3D
+		var surface: int = spec[3]
+		var after := _ribbon_point(strokes.mesh, surface, 4)
+		if before_points[spec_index].distance_to(after) < 0.01:
+			return _fail("Middle leg-stroke joint did not follow IK for " + spec[0])
+		target.position = original_positions[spec_index]
 	return true
 
 
