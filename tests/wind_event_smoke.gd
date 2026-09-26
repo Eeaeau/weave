@@ -9,7 +9,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	if not (_staggered_group_and_contact() and _empty_group_finishes()
+	if not (_camera_relative_path() and _staggered_group_and_contact()
+			and _empty_group_finishes()
 			and _removed_item_does_not_stall() and _preview_includes_starting_webs()
 			and _debug_contact_markers_toggle() and _debug_contact_marker_crossing()
 			and _audio_layers_work() and _removed_flight_does_not_stall()
@@ -21,6 +22,42 @@ func _run() -> void:
 	await create_timer(0.5).timeout
 	print("WIND EVENT PASS: staggered group, contact handoff, and lifecycle")
 	quit(0)
+
+
+func _camera_relative_path() -> bool:
+	var container := Node3D.new()
+	root.add_child(container)
+	var camera := Camera3D.new()
+	camera.name = "ParallaxCamera"
+	camera.position = Vector3(0.0, 12.0, 1.0)
+	camera.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	container.add_child(camera)
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	container.add_child(event)
+	event.reset_match(42)
+	var path := event._sample_path(
+		event.get_node("Lanes/PlayerLane") as WindLane3D
+	)
+	var approach := (path[1] - path[0]).dot(camera.global_basis.z.normalized())
+	var departure := (path[2] - path[1]).dot(camera.global_basis.z.normalized())
+	var contact_local: Vector3 = (
+		event.get_node("WebPlane") as Node3D
+	).to_local(path[1])
+	event.group_size = 1
+	event.start_round(1)
+	var uses_camera_axes := (
+		event.get_node("Flights").get_child(0) as WindFlight3D
+	).global_basis.is_equal_approx(
+		camera.global_basis.orthonormalized()
+	)
+	container.free()
+	if approach <= 0.0 or departure <= 0.0:
+		return _fail("Wind must travel through the web toward the camera")
+	if not is_zero_approx(contact_local.y):
+		return _fail("Camera-relative wind must preserve its web-plane contact")
+	if not uses_camera_axes:
+		return _fail("Wind turbulence must use the camera's coordinate system")
+	return true
 
 
 func _staggered_group_and_contact() -> bool:

@@ -19,6 +19,7 @@ var scene_weapon_no_action = preload(
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
+@onready var spider_rig: Node3D = $SpiderRig
 
 
 # Called when the node enters the scene tree for the first time.
@@ -52,7 +53,10 @@ func _process(delta: float) -> void:
 		aim_arrow.scale.x = aim_magnitude
 		aim_arrow.rotation.y = aim_angle
 
-	var velocity = get_movement_direction() * MOVE_SPEED
+	var movement_direction := get_movement_direction()
+	if not movement_direction.is_zero_approx():
+		spider_rig.rotation.y = atan2(movement_direction.x, movement_direction.z)
+	var velocity = movement_direction * MOVE_SPEED
 	if velocity.length() > 0:
 		if remaining_movement > 0:
 			var to_move = velocity * delta

@@ -133,6 +133,8 @@ func _run() -> void:
 		return
 	if not await _check_gameplay_spiders():
 		return
+	if not _check_player_faces_movement():
+		return
 	if not await _check_eye_tracking(rig):
 		return
 	if not await _check_ik_strokes(rig):
@@ -207,15 +209,44 @@ func _check_gameplay_spiders(scene_index: int = 0) -> bool:
 	var body := spider.get_node_or_null(
 		"SpiderRig/BoneAttachment3D/BodyOffset/Body"
 	) as Sprite3D
-	if body == null or not body.modulate.is_equal_approx(spider.body_color):
+	if body == null or not body.modulate.is_equal_approx(Color.WHITE):
 		spider.queue_free()
 		return _fail(
-			"Gameplay spider color did not reach the armature body: "
+			"Gameplay spider must preserve the original body and eye colors: "
 			+ GAMEPLAY_SPIDER_SCENES[scene_index]
 		)
 	spider.queue_free()
 	await process_frame
 	return await _check_gameplay_spiders(scene_index + 1)
+
+
+func _check_player_faces_movement() -> bool:
+	var scene := load("res://src/features/spiders/player_spider.tscn") as PackedScene
+	var spider := scene.instantiate() as PlayerSpider3D
+	root.add_child(spider)
+	spider.set_process(false)
+	spider.is_active = true
+	var root_basis := spider.basis
+	var directions := [
+		["move_right", Vector3.RIGHT],
+		["move_left", Vector3.LEFT],
+		["move_up", Vector3.FORWARD],
+		["move_down", Vector3.BACK],
+	]
+	for direction in directions:
+		spider.remaining_movement = 10.0
+		Input.action_press(direction[0])
+		spider._process(0.1)
+		Input.action_release(direction[0])
+		var visual := spider.get_node("SpiderRig") as Node3D
+		if visual.basis.z.normalized().dot(direction[1]) < 0.999:
+			spider.free()
+			return _fail("Spider rig did not face movement: " + direction[0])
+	if not spider.basis.is_equal_approx(root_basis):
+		spider.free()
+		return _fail("Visual turning must not rotate the player gameplay root")
+	spider.free()
+	return true
 
 
 func _check_leg_strokes(rig: Node) -> bool:
