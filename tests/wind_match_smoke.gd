@@ -32,7 +32,7 @@ func _run() -> void:
 					failure = "Returning to team 0 must start wind round 2"
 	_stop_audio(match_scene)
 	match_scene.free()
-	await create_timer(0.2).timeout
+	await create_timer(0.5).timeout
 	if not failure.is_empty():
 		push_error("WIND MATCH FAIL: " + failure)
 		quit(1)
