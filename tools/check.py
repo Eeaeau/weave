@@ -189,6 +189,7 @@ def main() -> int:
     for script, marker in (
         ("resource_smoke", "RESOURCE PASS:"),
         ("smoke", "SMOKE PASS:"),
+        ("background_layers_smoke", "BACKGROUND LAYERS PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
