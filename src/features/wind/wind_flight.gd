@@ -76,12 +76,17 @@ func claim_item(target_parent: Node3D) -> bool:
 
 func _position_at(progress: float) -> Vector3:
 	if progress <= CONTACT_FRACTION:
-		var step := progress / CONTACT_FRACTION
-		var control := _start.lerp(_contact, 0.5) + Vector3(_sway, 0.5, 0.0)
-		return _quadratic(_start, control, _contact, step) + _wobble(step)
-	var step := (progress - CONTACT_FRACTION) / (1.0 - CONTACT_FRACTION)
-	var control := _contact.lerp(_exit, 0.5) + Vector3(-_sway, 0.25, 0.0)
-	return _quadratic(_contact, control, _exit, step) + _wobble(step)
+		var approach_step := progress / CONTACT_FRACTION
+		var approach_control := _start.lerp(_contact, 0.5) + Vector3(_sway, 0.5, 0.0)
+		return _quadratic(
+			_start,
+			approach_control,
+			_contact,
+			approach_step,
+		) + _wobble(approach_step)
+	var departure_step := (progress - CONTACT_FRACTION) / (1.0 - CONTACT_FRACTION)
+	var departure_control := _contact.lerp(_exit, 0.5) + Vector3(-_sway, 0.25, 0.0)
+	return _quadratic(_contact, departure_control, _exit, departure_step) + _wobble(departure_step)
 
 
 func _quadratic(a: Vector3, control: Vector3, b: Vector3, t: float) -> Vector3:

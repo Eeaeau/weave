@@ -47,11 +47,13 @@ func start_round(round_number: int) -> void:
 
 
 ## Reset the side bag and random streams before the first round of a new match.
-func reset_match(seed: int = 0) -> void:
+func reset_match(match_seed: int = 0) -> void:
 	if is_active:
 		push_warning("Cannot reset wind selection during an event")
 		return
-	var seed_value := seed if seed != 0 else (random_seed if random_seed != 0 else randi())
+	var seed_value := match_seed
+	if seed_value == 0:
+		seed_value = random_seed if random_seed != 0 else randi()
 	_selection.reset(seed_value)
 	_path_random.seed = seed_value + 1
 	_round_number = 0

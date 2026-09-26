@@ -6,8 +6,8 @@ var _random := RandomNumberGenerator.new()
 var _remaining_sides: Array[int] = []
 
 
-func reset(seed: int) -> void:
-	_random.seed = seed
+func reset(selection_seed: int) -> void:
+	_random.seed = selection_seed
 	_remaining_sides.clear()
 
 
