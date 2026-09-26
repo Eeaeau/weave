@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ca8cqbxxkmgnw"]
+
+[ext_resource type="Script" uid="uid://jjifyn2m4c4w" path="res://src/features/systems/team.gd" id="1_kkwsp"]
+
+[node name="Team" type="Node3D" unique_id=1437638294]
+script = ExtResource("1_kkwsp")

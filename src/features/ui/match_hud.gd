@@ -8,6 +8,7 @@ var show_hints := true
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 @onready var team_label: Label = $LowerLeftPanel/TeamLabel
 
+
 func _ready() -> void:
 	_update_status()
 
@@ -31,6 +32,7 @@ func update_energy(energy: float) -> void:
 	"""
 	if energy_bar:
 		energy_bar.value = energy
+
 
 func update_team_label(text: String) -> void:
 	if team_label:

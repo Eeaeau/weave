@@ -7,16 +7,20 @@ extends BaseSpider3D
 
 var remaining_movement: float = 0
 
+@onready var selected_indicator: Sprite3D = $SelectedIndicator
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	pass
 
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	if not is_active:
-		$SelectedIndicator.visible = false
+		selected_indicator.visible = false
 		return
-	$SelectedIndicator.visible = true
+	selected_indicator.visible = true
 
 	var velocity = Vector3.ZERO
 
