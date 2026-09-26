@@ -47,8 +47,10 @@ func _run() -> void:
 		return
 	if not await _check_eye_tracking(rig):
 		return
+	if not await _check_ik_stroke(rig):
+		return
 	rig.free()
-	print("SPIDER RIG PASS: armature, targets, leg strokes, and animated eye tracking")
+	print("SPIDER RIG PASS: armature, IK-driven leg strokes, and animated eye tracking")
 	quit(0)
 
 
@@ -157,6 +159,25 @@ func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
 			or not right_eye.position.is_equal_approx(right_neutral)):
 		return _fail("Pupils must return to their neutral positions")
 	return true
+
+
+func _check_ik_stroke(rig: Node) -> bool:
+	var target := rig.get_node("FootTargets/FootFrontLeft") as Marker3D
+	var strokes := rig.get_node("LegStrokes") as MeshInstance3D
+	var before := _ribbon_point(strokes.mesh, 2, 4)
+	target.position += Vector3(0.4, 0.0, 0.3)
+	await process_frame
+	await process_frame
+	var after := _ribbon_point(strokes.mesh, 2, 4)
+	if before.distance_to(after) < 0.01:
+		return _fail("A middle leg-stroke joint must follow the completed IK pose")
+	return true
+
+
+func _ribbon_point(mesh: Mesh, surface: int, point: int) -> Vector3:
+	var arrays := mesh.surface_get_arrays(surface)
+	var vertices := arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array
+	return (vertices[point * 2] + vertices[point * 2 + 1]) * 0.5
 
 
 func _fail(message: String) -> bool:

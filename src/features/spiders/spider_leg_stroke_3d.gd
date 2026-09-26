@@ -50,7 +50,12 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not is_instance_valid(_skeleton) or not is_instance_valid(_foot_targets):
 		_resolve_rig()
-	_rebuild()
+
+
+func _exit_tree() -> void:
+	if (is_instance_valid(_skeleton)
+			and _skeleton.skeleton_updated.is_connected(_on_skeleton_updated)):
+		_skeleton.skeleton_updated.disconnect(_on_skeleton_updated)
 
 
 func _configure_material() -> void:
@@ -63,11 +68,17 @@ func _configure_material() -> void:
 
 
 func _resolve_rig() -> bool:
-	_skeleton = get_node_or_null(skeleton_path) as Skeleton3D
+	var resolved_skeleton := get_node_or_null(skeleton_path) as Skeleton3D
+	if is_instance_valid(_skeleton) and _skeleton != resolved_skeleton:
+		if _skeleton.skeleton_updated.is_connected(_on_skeleton_updated):
+			_skeleton.skeleton_updated.disconnect(_on_skeleton_updated)
+	_skeleton = resolved_skeleton
 	_foot_targets = get_node_or_null(foot_targets_path) as Node3D
 	_leg_bone_indices.clear()
 	if _skeleton == null or _foot_targets == null:
 		return false
+	if not _skeleton.skeleton_updated.is_connected(_on_skeleton_updated):
+		_skeleton.skeleton_updated.connect(_on_skeleton_updated)
 	for spec in LEG_SPECS:
 		var indices := _resolve_leg_bones(spec)
 		if indices.is_empty():
@@ -75,6 +86,11 @@ func _resolve_rig() -> bool:
 			return false
 		_leg_bone_indices.append(indices)
 	return true
+
+
+func _on_skeleton_updated() -> void:
+	if is_inside_tree():
+		_rebuild()
 
 
 func _resolve_leg_bones(spec: Array) -> PackedInt32Array:
