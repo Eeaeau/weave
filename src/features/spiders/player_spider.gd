@@ -4,8 +4,6 @@ extends BaseSpider3D
 const AIM_SPEED: float = 3.0
 const MOVE_SPEED: float = 2.0
 
-## Player-specific behavior can be added here when match rules are chosen.
-
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
 
@@ -14,7 +12,10 @@ var aim_angle: float = 0
 var action_charged_time: float = 0
 var charging_action: bool = false
 var aim_arrow_offset: Vector3 = Vector3(0.75, 0, 0)
-var weapon: Weapon3D
+var weapons: Array[Weapon3D]
+var selected_weapon_idx: int = 0
+var scene_weapon_no_action = preload(
+	"res://src/features/collectibles/weapons/weapon_no_action.tscn")
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -25,6 +26,9 @@ func _ready() -> void:
 	aim_arrow_offset = aim_arrow.position
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
+	var no_action = scene_weapon_no_action.instantiate()
+	add_child(no_action)
+	pick_up(no_action)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -38,7 +42,8 @@ func _process(delta: float) -> void:
 
 	var aim_magnitude: float = 0.2 + (sin(action_charged_time * 2) + 1)
 
-	if not weapon:
+	var selected_weapon: Weapon3D = weapons[selected_weapon_idx]
+	if not selected_weapon or selected_weapon is WeaponNoAction:
 		aim_arrow.visible = false
 	else:
 		aim_arrow.visible = true
@@ -63,11 +68,11 @@ func _process(delta: float) -> void:
 		charging_action = true
 	if Input.is_action_just_released("action"):
 		charging_action = false
-		if weapon:
-			weapon.fire(aim_angle, aim_magnitude)
-			if weapon.is_used_up():
-				remove_child(weapon)
-				weapon = null
+		if selected_weapon:
+			selected_weapon.fire(aim_angle, aim_magnitude)
+			if selected_weapon.is_used_up():
+				weapons.remove_at(selected_weapon_idx)
+				remove_child(selected_weapon)
 
 		n_remaining_actions -= 1
 
@@ -104,11 +109,6 @@ func is_done() -> bool:
 
 func pick_up(collectible: Collectible3D) -> bool:
 	if collectible is Weapon3D:
-		if weapon:
-			return false  # already have a weapon
-		print("Picked up weapon: " + collectible.name)
 		collectible.call_deferred("reparent", self)
-		weapon = collectible
-	else:
-		print("Picked up: " + collectible.name)
+		weapons.append(collectible)
 	return true

@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" path="res://src/features/spiders/base_spider.tscn" id="1"]
 [ext_resource type="Script" uid="uid://q14ib70ntabd" path="res://src/features/spiders/player_spider.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://ccsdepia2rl4" path="res://src/features/spiders/assets/circle.svg" id="3_gntsc"]
-[ext_resource type="Texture2D" uid="uid://bl5jd2u8biyug" path="res://src/features/spiders/assets/arrow.svg" id="3_uju3x"]
+[ext_resource type="Texture2D" uid="uid://p482fx31sjtm" path="res://src/features/spiders/assets/arrow.svg" id="3_uju3x"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6q6db"]
 height = 0.29162598

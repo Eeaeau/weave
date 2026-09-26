@@ -8,11 +8,13 @@ var show_hints := true
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 @onready var team_label: Label = $LowerLeftPanel/TeamLabel
 @onready var actions_remaining_label: Label = $LowerLeftPanel/ActionsRemainingLabel
-@onready var weapon_container: PanelContainer = $WeaponsContainer/WeaponContainer1
+@onready var weapons_container: BoxContainer = $WeaponsContainer
 
 
 func _ready() -> void:
 	_update_status()
+	for child in weapons_container.get_children():
+		child.visible = false
 
 
 func set_show_hints(enabled: bool) -> void:
@@ -46,11 +48,29 @@ func update_actions_remaining(n: int) -> void:
 		actions_remaining_label.text = "Actions remaining: " + str(n)
 
 
-func update_weapon(weapon: Weapon3D) -> void:
-	if weapon_container:
+func update_weapon(weapons: Array[Weapon3D]) -> void:
+	var containers: Array[PanelContainer] = []
+	for child in weapons_container.get_children():
+		if child is PanelContainer:
+			containers.append(child)
+
+	assert(
+		len(weapons) <= len(containers),
+		"more weapons in inventory than display containers! {0} > {1}".format(
+			[len(weapons), len(containers)]
+			),
+	)
+	for i in range(len(containers)):
+		var w_container = containers[i]
+		var weapon: Weapon3D = null
+		if i < len(weapons):
+			weapon = weapons.get(i)
+
 		if not weapon:
-			weapon_container.visible = false
+			w_container.visible = false
 		else:
-			weapon_container.visible = true
-			var texture_rect: TextureRect = weapon_container.get_child(0)
+			w_container.visible = true
+			var texture_rect: TextureRect = w_container.get_child(0)
 			texture_rect.texture = weapon.icon
+			var number_label: Label = texture_rect.get_child(0)
+			number_label.text = str(i + 1)

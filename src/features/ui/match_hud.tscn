@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://dkeimb46pht1e"]
 
 [ext_resource type="Script" uid="uid://bsu5gpwe4x7n8" path="res://src/features/ui/match_hud.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://f82tgw47tqlf" path="res://src/features/collectibles/weapons/assets/no_action.svg" id="2_n1tcl"]
+[ext_resource type="Texture2D" uid="uid://qedq4mdaomd6" path="res://src/features/collectibles/weapons/assets/pebble.svg" id="3_qsekk"]
 
 [node name="MatchHud" type="CanvasLayer" unique_id=1154433575]
 script = ExtResource("1")
@@ -57,22 +59,83 @@ offset_bottom = 109.0
 text = "Energy"
 
 [node name="WeaponsContainer" type="HBoxContainer" parent="." unique_id=1619650059]
-offset_left = 318.0
-offset_top = 602.0
-offset_right = 650.0
-offset_bottom = 698.0
+custom_maximum_size = Vector2(-1, 64)
+offset_left = 314.0
+offset_top = 633.0
+offset_right = 646.0
+offset_bottom = 697.0
 
 [node name="WeaponContainer1" type="PanelContainer" parent="WeaponsContainer" unique_id=33153483]
 layout_mode = 2
 
 [node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer1" unique_id=1240598489]
+custom_minimum_size = Vector2(64, 64)
+custom_maximum_size = Vector2(64, 64)
 layout_mode = 2
+texture = ExtResource("2_n1tcl")
 
 [node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer1/TextureRect" unique_id=457475894]
 layout_mode = 0
-offset_left = 77.0
-offset_top = 71.0
-offset_right = 91.0
-offset_bottom = 94.0
+offset_left = 47.0
+offset_top = 40.0
+offset_right = 61.0
+offset_bottom = 63.0
+text = "1"
+horizontal_alignment = 2
+
+[node name="WeaponContainer2" type="PanelContainer" parent="WeaponsContainer" unique_id=143571274]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer2" unique_id=376000053]
+custom_minimum_size = Vector2(64, 64)
+custom_maximum_size = Vector2(64, 64)
+layout_mode = 2
+texture = ExtResource("3_qsekk")
+expand_mode = 2
+
+[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer2/TextureRect" unique_id=1532770515]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 40.0
+offset_right = 61.0
+offset_bottom = 63.0
+text = "1"
+horizontal_alignment = 2
+
+[node name="WeaponContainer3" type="PanelContainer" parent="WeaponsContainer" unique_id=1201747482]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer3" unique_id=2141792067]
+custom_minimum_size = Vector2(64, 64)
+custom_maximum_size = Vector2(64, 64)
+layout_mode = 2
+texture = ExtResource("2_n1tcl")
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer3/TextureRect" unique_id=98363165]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 40.0
+offset_right = 61.0
+offset_bottom = 63.0
+text = "1"
+horizontal_alignment = 2
+
+[node name="WeaponContainer4" type="PanelContainer" parent="WeaponsContainer" unique_id=550444206]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer4" unique_id=716644935]
+custom_minimum_size = Vector2(64, 64)
+custom_maximum_size = Vector2(64, 64)
+layout_mode = 2
+texture = ExtResource("2_n1tcl")
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer4/TextureRect" unique_id=1686499476]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 40.0
+offset_right = 61.0
+offset_bottom = 63.0
 text = "1"
 horizontal_alignment = 2

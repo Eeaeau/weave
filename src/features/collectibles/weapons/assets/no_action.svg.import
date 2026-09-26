@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://p482fx31sjtm"
-path="res://.godot/imported/arrow.svg-09dcf4a894187da09065ba12b6d327cb.ctex"
+uid="uid://f82tgw47tqlf"
+path="res://.godot/imported/no_action.svg-ca01206a3c1114904895584aa9e9e2a0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://src/features/spiders/assets/arrow.svg"
-dest_files=["res://.godot/imported/arrow.svg-09dcf4a894187da09065ba12b6d327cb.ctex"]
+source_file="res://src/features/collectibles/weapons/assets/no_action.svg"
+dest_files=["res://.godot/imported/no_action.svg-ca01206a3c1114904895584aa9e9e2a0.ctex"]
 
 [params]
 

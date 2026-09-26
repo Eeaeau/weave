@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://c8pe8folulnmc"]
+
+[ext_resource type="Script" uid="uid://deeore54k7n64" path="res://src/features/collectibles/weapons/weapon_no_action.gd" id="1_76ixk"]
+[ext_resource type="Texture2D" uid="uid://f82tgw47tqlf" path="res://src/features/collectibles/weapons/assets/no_action.svg" id="2_cq8pp"]
+
+[node name="WeaponNoAction" type="Node3D" unique_id=719303514]
+script = ExtResource("1_76ixk")
+icon = ExtResource("2_cq8pp")
+metadata/_custom_type_script = "uid://br605w6pc4cgw"

@@ -7,8 +7,8 @@ extends Node3D
 
 
 func _ready() -> void:
-	assert(pickup_area, "Collectible3D '{0}' needs a pickup_area".format([name]))
-	pickup_area.connect("area_entered", _area_entered)
+	if pickup_area:
+		pickup_area.connect("area_entered", _area_entered)
 
 
 func after_picked_up() -> void:
