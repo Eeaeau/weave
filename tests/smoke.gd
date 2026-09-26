@@ -21,6 +21,7 @@ func _run() -> void:
 	var map_ok: bool = await _check_map(match_scene)
 	if not (map_ok
 			and _check_local_camera_sway()
+			and _check_sun_visual(match_scene)
 			and _check_webs(match_scene) and _check_collectibles(match_scene)
 			and _check_sprite_visuals(match_scene) and _check_audio()):
 		return
@@ -72,6 +73,16 @@ func _check_local_camera_sway() -> bool:
 	camera.free()
 	if not is_local or not kept_orientation:
 		return _fail("Camera sway must use the camera's local coordinate system")
+	return true
+
+
+func _check_sun_visual(match_scene: Node3D) -> bool:
+	var sun := match_scene.get_node_or_null("BranchCanopy/Sun") as Sprite3D
+	var expected_path := (
+		"res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png"
+	)
+	if sun == null or sun.texture == null or sun.texture.resource_path != expected_path:
+		return _fail("Branch canopy must include the distant sun artwork")
 	return true
 
 
