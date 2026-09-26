@@ -78,7 +78,9 @@ func _check_local_camera_sway() -> bool:
 
 
 func _check_sun_visual(match_scene: Node3D) -> bool:
-	var sun := match_scene.get_node_or_null("BranchCanopy/Sun") as Sprite3D
+	var sun := match_scene.get_node_or_null(
+		"BranchCanopy/BackgroundLayers/Sun"
+	) as Sprite3D
 	var expected_path := (
 		"res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png"
 	)
