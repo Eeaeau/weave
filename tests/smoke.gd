@@ -84,8 +84,11 @@ func _check_audio() -> bool:
 func _check_sprite_visuals(match_scene: Node3D) -> bool:
 	var sprites := match_scene.find_children("*", "Sprite3D", true, false)
 	var meshes := match_scene.find_children("*", "MeshInstance3D", true, false)
-	if sprites.size() < 20 or not meshes.is_empty():
-		return _fail("World placeholders must be 2D sprites in the 3D scene")
+	for mesh in meshes:
+		if not mesh is SpiderLegStroke3D:
+			return _fail("Only procedural spider leg strokes may use 3D meshes")
+	if sprites.size() < 20:
+		return _fail("World placeholders must remain 2D sprites in the 3D scene")
 	return true
 
 

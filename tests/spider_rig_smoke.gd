@@ -34,10 +34,13 @@ func _run() -> void:
 		return
 	var rig := wrapper.instantiate()
 	root.add_child(rig)
-	if not _check_imported_rig(rig) or not _check_base_spider():
+	await process_frame
+	if (not _check_imported_rig(rig)
+			or not _check_leg_strokes(rig)
+			or not _check_base_spider()):
 		return
 	rig.free()
-	print("SPIDER RIG PASS: 71 bones and 8 external foot targets")
+	print("SPIDER RIG PASS: 71 bones, 8 foot targets, and 8 adjustable leg strokes")
 	quit(0)
 
 
@@ -67,6 +70,25 @@ func _check_base_spider() -> bool:
 	if spider.get_node_or_null("SpiderRig") == null:
 		return _fail("Base spider does not contain the armature wrapper")
 	spider.free()
+	return true
+
+
+func _check_leg_strokes(rig: Node) -> bool:
+	var strokes := rig.get_node_or_null("LegStrokes") as MeshInstance3D
+	if strokes == null or strokes.mesh == null:
+		return _fail("Spider rig must draw its leg strokes from the armature")
+	if strokes.mesh.get_surface_count() != EXPECTED_FOOT_TARGETS.size():
+		return _fail("Spider rig must draw exactly eight leg strokes")
+	var width_value: Variant = strokes.get("stroke_width")
+	if not width_value is float or width_value <= 0.0:
+		return _fail("Leg stroke thickness must be adjustable")
+	var arrays := strokes.mesh.surface_get_arrays(0)
+	var vertices := arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array
+	if vertices.size() < 2:
+		return _fail("Leg stroke geometry must contain a ribbon")
+	var rendered_width := vertices[0].distance_to(vertices[1])
+	if not is_equal_approx(rendered_width, width_value):
+		return _fail("Leg ribbon width must match the Inspector stroke width")
 	return true
 
 

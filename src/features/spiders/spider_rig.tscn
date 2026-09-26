@@ -1,10 +1,14 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" uid="uid://ds762u7onoc57" path="res://src/features/spiders/assets/spider_rig.blend" id="1_rig"]
+[ext_resource type="Script" path="res://src/features/spiders/spider_leg_stroke_3d.gd" id="2_strokes"]
 
 [node name="SpiderRig" type="Node3D"]
 
 [node name="ImportedRig" parent="." instance=ExtResource("1_rig")]
+
+[node name="LegStrokes" type="MeshInstance3D" parent="."]
+script = ExtResource("2_strokes")
 
 [node name="FootTargets" type="Node3D" parent="."]
 
