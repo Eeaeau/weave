@@ -23,6 +23,7 @@ var scene_weapon_no_action = preload(
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	super._ready()
 	aim_arrow_offset = aim_arrow.position
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
