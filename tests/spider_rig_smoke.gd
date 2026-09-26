@@ -329,7 +329,25 @@ func _check_eye_tracking(rig: Node) -> bool:
 	var radius_value: Variant = eyes.get("eye_radius")
 	if not radius_value is float or radius_value <= 0.0:
 		return _fail("Eye movement radius must be adjustable")
+	if not _check_eye_idle_animation(eyes, target):
+		return false
 	return await _check_eye_motion(eyes, radius_value)
+
+
+func _check_eye_idle_animation(eyes: Node3D, target: Marker3D) -> bool:
+	var player := eyes.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	if player == null or not player.has_animation("eye_idle"):
+		return _fail("Spider eyes require an eye_idle animation")
+	var idle := player.get_animation("eye_idle")
+	if idle.loop_mode == Animation.LOOP_NONE:
+		return _fail("Spider eye idle animation must loop")
+	if not player.is_playing() or player.current_animation != "eye_idle":
+		return _fail("Spider eye idle animation must autoplay")
+	var initial_target := target.position
+	player.advance(1.0)
+	if target.position.is_equal_approx(initial_target):
+		return _fail("Spider eye idle animation must move LookAtPos")
+	return true
 
 
 func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:

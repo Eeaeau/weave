@@ -16,6 +16,44 @@ albedo_color = Color(0.09019608, 0.07450981, 0.07450981, 1)
 
 [sub_resource type="ImmediateMesh" id="ImmediateMesh_abrnf"]
 
+[sub_resource type="Animation" id="Animation_6mje3"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("LookAtPos:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-0.22418164, 0, -3.3086417)]
+}
+
+[sub_resource type="Animation" id="Animation_abrnf"]
+resource_name = "eye_idle"
+length = 4.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("LookAtPos:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.93, 1.79, 2.99),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.22418164, 0, -3.3086417), Vector3(1.9624949, 0, -1.9107451), Vector3(1.5702254, 0, -1.5608478), Vector3(-2.707295, 0, -1.4103186)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_rparr"]
+_data = {
+&"RESET": SubResource("Animation_6mje3"),
+&"eye_idle": SubResource("Animation_abrnf")
+}
+
 [node name="SpiderRig" type="Node3D" unique_id=1588032234]
 
 [node name="ImportedRig" parent="." unique_id=1157697690 instance=ExtResource("1_rig")]
@@ -43,7 +81,7 @@ settings/1/extend_end_bone = true
 settings/1/end_bone/direction = 6
 settings/1/end_bone/length = 0.2471447
 settings/1/joint_count = 5
-settings/0/joints/0/rotation_axis = 3
+settings/0/joints/0/rotation_axis = 0
 settings/0/joints/0/limitation = null
 settings/0/joints/1/rotation_axis = 3
 settings/0/joints/1/limitation = null
@@ -354,73 +392,73 @@ script = ExtResource("2_strokes")
 [node name="FootTargets" type="Node3D" parent="." unique_id=775124396]
 
 [node name="FootBackLeft" type="Marker3D" parent="FootTargets" unique_id=2084766856]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78525394, 0.5, -1.4204785)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.216023, 0.5, -1.683889)
 gizmo_extents = 0.12
 
 [node name="FootBackRight" type="Marker3D" parent="FootTargets" unique_id=548359014]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.394384, 0.5, -1.980057)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8664572, 0.5, -1.6848155)
 gizmo_extents = 0.12
 
 [node name="FootFrontLeft" type="Marker3D" parent="FootTargets" unique_id=858526737]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.53504246, 0.50002736, 1.4679191)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9606522, 0.50002736, 2.0292728)
 gizmo_extents = 0.12
 
 [node name="FootFrontRight" type="Marker3D" parent="FootTargets" unique_id=1246736733]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.928994, 0.500027, 2.503755)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.51757836, 0.500027, 2.0908637)
 gizmo_extents = 0.12
 
 [node name="FootMidBackLeft" type="Marker3D" parent="FootTargets" unique_id=442144950]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.348166, 0.5, -1.361902)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8915062, 0.5, -1.2299219)
 gizmo_extents = 0.12
 
 [node name="FootMidBackRight" type="Marker3D" parent="FootTargets" unique_id=316131591]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.348166, 0.5, -1.361902)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8359015, 0.5, -0.9453686)
 gizmo_extents = 0.12
 
 [node name="FootMidFrontLeft" type="Marker3D" parent="FootTargets" unique_id=427923149]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.333005, 0.5, 1.274444)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7966254, 0.5, 0.93660545)
 gizmo_extents = 0.12
 
 [node name="FootMidFrontRight" type="Marker3D" parent="FootTargets" unique_id=1728433374]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.333005, 0.5, 1.274444)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6313721, 0.5, 0.893468)
 gizmo_extents = 0.12
 
 [node name="LiftTargets" type="Node3D" parent="."]
 
 [node name="LiftFrontLeft" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.760311, 0.62, 1.264632)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8028837, 1.4135311, 1.4438746)
 gizmo_extents = 0.1
 
 [node name="LiftFrontRight" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.760312, 0.62, 1.264632)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5640344, 1.1684328, 1.2410624)
 gizmo_extents = 0.1
 
 [node name="LiftMidFrontLeft" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.320447, 0.62, 0.546594)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.320447, 1.0213535, 0.546594)
 gizmo_extents = 0.1
 
 [node name="LiftMidFrontRight" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.320448, 0.62, 0.546594)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2059113, 1.4054416, 0.48137552)
 gizmo_extents = 0.1
 
 [node name="LiftMidBackLeft" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.243719, 0.62, -0.732562)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.243719, 1.0223683, -0.732562)
 gizmo_extents = 0.1
 
 [node name="LiftMidBackRight" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.24372, 0.62, -0.732562)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0949509, 1.4038942, -0.66610795)
 gizmo_extents = 0.1
 
 [node name="LiftBackLeft" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.867847, 0.62, -1.212646)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88072765, 1.0492538, -1.294074)
 gizmo_extents = 0.1
 
 [node name="LiftBackRight" type="Marker3D" parent="LiftTargets"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.867847, 0.62, -1.212646)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7240806, 1.2097051, -1.4448448)
 gizmo_extents = 0.1
 
 [node name="BoneAttachment3D" type="BoneAttachment3D" parent="." unique_id=1951212813]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3255666, 0)
+transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 0, 0.8058373, 0)
 bone_name = "CTRL_root"
 bone_idx = 0
 use_external_skeleton = true
@@ -457,7 +495,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.744, 0, -0.761)
 gizmo_extents = 0.07
 
 [node name="LookAtPos" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=805047784]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26671454, 0, -3.1219494)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22418164, 0, -3.3086417)
 gizmo_extents = 0.1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="BoneAttachment3D/BodyOffset" unique_id=1309729961]
+libraries/ = SubResource("AnimationLibrary_rparr")
+autoplay = &"eye_idle"
 
 [editable path="ImportedRig"]
