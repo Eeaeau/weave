@@ -6,4 +6,3 @@
 [node name="OpponentSpider" instance=ExtResource("1")]
 script = ExtResource("2")
 team_name = "Opponent"
-body_color = Color(0.95, 0.62, 0.45, 1)
