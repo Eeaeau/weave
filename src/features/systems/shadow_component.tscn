@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ddt3h3368ybcj"]
+
+[ext_resource type="Script" uid="uid://cwp1xrpng2841" path="res://src/features/systems/shadow_component.gd" id="1_xih3l"]
+
+[node name="ShadowComponent" type="Node3D" unique_id=1817632336]
+script = ExtResource("1_xih3l")
