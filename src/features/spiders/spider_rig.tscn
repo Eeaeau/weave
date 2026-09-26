@@ -1,45 +1,84 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://s2t6xr80ccug"]
 
 [ext_resource type="PackedScene" uid="uid://ds762u7onoc57" path="res://src/features/spiders/assets/spider_rig.blend" id="1_rig"]
-[ext_resource type="Script" path="res://src/features/spiders/spider_leg_stroke_3d.gd" id="2_strokes"]
+[ext_resource type="Script" uid="uid://dt5g3hfdicxts" path="res://src/features/spiders/spider_leg_stroke_3d.gd" id="2_strokes"]
+[ext_resource type="Script" uid="uid://7mv2mpgfki4d" path="res://src/features/spiders/scripts/spider_eyes.gd" id="3_6mje3"]
+[ext_resource type="Texture2D" uid="uid://b1mvhdg4qhbur" path="res://src/features/spiders/assets/body/spider_body.png" id="3_xagw3"]
+[ext_resource type="Texture2D" uid="uid://dq1q7xnd4lige" path="res://src/features/spiders/assets/body/spider_pupile1.png" id="4_v4ffn"]
+[ext_resource type="Texture2D" uid="uid://dxmuc6viet353" path="res://src/features/spiders/assets/body/spider_pupile2.png" id="5_6mje3"]
 
-[node name="SpiderRig" type="Node3D"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hjatl"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.09019608, 0.07450981, 0.07450981, 1)
 
-[node name="ImportedRig" parent="." instance=ExtResource("1_rig")]
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_v4ffn"]
 
-[node name="LegStrokes" type="MeshInstance3D" parent="."]
+[node name="SpiderRig" type="Node3D" unique_id=1588032234]
+
+[node name="ImportedRig" parent="." unique_id=1157697690 instance=ExtResource("1_rig")]
+
+[node name="LegStrokes" type="MeshInstance3D" parent="." unique_id=1763659197]
+material_override = SubResource("StandardMaterial3D_hjatl")
+cast_shadow = 0
+mesh = SubResource("ImmediateMesh_v4ffn")
 script = ExtResource("2_strokes")
 
-[node name="FootTargets" type="Node3D" parent="."]
+[node name="FootTargets" type="Node3D" parent="." unique_id=775124396]
 
-[node name="FootBackLeft" type="Marker3D" parent="FootTargets"]
-position = Vector3(-1.394384, 0.5, -1.980057)
+[node name="FootBackLeft" type="Marker3D" parent="FootTargets" unique_id=2084766856]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.394384, 0.5, -1.980057)
 gizmo_extents = 0.12
 
-[node name="FootBackRight" type="Marker3D" parent="FootTargets"]
-position = Vector3(1.394384, 0.5, -1.980057)
+[node name="FootBackRight" type="Marker3D" parent="FootTargets" unique_id=548359014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.394384, 0.5, -1.980057)
 gizmo_extents = 0.12
 
-[node name="FootFrontLeft" type="Marker3D" parent="FootTargets"]
-position = Vector3(-0.928994, 0.500027, 2.503755)
+[node name="FootFrontLeft" type="Marker3D" parent="FootTargets" unique_id=858526737]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.928994, 0.500027, 2.503755)
 gizmo_extents = 0.12
 
-[node name="FootFrontRight" type="Marker3D" parent="FootTargets"]
-position = Vector3(0.928994, 0.500027, 2.503755)
+[node name="FootFrontRight" type="Marker3D" parent="FootTargets" unique_id=1246736733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.928994, 0.500027, 2.503755)
 gizmo_extents = 0.12
 
-[node name="FootMidBackLeft" type="Marker3D" parent="FootTargets"]
-position = Vector3(-2.348166, 0.5, -1.361902)
+[node name="FootMidBackLeft" type="Marker3D" parent="FootTargets" unique_id=442144950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.348166, 0.5, -1.361902)
 gizmo_extents = 0.12
 
-[node name="FootMidBackRight" type="Marker3D" parent="FootTargets"]
-position = Vector3(2.348166, 0.5, -1.361902)
+[node name="FootMidBackRight" type="Marker3D" parent="FootTargets" unique_id=316131591]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.348166, 0.5, -1.361902)
 gizmo_extents = 0.12
 
-[node name="FootMidFrontLeft" type="Marker3D" parent="FootTargets"]
-position = Vector3(-2.333005, 0.5, 1.274444)
+[node name="FootMidFrontLeft" type="Marker3D" parent="FootTargets" unique_id=427923149]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.333005, 0.5, 1.274444)
 gizmo_extents = 0.12
 
-[node name="FootMidFrontRight" type="Marker3D" parent="FootTargets"]
-position = Vector3(2.333005, 0.5, 1.274444)
+[node name="FootMidFrontRight" type="Marker3D" parent="FootTargets" unique_id=1728433374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.333005, 0.5, 1.274444)
 gizmo_extents = 0.12
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="." unique_id=1951212813]
+
+[node name="BodyOffset" type="Node3D" parent="BoneAttachment3D" unique_id=786587160 node_paths=PackedStringArray("left_eye", "right_eye", "look_at_pos")]
+script = ExtResource("3_6mje3")
+left_eye = NodePath("LeftEye")
+right_eye = NodePath("RightEye")
+look_at_pos = NodePath("LookAtPos")
+
+[node name="Body" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=301050122]
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.1609689, 0.40651894, -0.24795955)
+texture = ExtResource("3_xagw3")
+
+[node name="LeftEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=170682879]
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.099202484, 0.5124047, -0.29688102)
+texture = ExtResource("4_v4ffn")
+
+[node name="RightEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=1878592149]
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.22503239, 0.5124047, -0.3552975)
+texture = ExtResource("5_6mje3")
+
+[node name="LookAtPos" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=805047784]
+gizmo_extents = 0.1
