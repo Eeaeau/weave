@@ -3,6 +3,7 @@
 *.tscn text eol=lf
 *.tres text eol=lf
 *.godot text eol=lf
+*.import text eol=lf
 *.cfg text eol=lf
 *.uid text eol=lf
 *.yml text eol=lf
