@@ -74,11 +74,11 @@ func _check_stationary(controller: Node3D, targets: Node) -> bool:
 
 func _check_steps(controller: Node3D, targets: Node, spider: Node3D) -> bool:
 	var initial := _positions(targets)
-	spider.position.z += 0.05
+	spider.position.z += 0.14
 	controller.call("advance", 0.016)
 	if not _same_positions(targets, initial):
-		return _fail("Feet must stay planted during movement below the step threshold")
-	spider.position.z += 0.23
+		return _fail("Step lead must not shorten the movement threshold")
+	spider.position.z += 0.14
 	controller.call("advance", 0.05)
 	if not _moved_group(targets, initial, GROUP_A):
 		return _fail("First diagonal group did not start a step")
@@ -107,9 +107,16 @@ func _check_preview() -> bool:
 	if preview_spider == null or preview_camera == null or not preview_camera.current:
 		return _fail("Preview must contain the real spider and an active camera")
 	var start := preview_spider.global_position
+	var preview_targets := preview_spider.get_node("SpiderRig/FootTargets")
+	var planted := _positions(preview_targets)
+	var preview_controller := preview_spider.get_node("SpiderRig/LegController")
+	preview_controller.set_process(false)
 	preview.call("move_spider", Vector3.RIGHT, 0.25)
 	if preview_spider.global_position.x <= start.x:
 		return _fail("Preview must move the spider freely without a web")
+	preview_controller.call("advance", 0.11)
+	if _same_positions(preview_targets, planted):
+		return _fail("Preview movement must drive the spider's feet")
 	preview.free()
 	return true
 
@@ -148,12 +155,16 @@ func _check_emergency_release() -> bool:
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
 	controller.set_process(false)
+	var planted_height := (rig.get_node("FootTargets/FootFrontRight") as Marker3D).global_position.y
 	rig.rotation.y = PI
 	controller.call("advance", 0.016)
 	if not controller.call("is_dangling", 1):
 		spider.free()
 		return _fail("A stranded leg must release after an impossible instant turn")
 	var loose_foot := rig.get_node("FootTargets/FootFrontRight") as Marker3D
+	if loose_foot.global_position.y < planted_height:
+		spider.free()
+		return _fail("A released foot must lift above its planted height")
 	var before := loose_foot.global_position
 	spider.position.x += 0.1
 	controller.call("advance", 0.016)

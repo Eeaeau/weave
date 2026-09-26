@@ -77,7 +77,7 @@ func _start_group(group_index: int) -> bool:
 			_feet[foot_index].global_position = _dangling_position(foot_index)
 			continue
 		var destination: Vector3 = landing["point"]
-		var gap := destination - _feet[foot_index].global_position
+		var gap := _rig.to_global(_rest_offsets[foot_index]) - _feet[foot_index].global_position
 		gap.y = 0.0
 		if gap.length() <= step_distance and not _dangling[foot_index]:
 			continue
@@ -114,7 +114,7 @@ func _release_crossed_feet() -> void:
 
 func _dangling_position(foot_index: int) -> Vector3:
 	var foot_position := _lift_position(foot_index)
-	foot_position.y = _ground_heights[foot_index] - step_height * 0.25
+	foot_position.y = maxf(_ground_heights[foot_index] + step_height * 0.5, foot_position.y)
 	return foot_position
 
 
