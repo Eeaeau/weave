@@ -102,17 +102,17 @@ offset_bottom = 63.0
 text = "1"
 horizontal_alignment = 2
 
-[node name="WeaponContainer3" type="PanelContainer" parent="WeaponsContainer" unique_id=1201747482]
+[node name="WeaponContainer3" type="PanelContainer" parent="WeaponsContainer" unique_id=656179079]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer3" unique_id=2141792067]
+[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer3" unique_id=1845686330]
 custom_minimum_size = Vector2(64, 64)
 custom_maximum_size = Vector2(64, 64)
 layout_mode = 2
-texture = ExtResource("2_n1tcl")
-stretch_mode = 3
+texture = ExtResource("3_qsekk")
+expand_mode = 2
 
-[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer3/TextureRect" unique_id=98363165]
+[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer3/TextureRect" unique_id=1895536760]
 layout_mode = 0
 offset_left = 47.0
 offset_top = 40.0
@@ -121,17 +121,17 @@ offset_bottom = 63.0
 text = "1"
 horizontal_alignment = 2
 
-[node name="WeaponContainer4" type="PanelContainer" parent="WeaponsContainer" unique_id=550444206]
+[node name="WeaponContainer4" type="PanelContainer" parent="WeaponsContainer" unique_id=307642786]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer4" unique_id=716644935]
+[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer4" unique_id=423742059]
 custom_minimum_size = Vector2(64, 64)
 custom_maximum_size = Vector2(64, 64)
 layout_mode = 2
-texture = ExtResource("2_n1tcl")
-stretch_mode = 3
+texture = ExtResource("3_qsekk")
+expand_mode = 2
 
-[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer4/TextureRect" unique_id=1686499476]
+[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer4/TextureRect" unique_id=1828999023]
 layout_mode = 0
 offset_left = 47.0
 offset_top = 40.0

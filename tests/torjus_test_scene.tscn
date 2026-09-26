@@ -33,3 +33,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07861447, 0, -0.80688095)
 
 [node name="WeaponThrowPebble2" parent="." unique_id=2065555181 instance=ExtResource("5_vo601")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8082619, 0, -1.307636)
+
+[node name="WeaponThrowPebble3" parent="." unique_id=948418827 instance=ExtResource("5_vo601")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.86476195, 0, -2.8107464)
+
+[node name="WeaponThrowPebble4" parent="." unique_id=1072412236 instance=ExtResource("5_vo601")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6403325, 0, -2.7865822)
+
+[node name="WeaponThrowPebble5" parent="." unique_id=1377695298 instance=ExtResource("5_vo601")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6827142, 0, -0.3648212)

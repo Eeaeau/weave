@@ -16,6 +16,7 @@ var weapons: Array[Weapon3D]
 var selected_weapon_idx: int = 0
 var scene_weapon_no_action = preload(
 	"res://src/features/collectibles/weapons/weapon_no_action.tscn")
+var health: float = 1.0
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -73,6 +74,7 @@ func _process(delta: float) -> void:
 			if selected_weapon.is_used_up():
 				weapons.remove_at(selected_weapon_idx)
 				remove_child(selected_weapon)
+				selected_weapon_idx = 0
 
 		n_remaining_actions -= 1
 
@@ -129,3 +131,11 @@ func pick_up(collectible: Collectible3D) -> bool:
 		collectible.call_deferred("reparent", self)
 		weapons.append(collectible)
 	return true
+
+
+func take_damage(damage: float) -> void:
+	health -= damage
+
+
+func is_dead() -> bool:
+	return health <= 0
