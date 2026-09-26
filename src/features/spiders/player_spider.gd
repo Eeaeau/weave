@@ -16,9 +16,11 @@ var weapons: Array[Weapon3D]
 var selected_weapon_idx: int = 0
 var scene_weapon_no_action = preload(
 	"res://src/features/collectibles/weapons/weapon_no_action.tscn")
+var health: float = 1.0
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
+@onready var hitbox: Area3D = $Hitbox
 
 
 # Called when the node enters the scene tree for the first time.
@@ -73,6 +75,7 @@ func _process(delta: float) -> void:
 			if selected_weapon.is_used_up():
 				weapons.remove_at(selected_weapon_idx)
 				remove_child(selected_weapon)
+				selected_weapon_idx = 0
 
 		n_remaining_actions -= 1
 
@@ -121,7 +124,7 @@ func get_movement_direction() -> Vector3:
 
 
 func is_done() -> bool:
-	return n_remaining_actions <= 0
+	return n_remaining_actions <= 0 or is_dead()
 
 
 func pick_up(collectible: Collectible3D) -> bool:
@@ -129,3 +132,16 @@ func pick_up(collectible: Collectible3D) -> bool:
 		collectible.call_deferred("reparent", self)
 		weapons.append(collectible)
 	return true
+
+
+func take_damage(damage: float) -> void:
+	print("ouch")
+	health -= damage
+	if is_dead():
+		visible = false
+		hitbox.monitorable = false
+		hitbox.monitoring = false
+
+
+func is_dead() -> bool:
+	return health <= 0
