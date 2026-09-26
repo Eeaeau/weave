@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://ds762u7onoc57" path="res://src/features/spiders/assets/spider_rig.blend" id="1_rig"]
 [ext_resource type="Script" uid="uid://dt5g3hfdicxts" path="res://src/features/spiders/spider_leg_stroke_3d.gd" id="2_strokes"]
 [ext_resource type="Script" uid="uid://7mv2mpgfki4d" path="res://src/features/spiders/scripts/spider_eyes.gd" id="3_6mje3"]
+[ext_resource type="Script" path="res://src/features/spiders/spider_leg_controller_3d.gd" id="6_gait"]
 [ext_resource type="Texture2D" uid="uid://b1mvhdg4qhbur" path="res://src/features/spiders/assets/body/spider_body.png" id="3_xagw3"]
 [ext_resource type="Texture2D" uid="uid://dq1q7xnd4lige" path="res://src/features/spiders/assets/body/spider_pupile1.png" id="4_v4ffn"]
 [ext_resource type="Texture2D" uid="uid://dxmuc6viet353" path="res://src/features/spiders/assets/body/spider_pupile2.png" id="5_6mje3"]
@@ -21,7 +22,7 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("LookAtPos:position")
+tracks/0/path = NodePath("BoneAttachment3D/BodyOffset/LookAtPos:position")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -29,6 +30,30 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector3(-0.22418164, 0, -3.3086417)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("ImportedRig:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0.8090404, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("ImportedRig:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
 }
 
 [sub_resource type="Animation" id="Animation_abrnf"]
@@ -38,7 +63,7 @@ loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("LookAtPos:position")
+tracks/0/path = NodePath("BoneAttachment3D/BodyOffset/LookAtPos:position")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -46,6 +71,30 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 0,
 "values": [Vector3(-0.22418164, 0, -3.3086417), Vector3(1.9624949, 0, -1.9107451), Vector3(1.5702254, 0, -1.5608478), Vector3(-2.707295, 0, -1.4103186)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("ImportedRig:position")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 1, 2, 3, 4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0.8090404, 0), Vector3(0, 0.8390404, 0), Vector3(0, 0.8090404, 0), Vector3(0, 0.7790404, 0), Vector3(0, 0.8090404, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("ImportedRig:rotation")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 1, 2, 3, 4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0.02, 0.14, -0.015), Vector3(0, 0, 0), Vector3(-0.015, -0.14, 0.02), Vector3(0, 0, 0)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_rparr"]
@@ -55,6 +104,9 @@ _data = {
 }
 
 [node name="SpiderRig" type="Node3D" unique_id=1588032234]
+
+[node name="LegController" type="Node3D" parent="."]
+script = ExtResource("6_gait")
 
 [node name="ImportedRig" parent="." unique_id=1157697690 instance=ExtResource("1_rig")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8090404, 0)
@@ -479,11 +531,11 @@ transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.95051
 texture = ExtResource("3_xagw3")
 
 [node name="LeftEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=170682879]
-transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.099202484, 0.5124047, -0.29688102)
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.1609689, 0.5124047, -0.24795955)
 texture = ExtResource("4_v4ffn")
 
 [node name="RightEye" type="Sprite3D" parent="BoneAttachment3D/BodyOffset" unique_id=1878592149]
-transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.22503239, 0.5124047, -0.3552975)
+transform = Transform3D(-2.9505186e-08, -0.67499995, -2.9505186e-08, 0, -2.9505186e-08, 0.67499995, -0.67499995, 2.9505186e-08, 1.2897126e-15, -0.1609689, 0.5124047, -0.24795955)
 texture = ExtResource("5_6mje3")
 
 [node name="LeftEyeCenter" type="Marker3D" parent="BoneAttachment3D/BodyOffset" unique_id=714602965]
@@ -498,7 +550,7 @@ gizmo_extents = 0.07
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22418164, 0, -3.3086417)
 gizmo_extents = 0.1
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="BoneAttachment3D/BodyOffset" unique_id=1309729961]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1309729961]
 libraries/ = SubResource("AnimationLibrary_rparr")
 autoplay = &"eye_idle"
 

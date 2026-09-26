@@ -12,9 +12,12 @@ extends Node3D
 @export_group("Motion")
 @export_range(0.0, 0.5, 0.005, "or_greater") var eye_radius := 0.08
 @export_range(0.0, 1.0, 0.01) var influence := 1.0
+@export_group("Animation")
+@export var randomize_idle_phase := true
 @export_group("Neutral Positions")
-@export var left_neutral_position := Vector3(-0.099202484, 0.5124047, -0.29688102)
-@export var right_neutral_position := Vector3(-0.22503239, 0.5124047, -0.3552975)
+# Both pupil textures use the same canvas as Body, so their sprite origins align.
+@export var left_neutral_position := Vector3(-0.1609689, 0.5124047, -0.24795955)
+@export var right_neutral_position := Vector3(-0.1609689, 0.5124047, -0.24795955)
 
 
 func _ready() -> void:
@@ -22,6 +25,8 @@ func _ready() -> void:
 		push_warning("Spider eyes require both pupil sprites")
 		set_process(false)
 		return
+	if not Engine.is_editor_hint() and randomize_idle_phase:
+		call_deferred("_offset_idle_phase")
 	_update_eye_positions()
 
 
@@ -37,6 +42,12 @@ func _notification(what: int) -> void:
 		right_eye.position = right_neutral_position
 	elif what == NOTIFICATION_EDITOR_POST_SAVE:
 		_update_eye_positions()
+
+
+func _offset_idle_phase() -> void:
+	var player := get_node("../../AnimationPlayer") as AnimationPlayer
+	if player.current_animation == "eye_idle":
+		player.seek(randf() * player.current_animation_length, true)
 
 
 func _update_eye_positions() -> void:

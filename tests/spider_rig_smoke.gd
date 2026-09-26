@@ -1,6 +1,7 @@
 extends SceneTree
 ## Verify the Blender-authored rig is wrapped with external foot targets.
 
+const RIG_SCENE := preload("res://src/features/spiders/spider_rig.tscn")
 const EXPECTED_FOOT_TARGETS := [
 	"FootBackLeft",
 	"FootBackRight",
@@ -119,7 +120,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var wrapper := load("res://src/features/spiders/spider_rig.tscn") as PackedScene
+	var wrapper := RIG_SCENE
 	if wrapper == null:
 		_fail("Spider rig wrapper did not load")
 		return
@@ -321,23 +322,42 @@ func _check_eye_tracking(rig: Node) -> bool:
 	var target := eyes.get_node_or_null("LookAtPos") as Marker3D
 	var left_eye := eyes.get_node_or_null("LeftEye") as Sprite3D
 	var right_eye := eyes.get_node_or_null("RightEye") as Sprite3D
+	var body := eyes.get_node_or_null("Body") as Sprite3D
 	var left_center := eyes.get_node_or_null("LeftEyeCenter") as Marker3D
 	var right_center := eyes.get_node_or_null("RightEyeCenter") as Marker3D
-	if (target == null or left_eye == null or right_eye == null
+	if (target == null or body == null or left_eye == null or right_eye == null
 			or left_center == null or right_center == null):
 		return _fail("Eye tracking requires two pupils and an animatable LookAtPos marker")
 	var radius_value: Variant = eyes.get("eye_radius")
 	if not radius_value is float or radius_value <= 0.0:
 		return _fail("Eye movement radius must be adjustable")
-	if not _check_eye_idle_animation(eyes, target):
+	if not await _check_eye_idle_animation(rig, eyes, target):
 		return false
 	return await _check_eye_motion(eyes, radius_value)
 
 
-func _check_eye_idle_animation(eyes: Node3D, target: Marker3D) -> bool:
-	var player := eyes.get_node_or_null("AnimationPlayer") as AnimationPlayer
+func _check_eye_alignment(
+	eyes: Node3D,
+	body: Sprite3D,
+	left_eye: Sprite3D,
+	right_eye: Sprite3D,
+) -> bool:
+	for pupil in [left_eye, right_eye]:
+		var property_name := "left_neutral_position"
+		if pupil == right_eye:
+			property_name = "right_neutral_position"
+		var neutral: Vector3 = eyes.get(property_name)
+		var neutral_plane := Vector2(neutral.x, neutral.z)
+		var body_plane := Vector2(body.position.x, body.position.z)
+		if neutral_plane.distance_to(body_plane) > 0.025:
+			return _fail("Pupil neutral position must align with its socket artwork")
+	return true
+
+
+func _check_eye_idle_animation(rig: Node, eyes: Node3D, target: Marker3D) -> bool:
+	var player := rig.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	if player == null or not player.has_animation("eye_idle"):
-		return _fail("Spider eyes require an eye_idle animation")
+		return _fail("Spider rig needs one shared idle AnimationPlayer at its root")
 	var idle := player.get_animation("eye_idle")
 	if idle.loop_mode == Animation.LOOP_NONE:
 		return _fail("Spider eye idle animation must loop")
@@ -347,15 +367,56 @@ func _check_eye_idle_animation(eyes: Node3D, target: Marker3D) -> bool:
 	player.advance(1.0)
 	if target.position.is_equal_approx(initial_target):
 		return _fail("Spider eye idle animation must move LookAtPos")
+	return await _check_body_sway(rig, player)
+
+
+func _check_body_sway(rig: Node, player: AnimationPlayer) -> bool:
+	var controller := rig.get_node("LegController") as Node3D
+	controller.set_process(false)
+	var imported := rig.get_node("ImportedRig") as Node3D
+	var body := rig.get_node("BoneAttachment3D/BodyOffset/Body") as Sprite3D
+	var foot := rig.get_node("FootTargets/FootFrontLeft") as Marker3D
+	var strokes := rig.get_node("LegStrokes") as MeshInstance3D
+	var original_phase := player.current_animation_position
+	player.seek(0.0, true)
+	await process_frame
+	await process_frame
+	var initial := {
+		"imported": imported.position,
+		"body": body.global_position,
+		"foot": foot.global_position,
+		"tip": strokes.to_global(_ribbon_point(strokes.mesh, 2, 8)),
+	}
+	player.seek(1.0, true)
+	await process_frame
+	await process_frame
+	var moved := {
+		"imported": imported.position,
+		"body": body.global_position,
+		"foot": foot.global_position,
+		"tip": strokes.to_global(_ribbon_point(strokes.mesh, 2, 8)),
+	}
+	player.seek(original_phase, true)
+	controller.set_process(true)
+	if (moved["imported"].distance_to(initial["imported"]) < 0.01
+			or moved["body"].distance_to(initial["body"]) < 0.01):
+		return _fail("Shared idle clip must sway the body through the imported rig")
+	if moved["foot"].distance_to(initial["foot"]) > 0.001:
+		return _fail("Body sway must leave the foot targets planted")
+	if moved["tip"].distance_to(initial["tip"]) > 0.03:
+		return _fail("Body sway must adjust the leg instead of sliding its planted tip")
 	return true
 
 
 func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
+	var body := eyes.get_node("Body") as Sprite3D
 	var target := eyes.get_node("LookAtPos") as Marker3D
 	var left_eye := eyes.get_node("LeftEye") as Sprite3D
 	var right_eye := eyes.get_node("RightEye") as Sprite3D
 	var left_center := eyes.get_node("LeftEyeCenter") as Marker3D
 	var right_center := eyes.get_node("RightEyeCenter") as Marker3D
+	if not _check_eye_alignment(eyes, body, left_eye, right_eye):
+		return false
 	eyes.set("influence", 0.0)
 	await process_frame
 	var left_neutral := left_eye.position
@@ -377,7 +438,35 @@ func _check_eye_motion(eyes: Node3D, eye_radius: float) -> bool:
 	if (not left_eye.position.is_equal_approx(left_neutral)
 			or not right_eye.position.is_equal_approx(right_neutral)):
 		return _fail("Pupils must return to their neutral positions")
+	return await _check_eye_desync()
+
+
+func _check_eye_desync() -> bool:
+	var first := RIG_SCENE.instantiate()
+	var second := RIG_SCENE.instantiate()
+	root.add_child(first)
+	root.add_child(second)
+	await process_frame
+	var first_phase := _eye_player(first).current_animation_position
+	var second_phase := _eye_player(second).current_animation_position
+	var phase_gap := absf(first_phase - second_phase)
+	first.free()
+	second.free()
+	if phase_gap < 0.001:
+		return _fail("Separate spiders must not start the eye loop in sync")
+	var fixed := RIG_SCENE.instantiate()
+	fixed.get_node("BoneAttachment3D/BodyOffset").set("randomize_idle_phase", false)
+	root.add_child(fixed)
+	await process_frame
+	var fixed_phase := _eye_player(fixed).current_animation_position
+	fixed.free()
+	if fixed_phase > 0.1:
+		return _fail("Disabling the idle offset must start the loop at the beginning")
 	return true
+
+
+func _eye_player(rig: Node) -> AnimationPlayer:
+	return rig.get_node("AnimationPlayer") as AnimationPlayer
 
 
 func _check_ik_strokes(rig: Node) -> bool:
