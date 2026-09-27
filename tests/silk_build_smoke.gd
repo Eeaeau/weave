@@ -424,10 +424,43 @@ func _check_match_spawns() -> bool:
 				return _fail(
 					"Every spawned spider must be able to reach a legal starting web vertex"
 				)
+			if not _has_visible_starting_hint(team.home_web, spider):
+				_stop_audio(match_scene)
+				match_scene.free()
+				return _fail(
+					"A spider at a starting web vertex must see silk attachment hints"
+				)
 	_stop_audio(match_scene)
 	match_scene.free()
 	await create_timer(0.5).timeout
 	return true
+
+
+func _has_visible_starting_hint(web: Web3D, spider: PlayerSpider3D) -> bool:
+	var builder := spider.silk_builder
+	var nearest_source := -1
+	var nearest_distance := INF
+	for source_index in range(web.valid_nodes.size()):
+		if builder._find_targets(web, source_index).is_empty():
+			continue
+		var distance := spider.global_position.distance_to(
+			web.valid_nodes[source_index].global_position)
+		if distance < nearest_distance:
+			nearest_source = source_index
+			nearest_distance = distance
+	if nearest_source < 0 or nearest_distance > 5.0:
+		return false
+	spider.global_position = web.valid_nodes[nearest_source].global_position
+	spider.activate()
+	spider.n_remaining_actions = 1
+	spider.selected_weapon_idx = 1
+	builder.update_preview()
+	if builder.silk_source_index != nearest_source or not builder._preview_line.visible:
+		return false
+	for marker in builder.target_markers:
+		if marker.visible:
+			return true
+	return false
 
 
 func _can_reach_starting_build(web: Web3D, spider: PlayerSpider3D) -> bool:
@@ -439,7 +472,7 @@ func _can_reach_starting_build(web: Web3D, spider: PlayerSpider3D) -> bool:
 			if source_index == target_index or not is_instance_valid(web.valid_nodes[target_index]):
 				continue
 			var target := web.valid_nodes[target_index]
-			if source.global_position.distance_to(target.global_position) > MAX_TEST_STRAND_LENGTH:
+			if source.global_position.distance_to(target.global_position) > web.max_strand_length:
 				continue
 			if web.can_add_edge(source_index, target_index):
 				return true
