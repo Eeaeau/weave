@@ -9,7 +9,7 @@
 [node name="TorjusTestScene" type="Node3D" unique_id=1972552716]
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1837678052]
-transform = Transform3D(1, 0, 0, 0, 0.4302836, 0.90269375, 0, -0.90269375, 0.4302836, -0.43808636, 4.6753507, 1.3962454)
+transform = Transform3D(1, 0, 0, 0, -0.02509743, 0.999685, 0, -0.999685, -0.02509743, -2.7104003, 9.001486, -0.1830914)
 
 [node name="MatchHud" parent="." unique_id=1154433575 instance=ExtResource("2_jxtdx")]
 
@@ -21,24 +21,24 @@ n_spiders_per_team = 2
 metadata/_custom_type_script = "uid://vjxl4iy367xq"
 
 [node name="TeamA" parent="." unique_id=1437638294 instance=ExtResource("3_68q8q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.96625924, -2.3841858e-07, -0.6495352)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2209198, -2.3841858e-07, -2.5029812)
 spider_scene = ExtResource("1_6rc11")
 
 [node name="TeamB" parent="." unique_id=1935928191 instance=ExtResource("3_68q8q")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.66284835, 0, 0.36684728)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7910526, 0, 0.96349406)
 spider_scene = ExtResource("1_6rc11")
 
 [node name="WeaponThrowPebble2" parent="." unique_id=2065555181 instance=ExtResource("5_vo601")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8082619, 0, -1.307636)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2662711, 0, -5.0215454)
 
 [node name="WeaponThrowPebble6" parent="." unique_id=1754921735 instance=ExtResource("5_vo601")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7546339, -4.7683716e-07, 0.3402624)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.829167, -4.7683716e-07, -3.3736467)
 
 [node name="WeaponThrowPebble3" parent="." unique_id=948418827 instance=ExtResource("5_vo601")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.86476195, 0, -2.8107464)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2097712, 0, -6.5246553)
 
 [node name="WeaponThrowPebble4" parent="." unique_id=1072412236 instance=ExtResource("5_vo601")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6403325, 0, -2.7865822)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43420053, 0, -6.500491)
 
 [node name="WeaponThrowPebble5" parent="." unique_id=1377695298 instance=ExtResource("5_vo601")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6827142, 0, -0.3648212)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.39181876, 0, -4.0787306)
