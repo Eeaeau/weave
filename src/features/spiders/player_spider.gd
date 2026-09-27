@@ -58,6 +58,14 @@ func _process(delta: float) -> void:
 	var movement_direction := get_movement_direction()
 	if not movement_direction.is_zero_approx():
 		spider_rig.rotation.y = atan2(movement_direction.x, movement_direction.z)
+	var velocity = movement_direction * MOVE_SPEED
+	if velocity.length() > 0:
+		if remaining_movement > 0:
+			var to_move = velocity * delta
+			if to_move.length() > remaining_movement:
+				to_move = to_move.normalized() * remaining_movement
+			remaining_movement -= to_move.length()
+			position += to_move
 
 	if Input.is_action_pressed("aim_left"):
 		aim_angle += AIM_SPEED * delta
@@ -85,21 +93,6 @@ func _process(delta: float) -> void:
 	if number_input > 0 and not charging_action and number_input <= len(weapons):
 		selected_weapon_idx = number_input - 1
 		print("selected " + str(selected_weapon_idx))
-
-
-func _physics_process(delta: float) -> void:
-	if not is_active or remaining_movement <= 0.0 or delta <= 0.0:
-		velocity = Vector3.ZERO
-		return
-	var movement_direction := get_movement_direction()
-	if movement_direction.is_zero_approx():
-		velocity = Vector3.ZERO
-		return
-	var step_distance := minf(MOVE_SPEED * delta, remaining_movement)
-	velocity = movement_direction * (step_distance / delta)
-	move_and_slide()
-	remaining_movement = maxf(remaining_movement - get_position_delta().length(), 0.0)
-	velocity = Vector3.ZERO
 
 
 func activate() -> void:

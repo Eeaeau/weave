@@ -121,13 +121,6 @@ cancel_silk_build={
 3d_physics/layer_3="Walkable Web"
 3d_physics/layer_4="Projectiles"
 
-[layer_names]
-
-3d_physics/layer_1="Spiders"
-3d_physics/layer_2="Impassable Branches"
-3d_physics/layer_3="Walkable Web"
-3d_physics/layer_4="Projectiles"
-
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

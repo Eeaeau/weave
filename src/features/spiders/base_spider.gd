@@ -1,5 +1,5 @@
 class_name BaseSpider3D
-extends CharacterBody3D
+extends Node3D
 ## Shared spider identity backed by the armature-driven visual rig.
 
 @export var team_name: String = "Team"
