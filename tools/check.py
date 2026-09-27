@@ -194,6 +194,7 @@ def main() -> int:
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
+        ("action_camera_smoke", "ACTION CAMERA PASS:"),
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),
         ("wind_match_smoke", "WIND MATCH PASS:"),
         ("wind_event_smoke", "WIND EVENT PASS:"),

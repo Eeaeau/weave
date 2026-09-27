@@ -6,8 +6,6 @@ signal event_started(round_number: int)
 signal item_contact(item: Collectible3D, side: int, local_point: Vector2, world_point: Vector3)
 signal event_finished(round_number: int)
 
-const CAMERA_PATH := NodePath("../ParallaxCamera")
-
 @export_range(1, 12) var group_size: int = 3
 @export_range(0.1, 5.0, 0.1) var spawn_interval: float = 0.8
 @export_range(1.0, 20.0, 0.1) var flight_duration_min: float = 7.0
@@ -80,6 +78,22 @@ func claim(item: Collectible3D, target_parent: Node3D) -> bool:
 	return false
 
 
+func get_camera_focus_point() -> Vector3:
+	var total := Vector3.ZERO
+	var count := 0
+	for child in $Flights.get_children():
+		if (child is WindFlight3D and is_instance_valid(child)
+				and not child.is_queued_for_deletion()):
+			total += child.global_position
+			count += 1
+	if count == 0:
+		return ($WebPlane as Node3D).global_position
+	var plane := $WebPlane as Node3D
+	var plane_local_center := plane.to_local(total / float(count))
+	plane_local_center.y = 0.0
+	return plane.to_global(plane_local_center)
+
+
 func advance(delta: float) -> void:
 	$Gust.advance(delta)
 	if not is_active:
@@ -128,7 +142,7 @@ func _spawn_next() -> WindFlight3D:
 		sway = -sway
 	var flight := WindFlight3D.new()
 	$Flights.add_child(flight)
-	flight.global_basis = _camera_basis()
+	flight.global_basis = _plane_camera_basis()
 	flight.plane_crossed.connect(func(crossing_item: Collectible3D,
 			world_point: Vector3) -> void: _on_plane_crossed(crossing_item, side, world_point))
 	flight.finished.connect(func() -> void: _on_flight_finished(flight))
@@ -148,7 +162,7 @@ func _sample_path(lane: WindLane3D) -> PackedVector3Array:
 			lane.contact_rect.end.y)
 	var plane: Node3D = $WebPlane
 	var contact_world := plane.to_global(Vector3(local_x, 0.0, local_z))
-	var camera_basis := _camera_basis()
+	var camera_basis := _plane_camera_basis()
 	var start_world := contact_world - camera_basis.z * 8.0
 	start_world += camera_basis.x * _path_random.randf_range(-0.5, 0.5)
 	start_world += camera_basis.y * _path_random.randf_range(2.5, 3.1)
@@ -158,11 +172,9 @@ func _sample_path(lane: WindLane3D) -> PackedVector3Array:
 	return PackedVector3Array([start_world, contact_world, exit_world])
 
 
-func _camera_basis() -> Basis:
-	var camera := get_node_or_null(CAMERA_PATH) as Camera3D
-	if camera == null:
-		return Basis.IDENTITY
-	return camera.global_basis.orthonormalized()
+func _plane_camera_basis() -> Basis:
+	var plane_basis := ($WebPlane as Node3D).global_basis.orthonormalized()
+	return Basis(plane_basis.x, -plane_basis.z, plane_basis.y).orthonormalized()
 
 
 func _choose_lane(side: int) -> WindLane3D:
