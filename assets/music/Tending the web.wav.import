@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://csvbuj1kc88cg"
+path="res://.godot/imported/Tending the web.wav-56e2c3444923368194971ac2f66d6c22.sample"
+
+[deps]
+
+source_file="res://assets/music/Tending the web.wav"
+dest_files=["res://.godot/imported/Tending the web.wav-56e2c3444923368194971ac2f66d6c22.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
