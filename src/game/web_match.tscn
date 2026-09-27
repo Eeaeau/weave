@@ -109,6 +109,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.826775, -3.1135426, 8.4049
 
 [node name="WebA" parent="." unique_id=219804916 node_paths=PackedStringArray("valid_nodes") instance=ExtResource("12_web")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3, 0.1, 0)
+max_strand_length = 8.0
 valid_nodes = [NodePath("../BranchCanopy/Nodes/Left/1"), NodePath("../BranchCanopy/Nodes/Left/2"), NodePath("../BranchCanopy/Nodes/Left/3"), NodePath("../BranchCanopy/Nodes/Left/4"), NodePath("../BranchCanopy/Nodes/Left/5"), NodePath("../BranchCanopy/Nodes/Left/6"), NodePath("../BranchCanopy/Nodes/Left/7"), NodePath("../BranchCanopy/Nodes/Left/8"), NodePath("../BranchCanopy/Nodes/Left/9"), NodePath("../BranchCanopy/Nodes/Left/10"), NodePath("../BranchCanopy/Nodes/Left/11"), NodePath("../BranchCanopy/Nodes/Left/12")]
 edges = Array[Vector2i]([Vector2i(0, 1), Vector2i(2, 0), Vector2i(3, 0), Vector2i(2, 3), Vector2i(1, 3)])
 web_width = 0.00999999999999999
@@ -117,6 +118,7 @@ web_width = 0.00999999999999999
 
 [node name="WebB" parent="." unique_id=1110966528 node_paths=PackedStringArray("valid_nodes") instance=ExtResource("12_web")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0.1, 0)
+max_strand_length = 8.0
 valid_nodes = [NodePath("../BranchCanopy/Nodes/Right/9"), NodePath("../BranchCanopy/Nodes/Right/10"), NodePath("../BranchCanopy/Nodes/Right/11"), NodePath("../BranchCanopy/Nodes/Right/12"), NodePath("../BranchCanopy/Nodes/Right/13"), NodePath("../BranchCanopy/Nodes/Right/14"), NodePath("../BranchCanopy/Nodes/Right/15"), NodePath("../BranchCanopy/Nodes/Right/16"), NodePath("../BranchCanopy/Nodes/Right/17"), NodePath("../BranchCanopy/Nodes/Right/18"), NodePath("../BranchCanopy/Nodes/Right/19"), NodePath("../BranchCanopy/Nodes/Right/20"), NodePath("../BranchCanopy/Nodes/Right/21"), NodePath("../BranchCanopy/Nodes/Right/22"), NodePath("../BranchCanopy/Nodes/Right/23")]
 edges = Array[Vector2i]([Vector2i(0, 1), Vector2i(1, 2), Vector2i(3, 0), Vector2i(3, 1), Vector2i(2, 3)])
 web_width = 0.00999999999999999

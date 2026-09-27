@@ -8,6 +8,7 @@ const EDGE_MAX_HEALTH := 100.0
 const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn")
 
 @export_range(0.01, 1.0, 0.01) var catch_plane_tolerance: float = 0.25
+@export_range(0.5, 20.0, 0.5) var max_strand_length: float = 3.0
 # ============================================================
 # Nodes
 # ============================================================

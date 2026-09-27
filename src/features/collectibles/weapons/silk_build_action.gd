@@ -4,7 +4,6 @@ extends Weapon3D
 
 const VERTEX_INTERACTION_DISTANCE: float = 0.75
 const MAX_WEB_PLANE_DISTANCE: float = 0.5
-const MAX_STRAND_LENGTH: float = 3.0
 
 var spider: Node
 var owned_web: Web3D
@@ -181,7 +180,7 @@ func _find_targets(web: Web3D, source_index: int) -> Array[int]:
 		var target := web.valid_nodes[target_index]
 		if not is_instance_valid(target):
 			continue
-		if source.global_position.distance_to(target.global_position) > MAX_STRAND_LENGTH:
+		if source.global_position.distance_to(target.global_position) > web.max_strand_length:
 			continue
 		if web.can_add_edge(source_index, target_index):
 			targets.append(target_index)
