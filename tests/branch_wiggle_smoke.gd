@@ -51,8 +51,8 @@ func _prepare_canopy() -> bool:
 	var right_branch := _canopy.get_node("RightBranch") as Node3D
 	_left_foreground = left_branch.find_child("Foreground", true, false) as Node3D
 	_right_foreground = right_branch.find_child("Foreground", true, false) as Node3D
-	_left_blocker = left_branch.get_node("LeftBranchBlocker") as StaticBody3D
-	_right_blocker = right_branch.get_node("RightBranchBlocker") as StaticBody3D
+	_left_blocker = _canopy.get_node("LeftBranchBlocker") as StaticBody3D
+	_right_blocker = _canopy.get_node("RightBranchBlocker") as StaticBody3D
 	if (_left_foreground == null or _right_foreground == null
 			or _left_blocker == null or _right_blocker == null):
 		return false
