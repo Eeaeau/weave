@@ -13,6 +13,9 @@ func _run() -> void:
 	if not _check_standalone_edge():
 		quit(1)
 		return
+	if not _check_geometry_api():
+		quit(1)
+		return
 	if not await _check_match_claim():
 		quit(1)
 		return
@@ -55,6 +58,47 @@ func _check_standalone_edge() -> bool:
 	if not missed:
 		return _fail("An isolated strand must not catch in the first version")
 	return true
+
+
+func _check_geometry_api() -> bool:
+	var web := Web3D.new()
+	var nodes: Array[Node3D] = []
+	for point in [Vector3.ZERO, Vector3(3, 0, 0), Vector3(0, 0, 3), Vector3(3, 0, 3)]:
+		nodes.append(_add_web_node(web, point))
+	web.valid_nodes = nodes
+	web.edges = [
+		Vector2i(0, 1), Vector2i(1, 2), Vector2i(2, 0), Vector2i(2, 3),
+	]
+	root.add_child(web)
+
+	var triangles: Array = web.get_triangles()
+	if triangles.size() != 1 or triangles[0].size() != 3:
+		web.free()
+		return _fail("get_triangles must return each connected triangular face once")
+	var triangle: Array = triangles[0]
+	if not _contains_point(triangle, Vector2.ZERO) \
+			or not _contains_point(triangle, Vector2(3, 0)) \
+			or not _contains_point(triangle, Vector2(0, 3)):
+		web.free()
+		return _fail("get_triangles must return triangle vertex positions")
+
+	var standalone: Array = web.get_stand_alone_edges()
+	if standalone.size() != 1 or standalone[0].size() != 2:
+		web.free()
+		return _fail("get_stand_alone_edges must exclude triangle edges")
+	var edge: Array = standalone[0]
+	if not _contains_point(edge, Vector2(0, 3)) or not _contains_point(edge, Vector2(3, 3)):
+		web.free()
+		return _fail("get_stand_alone_edges must return standalone endpoint positions")
+	web.free()
+	return true
+
+
+func _contains_point(points: Array, expected: Vector2) -> bool:
+	for point in points:
+		if point is Vector2 and point.is_equal_approx(expected):
+			return true
+	return false
 
 
 func _check_match_claim() -> bool:
