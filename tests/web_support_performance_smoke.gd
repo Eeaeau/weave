@@ -40,6 +40,7 @@ func _run() -> void:
 
 func _make_dense_web() -> Web3D:
 	var web := Web3D.new()
+	web.rings = 8
 	var nodes: Array[Node3D] = []
 	var edge_list: Array[Vector2i] = []
 	for z in range(4):
@@ -68,6 +69,8 @@ func _add_web_node(web: Web3D, position: Vector3) -> Node3D:
 
 func _check_single_render(web: Web3D) -> bool:
 	for polygon in web.polygon_container.get_children():
+		if not polygon is WebPolygon3D:
+			continue
 		if polygon.get_child_count() != 1:
 			push_error("WEB SUPPORT PERFORMANCE FAIL: polygon generated duplicate mesh containers")
 			return false
