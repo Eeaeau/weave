@@ -2,7 +2,7 @@ class_name WindGust
 extends AudioStreamPlayer
 ## Plays one gust for the full wind group and fades when it ends.
 
-@export_range(-60.0, 0.0, 0.1) var level_db: float = -9.0
+@export_range(-60.0, 0.0, 0.1) var level_db: float = -40.0
 @export_range(0.1, 5.0, 0.1) var fade_seconds: float = 1.0
 
 var _fade_elapsed: float = -1.0
