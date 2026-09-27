@@ -192,6 +192,7 @@ def main() -> int:
         ("background_layers_smoke", "BACKGROUND LAYERS PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
+        ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
         ("action_camera_smoke", "ACTION CAMERA PASS:"),
@@ -199,6 +200,7 @@ def main() -> int:
         ("wind_match_smoke", "WIND MATCH PASS:"),
         ("wind_event_smoke", "WIND EVENT PASS:"),
         ("web_catch_smoke", "WEB CATCH PASS:"),
+        ("web_support_performance_smoke", "WEB SUPPORT PERFORMANCE PASS:"),
     ):
         run(
             base + ["--script", f"res://tests/{script}.gd", "--log-file", str(check_dir / f"{script}.log")],

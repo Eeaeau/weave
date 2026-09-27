@@ -125,6 +125,7 @@ func _run() -> void:
 		_fail("Spider rig wrapper did not load")
 		return
 	var rig := wrapper.instantiate()
+	(rig.get_node("LegController") as Node).set("targeting_mode", 1)
 	root.add_child(rig)
 	await process_frame
 	if (not _check_imported_rig(rig)
@@ -206,6 +207,7 @@ func _check_gameplay_spiders(scene_index: int = 0) -> bool:
 	var scene := load(GAMEPLAY_SPIDER_SCENES[scene_index]) as PackedScene
 	var spider := scene.instantiate() as BaseSpider3D
 	root.add_child(spider)
+	(spider.get_node("SpiderRig/LegController") as Node).set("targeting_mode", 1)
 	await process_frame
 	var body := spider.get_node_or_null(
 		"SpiderRig/BoneAttachment3D/BodyOffset/Body"

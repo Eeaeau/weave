@@ -94,6 +94,7 @@ var polygon_container: Node3D
 
 
 func _ready() -> void:
+	add_to_group("web_support")
 
 	if Engine.is_editor_hint():
 		set_process(true)
@@ -238,6 +239,24 @@ func find_catch_face(world_point: Vector3) -> String:
 
 func has_catch_face(face_key: String) -> bool:
 	return _catch_regions.has(face_key)
+
+
+## Returns the visible polygon line segments in world space.
+func get_support_segments() -> Array[Dictionary]:
+	var segments: Array[Dictionary] = []
+	if polygon_container == null or not is_instance_valid(polygon_container):
+		return segments
+	for polygon_index in range(polygon_container.get_child_count()):
+		var polygon := polygon_container.get_child(polygon_index) as WebPolygon3D
+		if polygon == null:
+			continue
+		for local_segment in polygon.get_support_segments():
+			segments.append({
+				"start": polygon.to_global(local_segment["start"]),
+				"end": polygon.to_global(local_segment["end"]),
+				"strand_id": "%d:%s" % [polygon_index, local_segment["strand_id"]],
+			})
+	return segments
 
 
 # ============================================================
@@ -811,12 +830,6 @@ func create_polygon(node_indices: Array[int]) -> void:
 	var polygon := WebPolygon3D.new()
 	polygon.name = "WebPolygon"
 
-	polygon_container.add_child(polygon)
-
-	# Generated editor nodes should not be saved.
-	if Engine.is_editor_hint():
-		polygon.owner = null
-
 	polygon.points.clear()
 
 	for node_index in node_indices:
@@ -843,7 +856,13 @@ func create_polygon(node_indices: Array[int]) -> void:
 	polygon.outer_curvature = outer_curvature
 	polygon.line_color = line_color
 
-	polygon.draw()
+	# Configure before entering the tree so each setter does not redraw the mesh.
+	polygon_container.add_child(polygon)
+
+	# Generated editor nodes should not be saved.
+	if Engine.is_editor_hint():
+		polygon.owner = null
+
 	if node_indices.size() == 3:
 		_catch_regions[_face_key(node_indices)] = polygon.get_catch_outline()
 

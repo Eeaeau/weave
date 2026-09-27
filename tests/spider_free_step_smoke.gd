@@ -26,6 +26,7 @@ func _run() -> void:
 		_fail("Spider rig has no leg movement controller")
 		return
 	controller.set_process(false)
+	controller.set("targeting_mode", 1)
 	await process_frame
 	(spider.get_node("SpiderRig/AnimationPlayer") as AnimationPlayer).seek(0.0, true)
 	controller.set("step_distance", 0.2)
@@ -133,6 +134,7 @@ func _check_idle_pose_steps() -> bool:
 	var imported := rig.get_node("ImportedRig") as Node3D
 	var targets := rig.get_node("FootTargets")
 	controller.set_process(false)
+	controller.set("targeting_mode", 1)
 	player.seek(0.0, true)
 	controller.call("advance", 0.016)
 	var planted := _positions(targets)
@@ -161,6 +163,7 @@ func _check_turning() -> bool:
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
 	controller.set_process(false)
+	controller.set("targeting_mode", 1)
 	controller.set("step_distance", 0.2)
 	if not controller.has_method("is_dangling"):
 		spider.free()
@@ -189,6 +192,7 @@ func _check_emergency_release() -> bool:
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
 	controller.set_process(false)
+	controller.set("targeting_mode", 1)
 	var planted_height := (rig.get_node("FootTargets/FootFrontRight") as Marker3D).global_position.y
 	rig.rotation.y = PI
 	controller.call("advance", 0.016)
