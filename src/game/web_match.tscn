@@ -3,28 +3,32 @@
 [ext_resource type="Script" uid="uid://dfm7bd8aacsp0" path="res://src/game/web_match.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://cjr2bhdata12b" path="res://src/features/world/maps/branch_canopy/branch_canopy.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://baf408x8r2h8j" path="res://src/features/spiders/player_spider.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://src/features/collectibles/weapons/windborne_weapon.tscn" id="6"]
-[ext_resource type="Resource" path="res://src/features/collectibles/weapons/pebble.tres" id="7"]
+[ext_resource type="AudioStream" uid="uid://bfgnr2r61m1ep" path="res://assets/music/Combat.wav" id="3_ggfpk"]
+[ext_resource type="AudioStream" uid="uid://xahoesnmfsrk" path="res://assets/music/Expanding.wav" id="4_xyjxb"]
+[ext_resource type="AudioStream" uid="uid://csvbuj1kc88cg" path="res://assets/music/Tending the web.wav" id="5_p1esv"]
+[ext_resource type="AudioStream" uid="uid://bnc0mrfs6sfpg" path="res://assets/music/Swaying in the wind.wav" id="6_0rucu"]
 [ext_resource type="PackedScene" path="res://src/features/ui/match_hud.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://src/features/ui/pause_menu.tscn" id="9"]
 [ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="11_m5no2"]
 [ext_resource type="PackedScene" uid="uid://ca8cqbxxkmgnw" path="res://src/features/systems/team.tscn" id="11_pd16p"]
 [ext_resource type="PackedScene" uid="uid://bu81h1e2g7ldm" path="res://src/features/web/web_3d.tscn" id="12_web"]
+[ext_resource type="AudioStream" uid="uid://fpg0qjm58l6g" path="res://assets/music/Menu.wav" id="13_gmg8k"]
 
 [node name="WebMatch" type="Node3D" unique_id=1817038654]
 script = ExtResource("1")
+sound_tracks = Array[AudioStream]([ExtResource("4_xyjxb"), ExtResource("5_p1esv"), ExtResource("6_0rucu"), ExtResource("13_gmg8k"), ExtResource("3_ggfpk")])
 
 [node name="BranchCanopy" parent="." unique_id=2083914664 instance=ExtResource("2")]
 
 [node name="WebA" parent="." unique_id=219804916 instance=ExtResource("12_web")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3, 0.1, 0)
-web_width = 0.009999999999999998
+web_width = 0.00999999999999999
 
 [node name="CaughtItems" type="Node3D" parent="WebA" unique_id=199677267]
 
 [node name="WebB" parent="." unique_id=1110966528 instance=ExtResource("12_web")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0.1, 0)
-web_width = 0.009999999999999998
+web_width = 0.00999999999999999
 
 [node name="CaughtItems" type="Node3D" parent="WebB" unique_id=1027188632]
 
@@ -47,3 +51,7 @@ spider_scene = ExtResource("3")
 [node name="TeamB" parent="." unique_id=1203086720 instance=ExtResource("11_pd16p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1016297, -4.7683716e-07, 0.14235687)
 spider_scene = ExtResource("3")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1184262214]
+volume_db = -25.0
+autoplay = true
