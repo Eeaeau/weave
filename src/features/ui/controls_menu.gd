@@ -18,7 +18,7 @@ const ACTIONS := [
 	{ "name": "Select Weapon 3", "action": "select_3" },
 	{ "name": "Select Weapon 4", "action": "select_4" },
 	{ "name": "Select Weapon 5", "action": "select_5" },
-	{ "name": "Cycle Silk Target Previous", "action": "cycle_silk_target_previous" },
+	{ "name": "Cycle Silk Target Back", "action": "cycle_silk_target_previous" },
 	{ "name": "Cycle Silk Target Next", "action": "cycle_silk_target_next" },
 	{ "name": "Cancel Silk Build", "action": "cancel_silk_build" },
 ]

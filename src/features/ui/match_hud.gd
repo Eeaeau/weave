@@ -30,7 +30,7 @@ func _update_status() -> void:
 	status.text = "WEAVE  |  2.5D scene prototype"
 	if show_hints:
 		status.text += "\nWASD move · Arrows aim · Space action"
-		status.text += "\n1–5 select · 2 Silk · Q/E target · X cancel · Esc pause"
+		status.text += "\n1–5 select · 2 Silk · reach node · Tab cycle · Space build · X cancel"
 
 
 func update_energy(energy: float) -> void:

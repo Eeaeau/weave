@@ -86,10 +86,10 @@ func _process(delta: float) -> void:
 		aim_angle -= AIM_SPEED * delta
 	if Input.is_action_just_pressed("action"):
 		action_charged_time = 0.0
-	if Input.is_action_just_released("action"):
 		if selected_weapon is SilkBuildAction3D:
 			silk_builder.try_build_selected_silk()
-		elif selected_weapon:
+	if Input.is_action_just_released("action"):
+		if selected_weapon and not selected_weapon is SilkBuildAction3D:
 			selected_weapon.fire(aim_angle, aim_magnitude)
 			if selected_weapon.is_used_up():
 				weapons.remove_at(selected_weapon_idx)

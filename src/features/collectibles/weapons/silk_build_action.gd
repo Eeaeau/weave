@@ -2,9 +2,9 @@ class_name SilkBuildAction3D
 extends Weapon3D
 ## Permanent action slot used to select and place a silk strand.
 
-const MAX_SOURCE_ANCHOR_DISTANCE: float = 1.5
+const VERTEX_INTERACTION_DISTANCE: float = 0.35
 const MAX_WEB_PLANE_DISTANCE: float = 0.5
-const EXISTING_VERTEX_DISTANCE: float = 0.01
+const MAX_STRAND_LENGTH: float = 3.0
 
 var spider: Node
 var owned_web: Web3D
@@ -12,9 +12,10 @@ var silk_source_web: Web3D
 var silk_source_index: int = -1
 var silk_target_indices: Array[int] = []
 var selected_silk_target_index: int = 0
+var target_markers: Array[Sprite3D] = []
 var _preview_root: Node3D
 var _preview_line: Sprite3D
-var _target_highlight: Sprite3D
+var _target_marker_template: Sprite3D
 
 
 func _ready() -> void:
@@ -35,7 +36,7 @@ func set_build_web(web: Web3D) -> void:
 	refresh_silk_build_options()
 
 
-## Finds a nearby web vertex that can support a strand from the spider's position.
+## Exposes targets only when the spider is standing at an owned web vertex.
 func refresh_silk_build_options() -> void:
 	var previous_target := -1
 	if not silk_target_indices.is_empty():
@@ -44,32 +45,25 @@ func refresh_silk_build_options() -> void:
 	silk_source_index = -1
 	silk_target_indices.clear()
 	selected_silk_target_index = 0
-	if not is_inside_tree() or owned_web == null:
+	if (not is_inside_tree() or not is_instance_valid(spider)
+			or not is_instance_valid(owned_web)):
 		return
 	var web := owned_web
-	var local_origin := web.to_local(spider.global_position)
-	if absf(local_origin.y) > MAX_WEB_PLANE_DISTANCE:
+	var local_spider_position := web.to_local(spider.global_position)
+	if absf(local_spider_position.y) > MAX_WEB_PLANE_DISTANCE:
 		return
-	local_origin.y = 0.0
-	var origin := web.to_global(local_origin)
-
-	var max_distance_squared := (
-		MAX_SOURCE_ANCHOR_DISTANCE * MAX_SOURCE_ANCHOR_DISTANCE
-	)
-	var nearest_distance_squared := max_distance_squared
+	var nearest_distance := VERTEX_INTERACTION_DISTANCE
 	for source_index in range(web.valid_nodes.size()):
 		var source := web.valid_nodes[source_index]
-		if source == null:
+		if not is_instance_valid(source):
 			continue
-		var distance_squared: float = origin.distance_squared_to(
-			source.global_position
-		)
-		if distance_squared > nearest_distance_squared:
+		var distance: float = spider.global_position.distance_to(source.global_position)
+		if distance > nearest_distance:
 			continue
-		var eligible_targets := _find_targets(web, source_index, origin)
+		var eligible_targets := _find_targets(web, source_index)
 		if eligible_targets.is_empty():
 			continue
-		nearest_distance_squared = distance_squared
+		nearest_distance = distance
 		silk_source_web = web
 		silk_source_index = source_index
 		silk_target_indices = eligible_targets
@@ -105,17 +99,15 @@ func try_build_selected_silk() -> bool:
 func build_silk_strand(web: Web3D, source_index: int, target_index: int) -> bool:
 	if not _can_build_on_web(web, source_index, target_index):
 		return false
-	var local_origin := web.to_local(spider.global_position)
-	if absf(local_origin.y) > MAX_WEB_PLANE_DISTANCE:
+	var local_spider_position := web.to_local(spider.global_position)
+	if absf(local_spider_position.y) > MAX_WEB_PLANE_DISTANCE:
 		return false
-	local_origin.y = 0.0
-	var origin := web.to_global(local_origin)
-	var source_position := web.valid_nodes[source_index].global_position
-	if origin.distance_to(source_position) > MAX_SOURCE_ANCHOR_DISTANCE:
+	var source := web.valid_nodes[source_index]
+	if spider.global_position.distance_to(source.global_position) > VERTEX_INTERACTION_DISTANCE:
 		return false
-	if not _find_targets(web, source_index, origin).has(target_index):
+	if not _find_targets(web, source_index).has(target_index):
 		return false
-	if not _commit_strand(web, source_index, target_index, origin):
+	if not web.add_edge(source_index, target_index):
 		return false
 	spider.set("silk_amount", spider.get("silk_amount") - 1)
 	spider.set("n_remaining_actions", spider.get("n_remaining_actions") - 1)
@@ -133,7 +125,8 @@ func _can_build_on_web(web: Web3D, source_index: int, target_index: int) -> bool
 	if (source_index < 0 or source_index >= web.valid_nodes.size()
 			or target_index < 0 or target_index >= web.valid_nodes.size()):
 		return false
-	return web.valid_nodes[source_index] != null and web.valid_nodes[target_index] != null
+	return (is_instance_valid(web.valid_nodes[source_index])
+		and is_instance_valid(web.valid_nodes[target_index]))
 
 
 func update_preview() -> void:
@@ -142,83 +135,62 @@ func update_preview() -> void:
 			or silk_source_web == null or silk_target_indices.is_empty()):
 		hide_preview()
 		return
-	var local_origin := silk_source_web.to_local(spider.global_position)
-	local_origin.y = 0.0
-	var origin := silk_source_web.to_global(local_origin)
-	var target := silk_source_web.valid_nodes[
+	var source := silk_source_web.valid_nodes[silk_source_index]
+	var target_count := silk_target_indices.size()
+	_ensure_target_markers(target_count)
+	for index in range(target_count):
+		var target := silk_source_web.valid_nodes[silk_target_indices[index]]
+		var marker := target_markers[index]
+		marker.visible = true
+		marker.global_position = target.global_position + Vector3.UP * 0.04
+		if index == selected_silk_target_index:
+			marker.pixel_size = 0.016
+			marker.modulate = Color(1.0, 0.82, 0.35, 0.95)
+		else:
+			marker.pixel_size = 0.011
+			marker.modulate = Color(0.55, 1.0, 0.9, 0.8)
+	var selected_target := silk_source_web.valid_nodes[
 		silk_target_indices[selected_silk_target_index]
 	]
-	var direction := target.global_position - origin
+	var direction := selected_target.global_position - source.global_position
 	_preview_root.global_position = (
-		(origin + target.global_position) * 0.5 + Vector3.UP * 0.05
+		(source.global_position + selected_target.global_position) * 0.5
+		+ Vector3.UP * 0.05
 	)
 	_preview_root.global_rotation = Vector3(0.0, atan2(-direction.z, direction.x), 0.0)
 	_preview_line.scale.x = direction.length() / (256.0 * _preview_line.pixel_size)
 	_preview_line.visible = true
-	_target_highlight.global_position = target.global_position + Vector3.UP * 0.04
-	_target_highlight.visible = true
 
 
-func _find_targets(web: Web3D, source_index: int, origin: Vector3) -> Array[int]:
+func _find_targets(web: Web3D, source_index: int) -> Array[int]:
 	var targets: Array[int] = []
-	var source_position := web.valid_nodes[source_index].global_position
-	if origin.distance_to(source_position) <= EXISTING_VERTEX_DISTANCE:
-		for index in range(web.valid_nodes.size()):
-			if web.valid_nodes[index] != null and web.can_add_edge(source_index, index):
-				targets.append(index)
-		return targets
-
-	var probe := Node3D.new()
-	web.add_child(probe)
-	probe.global_position = origin
-	var probe_index := web.valid_nodes.size()
-	web.valid_nodes.append(probe)
-	if web.can_add_edge(source_index, probe_index):
-		web.edges.append(Vector2i(source_index, probe_index))
-		for index in range(probe_index):
-			if (index != source_index and web.valid_nodes[index] != null
-					and web.can_add_edge(probe_index, index)):
-				targets.append(index)
-		web.edges.pop_back()
-	web.valid_nodes.pop_back()
-	probe.free()
+	var source := web.valid_nodes[source_index]
+	for target_index in range(web.valid_nodes.size()):
+		var target := web.valid_nodes[target_index]
+		if not is_instance_valid(target):
+			continue
+		if source.global_position.distance_to(target.global_position) > MAX_STRAND_LENGTH:
+			continue
+		if web.can_add_edge(source_index, target_index):
+			targets.append(target_index)
 	return targets
 
 
-func _commit_strand(web: Web3D, source_index: int, target_index: int,
-		origin: Vector3) -> bool:
-	var source_position := web.valid_nodes[source_index].global_position
-	if origin.distance_to(source_position) <= EXISTING_VERTEX_DISTANCE:
-		return web.add_edge(source_index, target_index)
-	var vertex := Node3D.new()
-	vertex.name = "SilkVertex"
-	var node_parent := web.get_node_or_null("Nodes") as Node3D
-	if node_parent == null:
-		node_parent = web
-	node_parent.add_child(vertex)
-	vertex.global_position = origin
-	var vertex_index := web.valid_nodes.size()
-	web.valid_nodes.append(vertex)
-	if not web.can_add_edge(source_index, vertex_index):
-		web.valid_nodes.pop_back()
-		vertex.free()
-		return false
-	web.edges.append(Vector2i(source_index, vertex_index))
-	if not web.can_add_edge(vertex_index, target_index):
-		web.edges.pop_back()
-		web.valid_nodes.pop_back()
-		vertex.free()
-		return false
-	web.edges.append(Vector2i(vertex_index, target_index))
-	web.rebuild()
-	return true
+func _ensure_target_markers(target_count: int) -> void:
+	while target_markers.size() < target_count:
+		var marker := _target_marker_template.duplicate() as Sprite3D
+		marker.name = "SilkTargetMarker%d" % target_markers.size()
+		add_child(marker)
+		target_markers.append(marker)
+	for index in range(target_markers.size()):
+		target_markers[index].visible = index < target_count
 
 
 func hide_preview() -> void:
 	if _preview_line:
 		_preview_line.visible = false
-	if _target_highlight:
-		_target_highlight.visible = false
+	for marker in target_markers:
+		marker.visible = false
 
 
 func _create_preview() -> void:
@@ -233,11 +205,9 @@ func _create_preview() -> void:
 	_preview_line.rotation.x = -PI / 2.0
 	_preview_line.visible = false
 	_preview_root.add_child(_preview_line)
-	_target_highlight = Sprite3D.new()
-	_target_highlight.name = "SilkTargetHighlight"
-	_target_highlight.texture = load("res://src/features/spiders/assets/silk_anchor.svg")
-	_target_highlight.pixel_size = 0.012
-	_target_highlight.modulate = Color(1.0, 0.82, 0.35, 0.95)
-	_target_highlight.rotation.x = -PI / 2.0
-	_target_highlight.visible = false
-	add_child(_target_highlight)
+	_target_marker_template = Sprite3D.new()
+	_target_marker_template.name = "SilkTargetMarkerTemplate"
+	_target_marker_template.texture = load("res://src/features/spiders/assets/silk_anchor.svg")
+	_target_marker_template.rotation.x = -PI / 2.0
+	_target_marker_template.visible = false
+	add_child(_target_marker_template)

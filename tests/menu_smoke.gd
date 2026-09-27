@@ -70,7 +70,16 @@ func _has_player_actions(controls: ControlsMenu) -> bool:
 			return false
 	if (controls.rows.get_child(7).get_node("ActionLabel").text != "Use Action"
 			or controls.rows.get_child(9).get_node("ActionLabel").text != "Select Silk"
-			or controls.rows.get_child(12).get_node("ActionLabel").text != "Select Weapon 5"):
+			or controls.rows.get_child(12).get_node("ActionLabel").text != "Select Weapon 5"
+			or controls.rows.get_child(14).get_node("ActionLabel").text
+			!= "Cycle Silk Target Next"):
+		return false
+	var cycle_events := InputMap.action_get_events("cycle_silk_target_next")
+	var has_tab_binding := false
+	for event in cycle_events:
+		if event is InputEventKey and event.physical_keycode == KEY_TAB:
+			has_tab_binding = true
+	if not has_tab_binding:
 		return false
 	return true
 
