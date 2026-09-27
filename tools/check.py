@@ -190,6 +190,7 @@ def main() -> int:
         ("resource_smoke", "RESOURCE PASS:"),
         ("smoke", "SMOKE PASS:"),
         ("moth_visual_smoke", "MOTH VISUAL PASS:"),
+        ("weapon_self_hit_smoke", "WEAPON SELF HIT PASS:"),
         ("background_layers_smoke", "BACKGROUND LAYERS PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),

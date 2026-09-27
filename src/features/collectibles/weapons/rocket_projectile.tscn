@@ -113,6 +113,7 @@ animations = [{
 
 [node name="RocketProjectile" type="Node3D" unique_id=387750299 node_paths=PackedStringArray("hitbox", "explosion_hitbox", "explosion_sprite", "hide_on_hit")]
 script = ExtResource("1_vkrc5")
+launch_speed_multiplier = 1.5
 explosion_damage = 20.0
 hitbox = NodePath("Hitbox")
 explosion_hitbox = NodePath("ExplosionHitbox")
