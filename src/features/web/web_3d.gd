@@ -692,6 +692,58 @@ func find_faces() -> Array:
 	return faces
 
 
+func get_triangles() -> Array:
+
+	var triangles: Array = []
+
+	for face in find_faces():
+		var a = _node_position_2d(face[0])
+		var b = _node_position_2d(face[1])
+		var c = _node_position_2d(face[2])
+
+		var triangle: Array[Vector2] = [a, b, c]
+
+		triangles.append(triangle)
+
+	return triangles
+
+
+func get_stand_alone_edges() -> Array:
+
+	var faces := find_faces()
+
+	var face_edges: Dictionary = {}
+
+	for face in faces:
+
+		if face.size() != 3:
+			continue
+
+		var a: int = face[0]
+		var b: int = face[1]
+		var c: int = face[2]
+
+		face_edges[_edge_key(a, b)] = true
+		face_edges[_edge_key(b, c)] = true
+		face_edges[_edge_key(c, a)] = true
+
+	var stand_alone_edges: Array
+
+	for edge in edges:
+
+		var a: int = edge.x
+		var b: int = edge.y
+
+		if face_edges.has(_edge_key(a, b)):
+			continue
+
+		var a_position = _node_position_2d(a)
+		var b_position = _node_position_2d(b)
+
+		stand_alone_edges.append([a_position, b_position])
+
+	return stand_alone_edges
+
 # ============================================================
 # Edge key
 # ============================================================
