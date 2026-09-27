@@ -16,6 +16,8 @@ top_radius = 0.16455078
 bottom_radius = 0.16455078
 height = 0.001
 
+[sub_resource type="SpriteFrames" id="SpriteFrames_6q6db"]
+
 [node name="RocketProjectile" type="Node3D" unique_id=387750299 node_paths=PackedStringArray("hitbox", "explosion_hitbox", "explosion_sprite", "hide_on_hit")]
 script = ExtResource("1_vkrc5")
 explosion_damage = 20.0
@@ -25,7 +27,7 @@ explosion_sprite = NodePath("ExplosionSprite")
 hide_on_hit = [NodePath("ShadowComponent"), NodePath("Sprite3D")]
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
-transform = Transform3D(0.2, 0, 0, 0, -8.742278e-09, 0.2, 0, -0.2, -8.742278e-09, 0, 0, 0)
+transform = Transform3D(-0.0022336345, 0.19998753, 8.741733e-09, 0, -8.742278e-09, 0.2, 0.19998753, 0.0022336345, 9.763527e-11, -0.19264263, 2.3841858e-07, 0.06542659)
 texture = ExtResource("2_w8ylx")
 
 [node name="Hitbox" type="Area3D" parent="." unique_id=164628878]
@@ -42,10 +44,13 @@ shape = SubResource("SphereShape3D_vkrc5")
 mesh = NodePath("ShadowMesh")
 
 [node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=268478568]
-transform = Transform3D(0.89598715, 0, 0, 0, 0.9418374, 0, 0, 0, 2.7471282, 0.016407251, 0.08731341, -0.107384205)
+transform = Transform3D(0.022847764, 0, -2.7462354, 0, 0.9418375, 0, 0.89569587, 0, 0.070052, 0.027644947, 0.08731341, 0.049494803)
 mesh = SubResource("CylinderMesh_6q6db")
 
 [node name="ExplosionSprite" type="Sprite3D" parent="." unique_id=619356830]
 transform = Transform3D(3, 0, 0, 0, -1.3113416e-07, 3, 0, -3, -1.3113416e-07, 0, 0, 0)
 visible = false
 texture = ExtResource("2_vkrc5")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="." unique_id=68559792]
+sprite_frames = SubResource("SpriteFrames_6q6db")

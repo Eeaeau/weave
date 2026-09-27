@@ -46,6 +46,7 @@ func hit(hurtbox: Hurtbox3D) -> void:
 
 func launch(direction: float, power: float) -> void:
 	velocity = Vector3(4, 2, 0).rotated(Vector3(0, 1, 0), direction) * power
+	rotate_y(direction)
 
 
 func explode() -> void:
