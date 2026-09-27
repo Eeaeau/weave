@@ -2,6 +2,8 @@ class_name ActionCamera3D
 extends Camera3D
 ## Follows match action through a pose waypoint attached to the gameplay plane.
 
+const WIND_FOCUS_SMOOTHING: float = 3.0
+
 @export var waypoint_path: NodePath
 @export_range(0.1, 20.0, 0.1) var pan_smoothing: float = 5.0
 @export var sway_distance: float = 0.45
@@ -17,6 +19,7 @@ var _waypoint: Node3D
 var _gameplay_plane: Node3D
 var _wind_event: WindEvent3D
 var _match_manager: MatchManager
+var _wind_focus: Dictionary = {}
 
 
 func _ready() -> void:
@@ -37,9 +40,20 @@ func _process(delta: float) -> void:
 		return
 
 	var focus_request := _resolve_focus_request()
+	var focus_position: Vector3 = focus_request["position"]
+	if focus_request["kind"] == "wind":
+		if _wind_focus.is_empty():
+			_wind_focus["position"] = focus_position
+		else:
+			var focus_weight := 1.0 - exp(-WIND_FOCUS_SMOOTHING * maxf(delta, 0.0))
+			var previous_focus: Vector3 = _wind_focus["position"]
+			_wind_focus["position"] = previous_focus.lerp(focus_position, focus_weight)
+		focus_position = _wind_focus["position"]
+	else:
+		_wind_focus.clear()
 	var target_transform := _build_waypoint_transform(
 		_waypoint,
-		focus_request["position"],
+		focus_position,
 		focus_request["distance"],
 	)
 	target_transform.origin += target_transform.basis.x * sin(_elapsed * sway_speed) * sway_distance
