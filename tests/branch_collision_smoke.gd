@@ -25,9 +25,8 @@ func _run() -> void:
 	var right_blocker := branch_scene.get_node_or_null(
 		"RightBranch/RightBranchBlocker"
 	) as StaticBody3D
-	if left_blocker == null or right_blocker == null:
+	if not _check_visible_capsule(left_blocker) or not _check_visible_capsule(right_blocker):
 		branch_scene.free()
-		_fail("Both visible branches need named StaticBody3D blockers")
 		return
 	if left_blocker.collision_layer != 2 or right_blocker.collision_layer != 2:
 		branch_scene.free()
@@ -38,7 +37,7 @@ func _run() -> void:
 		branch_scene.free()
 		_fail("Impassable branches and walkable web need separate named layers")
 		return
-	var movement_ok: bool = await _check_spider_movement()
+	var movement_ok: bool = await _check_spider_movement(right_blocker)
 	if not movement_ok:
 		return
 	await process_frame
@@ -56,8 +55,43 @@ func _run() -> void:
 	quit(0)
 
 
-func _check_spider_movement() -> bool:
-	return await _check_clear_spider_movement() and await _check_blocked_spider_movement()
+func _check_visible_capsule(blocker: StaticBody3D) -> bool:
+	if blocker == null:
+		return _fail("Both branches need named StaticBody3D blockers")
+	var shape_node := blocker.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	var marker := blocker.get_node_or_null("VisualMarker") as Sprite3D
+	if shape_node == null or not shape_node.shape is CapsuleShape3D:
+		return _fail("Each branch blocker needs a capsule collision shape")
+	if marker == null or marker.texture == null or not marker.visible:
+		return _fail("Each branch blocker needs a visible placeholder sprite")
+	if absf(blocker.global_position.y) > 0.4:
+		return _fail("Branch blockers must overlap the spider's gameplay plane")
+	return true
+
+
+func _check_spider_movement(map_blocker: StaticBody3D) -> bool:
+	return (await _check_clear_spider_movement()
+		and await _check_blocked_spider_movement()
+		and await _check_map_branch_movement(map_blocker))
+
+
+func _check_map_branch_movement(blocker: StaticBody3D) -> bool:
+	var spider := SPIDER_SCENE.instantiate() as PlayerSpider3D
+	root.add_child(spider)
+	await physics_frame
+	spider.global_position = Vector3(
+		blocker.global_position.x - 4.0, 0.0, blocker.global_position.z
+	)
+	spider.is_active = true
+	spider.remaining_movement = 10.0
+	Input.action_press("move_right")
+	await _wait_physics_frames(120)
+	Input.action_release("move_right")
+	var stopped := spider.global_position.x < blocker.global_position.x - 1.0
+	spider.queue_free()
+	if not stopped:
+		return _fail("The visible map branch must block an approaching spider")
+	return true
 
 
 func _check_clear_spider_movement() -> bool:
