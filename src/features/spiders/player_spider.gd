@@ -1,21 +1,19 @@
 class_name PlayerSpider3D
 extends BaseSpider3D
 
-const PLAYER_TUNING := {
-	"aim_speed": 3.0,
-	"move_speed": 2.0,
-	"silk_capacity": 5,
-	"starting_silk": 3,
-	"aim_arrow_offset": Vector3(0.75, 0, 0),
-}
+const AIM_SPEED: float = 3.0
+const MOVE_SPEED: float = 2.0
+const SILK_CAPACITY: int = 5
+const STARTING_SILK: int = 3
 
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
-@export_range(0, 20) var silk_amount: int = PLAYER_TUNING.starting_silk
+@export_range(0, 20) var silk_amount: int = STARTING_SILK
 
 var remaining_movement: float = 0
 var aim_angle: float = 0
 var action_charged_time: float = 0
+var aim_arrow_offset: Vector3 = Vector3(0.75, 0, 0)
 var weapons: Array[Weapon3D]
 var selected_weapon_idx: int = 0
 var health: float = 1.0
@@ -30,6 +28,7 @@ var silk_builder: SilkBuildAction3D
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	super._ready()
+	aim_arrow_offset = aim_arrow.position
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
 	var no_action = load(
@@ -65,16 +64,14 @@ func _process(delta: float) -> void:
 		aim_arrow.visible = false
 	else:
 		aim_arrow.visible = true
-		aim_arrow.position = PLAYER_TUNING.aim_arrow_offset.rotated(
-			Vector3(0, 1, 0), aim_angle
-		)
+		aim_arrow.position = aim_arrow_offset.rotated(Vector3(0, 1, 0), aim_angle)
 		aim_arrow.scale.x = aim_magnitude
 		aim_arrow.rotation.y = aim_angle
 
 	var movement_direction := get_movement_direction()
 	if not movement_direction.is_zero_approx():
 		spider_rig.rotation.y = atan2(movement_direction.x, movement_direction.z)
-	var velocity = movement_direction * PLAYER_TUNING.move_speed
+	var velocity = movement_direction * MOVE_SPEED
 	if velocity.length() > 0:
 		if remaining_movement > 0:
 			var to_move = velocity * delta
@@ -84,9 +81,9 @@ func _process(delta: float) -> void:
 			position += to_move
 
 	if Input.is_action_pressed("aim_left"):
-		aim_angle += PLAYER_TUNING.aim_speed * delta
+		aim_angle += AIM_SPEED * delta
 	if Input.is_action_pressed("aim_right"):
-		aim_angle -= PLAYER_TUNING.aim_speed * delta
+		aim_angle -= AIM_SPEED * delta
 	if Input.is_action_just_pressed("action"):
 		action_charged_time = 0.0
 	if Input.is_action_just_released("action"):
@@ -196,7 +193,7 @@ func _on_hurtbox_3d_hurt(damage: float) -> void:
 
 
 func get_silk_capacity() -> int:
-	return PLAYER_TUNING.silk_capacity
+	return SILK_CAPACITY
 
 
 func refresh_silk_build_options() -> void:
