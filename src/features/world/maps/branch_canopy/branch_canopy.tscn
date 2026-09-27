@@ -2,8 +2,10 @@
 
 [ext_resource type="Script" uid="uid://c7qoxha3sjtqr" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
 [ext_resource type="Script" uid="uid://0t3i56jevefa" path="res://src/features/world/maps/branch_canopy/action_camera.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://dnk41n0ol086l" path="res://src/features/world/maps/branch_canopy/assets/sprites/1bc58e8a-8138-47c5-9ac7-b4d4de4c6777.png" id="4_jlj4k"]
 [ext_resource type="PackedScene" uid="uid://cbs1sven7fvks" path="res://src/features/wind/wind_event.tscn" id="5"]
 [ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
+[ext_resource type="Texture2D" uid="uid://djmhglsl6nlsi" path="res://src/features/world/maps/branch_canopy/assets/sprites/0a828e98-4e6e-4fbc-8996-2addc9b9f53c.png" id="6_jlj4k"]
 [ext_resource type="AudioStream" uid="uid://dvecvqgunvqet" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
 [ext_resource type="Texture2D" uid="uid://cre5odthyaego" path="res://src/features/world/maps/branch_canopy/assets/sprites/718df2e0-581a-4bd3-be50-f37b180e5c7f.png" id="7_pj3w8"]
 [ext_resource type="AudioStream" uid="uid://dugi670rbirir" path="res://src/features/world/maps/branch_canopy/assets/audio/soft_wind.mp3" id="8"]
@@ -19,9 +21,6 @@
 [ext_resource type="Texture2D" uid="uid://kclx2j6wcs5s" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521398763.png" id="16_1t75y"]
 [ext_resource type="Texture2D" uid="uid://d1ep2utqq105v" path="res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png" id="17_sun"]
 [ext_resource type="Texture2D" uid="uid://c0niwu8qctjnx" path="res://src/features/world/maps/branch_canopy/assets/background/sunset_sky.svg" id="18_sky"]
-[ext_resource type="Texture2D" uid="uid://cmbogprbrcsbe" path="res://src/features/world/maps/branch_canopy/assets/background/far_forest.svg" id="19_far"]
-[ext_resource type="Texture2D" uid="uid://djnb3oepy5f8t" path="res://src/features/world/maps/branch_canopy/assets/background/atmosphere.svg" id="20_mist"]
-[ext_resource type="Texture2D" uid="uid://cideutdsv401y" path="res://src/features/world/maps/branch_canopy/assets/background/god_rays.svg" id="22_rays"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 script = ExtResource("1")
@@ -30,36 +29,59 @@ script = ExtResource("1")
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 
 [node name="SunsetSky" type="Sprite3D" parent="BackgroundLayers" unique_id=975018279]
-transform = Transform3D(3.2, 0, 0, 0, 2.6, 0, 0, 0, 2.6, 0, 0, -18)
+transform = Transform3D(3.2, 0, 0, 0, 2.6, 0, 0, 0, 2.6, 0, 1.7041816e-07, -21.898712)
 pixel_size = 0.018
 texture = ExtResource("18_sky")
 
 [node name="Sun" type="Sprite3D" parent="BackgroundLayers" unique_id=1732723871]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.1, -16.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.573257, 2.4273925, -16.5)
 pixel_size = 0.008
 texture = ExtResource("17_sun")
 
-[node name="FarForest" type="Sprite3D" parent="BackgroundLayers" unique_id=843084323]
-transform = Transform3D(2.8, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -14)
-pixel_size = 0.018
-texture = ExtResource("19_far")
-
 [node name="AtmosphericEffects" type="Node3D" parent="BackgroundLayers" unique_id=1859420533]
 
-[node name="Haze" type="Sprite3D" parent="BackgroundLayers/AtmosphericEffects" unique_id=392024899]
-transform = Transform3D(2.7, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -12)
-pixel_size = 0.018
-texture = ExtResource("20_mist")
-
 [node name="GodRays" type="Sprite3D" parent="BackgroundLayers/AtmosphericEffects" unique_id=1698868042]
-transform = Transform3D(2.6, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -10.5)
+transform = Transform3D(0.19724898, -0.8583359, -3.0108497, 0.13163593, 2.835327, 0.11384452, 0.20151481, -1.0119609, 2.8727474, -18.952374, 12.626038, -4.106689)
 pixel_size = 0.018
-texture = ExtResource("22_rays")
+texture = ExtResource("4_jlj4k")
 
-[node name="MidForest" type="Sprite3D" parent="BackgroundLayers" unique_id=1013388720]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 2.7906651e-08, -9.63843)
+[node name="GodRays2" type="Sprite3D" parent="BackgroundLayers/AtmosphericEffects" unique_id=567287373]
+transform = Transform3D(0.16775236, -1.3953876, -2.975134, 0.16761357, 2.6131806, -0.47618553, 0.20151477, -1.0119607, 2.8727472, -2.249714, 19.670044, -12.006591)
+pixel_size = 0.018
+texture = ExtResource("4_jlj4k")
+
+[node name="MidForest4" type="Sprite3D" parent="BackgroundLayers" unique_id=706238648]
+transform = Transform3D(1.145, 0, 0, 0, 1.145, 0, 0, 0, 1.145, -17.3013, 0.62403196, -9.63843)
 pixel_size = 0.018
 texture = ExtResource("7_pj3w8")
+
+[node name="MidForest7" type="Sprite3D" parent="BackgroundLayers" unique_id=1091943716]
+transform = Transform3D(1.145, 0, 0, 0, 1.145, 0, 0, 0, 1.145, -5.216756, 1.1588537, -14.941622)
+pixel_size = 0.018
+texture = ExtResource("7_pj3w8")
+
+[node name="MidForest5" type="Sprite3D" parent="BackgroundLayers" unique_id=1336079758]
+transform = Transform3D(1.145, 0, 0, 0, 1.145, 0, 0, 0, 1.145, 32.655952, -1.5273339, -15.669252)
+pixel_size = 0.018
+texture = ExtResource("7_pj3w8")
+
+[node name="MidForest6" type="Sprite3D" parent="BackgroundLayers" unique_id=1399973441]
+transform = Transform3D(1.145, 0, 0, 0, 1.145, 0, 0, 0, 1.145, 22.837334, -1.5273342, -8.737001)
+flip_h = true
+pixel_size = 0.018
+texture = ExtResource("7_pj3w8")
+
+[node name="MidForest2" type="Sprite3D" parent="BackgroundLayers" unique_id=812535485]
+transform = Transform3D(1.4925982, 0, 0, 0, 1.1316303, 0, 0, 0, 1.145, -37.256153, 4.7967973, -9.63843)
+flip_h = true
+pixel_size = 0.018
+texture = ExtResource("6_jlj4k")
+
+[node name="MidForest3" type="Sprite3D" parent="BackgroundLayers" unique_id=13314538]
+transform = Transform3D(0.9344679, 0, 0, 0, 1.4973296, 0, 0, 0, 1.145, 13.52784, -1.309141, -11.79944)
+flip_h = true
+pixel_size = 0.018
+texture = ExtResource("6_jlj4k")
 
 [node name="PlayerBranchStart" type="Marker3D" parent="." unique_id=1827103423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 0)
@@ -126,7 +148,7 @@ flip_h = true
 texture = ExtResource("9_wesyk")
 
 [node name="Left4" type="Sprite3D" parent="Branches/RightRoot" unique_id=1395341987]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7866106, 1.3318663, 0.7595343)
 flip_h = true
 texture = ExtResource("10_p03h0")
 
@@ -166,8 +188,8 @@ flip_h = true
 texture = ExtResource("16_1t75y")
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
 process_priority = 100
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
 current = true
 fov = 65.0
 script = ExtResource("2")
