@@ -4,6 +4,9 @@ extends Node3D
 
 signal geometry_changed
 
+const EDGE_MAX_HEALTH := 100.0
+const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn")
+
 @export_range(0.01, 1.0, 0.01) var catch_plane_tolerance: float = 0.25
 # ============================================================
 # Nodes
@@ -40,7 +43,7 @@ signal geometry_changed
 @export_category("Web")
 
 @export_range(0, 30, 1)
-var rings: int = 8:
+var rings: int = 3:
 	set(value):
 		rings = value
 		if is_inside_tree():
@@ -51,8 +54,8 @@ var curve_segments: int = 8:
 		curve_segments = value
 		if is_inside_tree():
 			rebuild()
-@export_range(0.0001, 0.01, 0.0001)
-var web_width: float = 0.0025:
+@export_range(0.0001, 0.1, 0.0001)
+var web_width: float = 0.1:
 	set(value):
 		web_width = value
 		if is_inside_tree():
@@ -76,6 +79,7 @@ var line_color: Color = Color.WHITE:
 		if is_inside_tree():
 			rebuild()
 
+var edges_health: Array[float] = []
 var _last_node_positions: Array[Vector3] = []
 var _catch_regions: Dictionary = {}
 # ============================================================
@@ -145,6 +149,8 @@ func rebuild() -> void:
 	if not is_inside_tree():
 		return
 
+	_synchronize_edge_health()
+
 	_clear_polygons()
 	_catch_regions.clear()
 
@@ -211,6 +217,9 @@ func rebuild() -> void:
 
 	for face in faces:
 		create_polygon(face)
+
+	_create_edge_health_bars()
+
 	geometry_changed.emit()
 
 
@@ -245,6 +254,105 @@ func _clear_polygons() -> void:
 		polygon_container.free()
 
 	polygon_container = null
+
+# ============================================================
+# Damage API
+# ============================================================
+
+
+func deal_damage(point: Vector2, radius: float, damage: float):
+	if damage <= 0.0 or radius < 0.0:
+		return
+
+	var radius_squared := radius * radius
+
+	# First find how many edges to spread the damage over
+
+	var edges_to_deal_damage_to: Array[int] = []
+
+	for i in range(edges.size()):
+		var edge := edges[i]
+		if edge.x < 0 or edge.x >= valid_nodes.size() or edge.y < 0 or edge.y >= valid_nodes.size():
+			continue
+		if valid_nodes[edge.x] == null or valid_nodes[edge.y] == null:
+			continue
+		var a := _node_position_2d(edge.x)
+		var b := _node_position_2d(edge.y)
+
+		if _distance_squared_to_segment(point, a, b) <= radius_squared:
+			edges_to_deal_damage_to.append(i)
+
+	if edges_to_deal_damage_to.size() == 0:
+		return
+
+	var remaining_edges: Array[Vector2i] = []
+	var remaining_health: Array[float] = []
+
+	# Then deal the damage
+
+	for i in range(edges.size()):
+
+		var health := edges_health[i]
+
+		if i in edges_to_deal_damage_to:
+			health -= damage / edges_to_deal_damage_to.size()
+
+		if health > 0.0:
+			remaining_edges.append(edges[i])
+			remaining_health.append(health)
+
+	# Assigning edges rebuilds immediately; restore the filtered health values
+	# afterwards and rebuild once more so the bars use those values.
+	edges = remaining_edges
+	edges_health = remaining_health
+	rebuild()
+
+
+func _synchronize_edge_health() -> void:
+	var old_health := edges_health.duplicate()
+	var old_edges := edges.duplicate()
+	edges_health.clear()
+	for edge in edges:
+		var health := EDGE_MAX_HEALTH
+		for i in range(old_edges.size()):
+			if _same_edge(edge, old_edges[i]):
+				health = old_health[i] if i < old_health.size() else EDGE_MAX_HEALTH
+				break
+		edges_health.append(clampf(health, 0.0, EDGE_MAX_HEALTH))
+
+
+func _same_edge(a: Vector2i, b: Vector2i) -> bool:
+	return (a.x == b.x and a.y == b.y) or (a.x == b.y and a.y == b.x)
+
+
+func _distance_squared_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float:
+	var segment := b - a
+	var length_squared := segment.length_squared()
+	if is_zero_approx(length_squared):
+		return point.distance_squared_to(a)
+	var t := clampf((point - a).dot(segment) / length_squared, 0.0, 1.0)
+	return point.distance_squared_to(a + segment * t)
+
+
+func _create_edge_health_bars() -> void:
+	if polygon_container == null:
+		return
+	for i in range(edges.size()):
+		var edge := edges[i]
+		if edge.x < 0 or edge.x >= valid_nodes.size() or edge.y < 0 or edge.y >= valid_nodes.size():
+			continue
+		if valid_nodes[edge.x] == null or valid_nodes[edge.y] == null:
+			continue
+		var bar := HEALTH_BAR_SCENE.instantiate() as HealthBar3D
+		if bar == null:
+			continue
+		bar.name = "EdgeHealthBar_%d" % i
+		bar.max_health = EDGE_MAX_HEALTH
+		var midpoint := (_node_position_2d(edge.x) + _node_position_2d(edge.y)) * 0.5
+		bar.position = Vector3(midpoint.x, 0.02, midpoint.y)
+		bar.scale = Vector3(0.1, 0.03, 0.03)
+		polygon_container.add_child(bar)
+		bar.set_health(edges_health[i] if i < edges_health.size() else EDGE_MAX_HEALTH)
 
 
 # ============================================================

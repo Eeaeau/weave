@@ -19,8 +19,8 @@ var curve_segments: int = 8:
 		curve_segments = value
 		if is_inside_tree():
 			draw()
-@export_range(0.0001, 0.01)
-var web_width: float = 0.0025:
+@export_range(0.0001, 0.1)
+var web_width: float = 0.1:
 	set(value):
 		web_width = value
 		if is_inside_tree():

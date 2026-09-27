@@ -1,3 +1,4 @@
+@tool
 class_name HealthBar3D
 extends Node3D
 
