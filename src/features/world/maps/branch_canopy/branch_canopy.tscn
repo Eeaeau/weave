@@ -70,38 +70,42 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
 [node name="RightBranch" type="Node3D" parent="." unique_id=1951663678]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 
-[node name="Midground" type="Sprite3D" parent="RightBranch" unique_id=1495854347]
+[node name="Visuals" type="Node3D" parent="RightBranch"]
+
+[node name="Midground" type="Sprite3D" parent="RightBranch/Visuals" unique_id=1495854347]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5243998, 0.5648395, 0)
 texture = ExtResource("10_na7lp")
 
-[node name="Background" type="Sprite3D" parent="RightBranch" unique_id=1025281712]
+[node name="Background" type="Sprite3D" parent="RightBranch/Visuals" unique_id=1025281712]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.651025, 0.5332709, -0.37074828)
 texture = ExtResource("11_swqb0")
 
-[node name="Foreground" type="Sprite3D" parent="RightBranch" unique_id=1013775426]
+[node name="Foreground" type="Sprite3D" parent="RightBranch/Visuals" unique_id=1013775426]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6307135, 1.1424023, 1.1057911)
 texture = ExtResource("12_nukbw")
 
-[node name="FarBackground" type="Sprite3D" parent="RightBranch" unique_id=1321757632]
+[node name="FarBackground" type="Sprite3D" parent="RightBranch/Visuals" unique_id=1321757632]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5243998, 0.46367395, -1.1354756)
 texture = ExtResource("13_6diav")
 
 [node name="LeftBranch" type="Node3D" parent="." unique_id=148347526]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -7.3, 0, 0)
 
-[node name="Midground" type="Sprite3D" parent="LeftBranch" unique_id=142453769]
+[node name="Visuals" type="Node3D" parent="LeftBranch"]
+
+[node name="Midground" type="Sprite3D" parent="LeftBranch/Visuals" unique_id=142453769]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.13982153)
 texture = ExtResource("13_na7lp")
 
-[node name="Background" type="Sprite3D" parent="LeftBranch" unique_id=1796231141]
+[node name="Background" type="Sprite3D" parent="LeftBranch/Visuals" unique_id=1796231141]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.7314515)
 texture = ExtResource("14_6diav")
 
-[node name="Foreground" type="Sprite3D" parent="LeftBranch" unique_id=1518102136]
+[node name="Foreground" type="Sprite3D" parent="LeftBranch/Visuals" unique_id=1518102136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2696848, 0.08513379, 0.5269489)
 texture = ExtResource("15_lyog6")
 
-[node name="FarBackground" type="Sprite3D" parent="LeftBranch" unique_id=2017132181]
+[node name="FarBackground" type="Sprite3D" parent="LeftBranch/Visuals" unique_id=2017132181]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
 texture = ExtResource("16_owa7m")
 
