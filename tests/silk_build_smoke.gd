@@ -20,7 +20,7 @@ func _run() -> void:
 	if not _check_build_and_selection():
 		quit(1)
 		return
-	if not await _check_tab_and_space_controls():
+	if not await _check_space_controls():
 		quit(1)
 		return
 	if not _check_target_range_and_crossing():
@@ -34,6 +34,12 @@ func _run() -> void:
 		return
 	print("SILK BUILD PASS: personal silk, feeding, strand actions, and anchor cycling")
 	quit(0)
+
+
+func _check_space_controls() -> bool:
+	if not await _check_tab_and_space_controls():
+		return false
+	return await _check_build_release_keeps_next_spider_action()
 
 
 func _check_insect_proximity() -> bool:
@@ -253,6 +259,35 @@ func _check_tab_and_space_controls() -> bool:
 	_free_nodes([web, spider])
 	if not built or not resources_spent:
 		return _fail("Space must build to the highlighted node and spend one turn action")
+	return true
+
+
+func _check_build_release_keeps_next_spider_action() -> bool:
+	var web := _make_web()
+	root.add_child(web)
+	var team := Team.new()
+	team.spider_scene = PLAYER_SCENE
+	team.home_web = web
+	root.add_child(team)
+	team.spawn_spiders(2)
+	await process_frame
+	team.start_turn(10.0)
+	var builder := team.spiders[0]
+	var next_spider := team.spiders[1]
+	builder.selected_weapon_idx = 1
+	Input.action_press("action")
+	await process_frame
+	var kept_first_turn := (team.get_active_spider() == builder
+			and builder.n_remaining_actions == 1)
+	Input.action_release("action")
+	await process_frame
+	await process_frame
+	var next_turn_intact := (team.get_active_spider() == next_spider
+			and next_spider.n_remaining_actions == 1
+			and web.edges.size() == 1)
+	_free_nodes([team, web])
+	if not kept_first_turn or not next_turn_intact:
+		return _fail("Building silk must not spend the next spider's action")
 	return true
 
 
