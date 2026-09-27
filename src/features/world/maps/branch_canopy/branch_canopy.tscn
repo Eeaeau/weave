@@ -21,6 +21,7 @@
 [ext_resource type="Texture2D" uid="uid://djnb3oepy5f8t" path="res://src/features/world/maps/branch_canopy/assets/background/atmosphere.svg" id="20_mist"]
 [ext_resource type="Texture2D" uid="uid://bpa2567c5gyhe" path="res://src/features/world/maps/branch_canopy/assets/background/mid_forest.svg" id="21_mid"]
 [ext_resource type="Texture2D" uid="uid://cideutdsv401y" path="res://src/features/world/maps/branch_canopy/assets/background/god_rays.svg" id="22_rays"]
+[ext_resource type="PackedScene" uid="uid://vnj15op678e4" path="res://src/features/world/maps/branch_canopy/branch_blocker.tscn" id="23_blocker"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 script = ExtResource("1")
@@ -103,6 +104,16 @@ texture = ExtResource("15_lyog6")
 [node name="FarBackground" type="Sprite3D" parent="LeftBranch" unique_id=2017132181]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
 texture = ExtResource("16_owa7m")
+
+[node name="RightBranchBlocker" parent="." unique_id=1257226542 instance=ExtResource("23_blocker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.003889, 1.1, -0.14897406)
+capsule_height = 2.2
+
+[node name="LeftBranchBlocker" parent="." unique_id=1461877807 instance=ExtResource("23_blocker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.642756, 0.050912976, 1.4502459)
+
+[node name="LeftBranchBlocker2" parent="." unique_id=1793424567 instance=ExtResource("23_blocker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.733313, 0.050912976, -0.11448157)
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)

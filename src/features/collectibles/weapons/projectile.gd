@@ -23,16 +23,26 @@ func _ready() -> void:
 		explosion_sprite.visible = false
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	if not freeze:
-		global_position += velocity * delta
-		velocity.y -= 9.81 * delta
+func _physics_process(delta: float) -> void:
+	if freeze:
+		return
+	var next_position := global_position + velocity * delta
+	var query := PhysicsRayQueryParameters3D.create(global_position, next_position, 3)
+	var impact := get_world_3d().direct_space_state.intersect_ray(query)
+	if not impact.is_empty():
+		global_position = impact["position"]
+		var spider := impact["collider"] as PlayerSpider3D
+		hit(spider.hurtbox if spider else null)
+		return
+	global_position = next_position
+	velocity.y -= 9.81 * delta
 	if position.y <= 0:
 		hit(null)
 
 
 func hit(hurtbox: Hurtbox3D) -> void:
+	if freeze:
+		return
 	for node in hide_on_hit:
 		node.visible = false
 	freeze = true
