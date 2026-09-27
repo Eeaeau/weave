@@ -9,7 +9,7 @@
 [node name="TorjusTestScene" type="Node3D" unique_id=1972552716]
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1837678052]
-transform = Transform3D(1, 0, 0, 0, 0.62572914, 0.78004044, 0, -0.78004044, 0.62572914, -0.12789035, 4.1106133, 0.7975545)
+transform = Transform3D(1, 0, 0, 0, 0.4302836, 0.90269375, 0, -0.90269375, 0.4302836, -0.43808636, 4.6753507, 1.3962454)
 
 [node name="MatchHud" parent="." unique_id=1154433575 instance=ExtResource("2_jxtdx")]
 
@@ -28,11 +28,11 @@ spider_scene = ExtResource("1_6rc11")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.66284835, 0, 0.36684728)
 spider_scene = ExtResource("1_6rc11")
 
-[node name="WeaponThrowPebble" parent="." unique_id=1754921735 instance=ExtResource("5_vo601")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07861447, 0, -0.80688095)
-
 [node name="WeaponThrowPebble2" parent="." unique_id=2065555181 instance=ExtResource("5_vo601")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8082619, 0, -1.307636)
+
+[node name="WeaponThrowPebble6" parent="." unique_id=1754921735 instance=ExtResource("5_vo601")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7546339, -4.7683716e-07, 0.3402624)
 
 [node name="WeaponThrowPebble3" parent="." unique_id=948418827 instance=ExtResource("5_vo601")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.86476195, 0, -2.8107464)
