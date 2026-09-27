@@ -2,7 +2,38 @@
 
 [ext_resource type="Script" uid="uid://dnkvwxmnh2yko" path="res://src/features/collectibles/weapons/projectile.gd" id="1_vkrc5"]
 [ext_resource type="Texture2D" uid="uid://qedq4mdaomd6" path="res://src/features/collectibles/weapons/assets/pebble.svg" id="2_vkrc5"]
+[ext_resource type="Texture2D" uid="uid://rwop8oahm3d7" path="res://src/features/collectibles/weapons/assets/rocket.png" id="2_w8ylx"]
 [ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_yll53"]
+[ext_resource type="Texture2D" uid="uid://b1sl3kac2etfw" path="res://src/features/collectibles/weapons/assets/rocket_fire_strip.png" id="5_yll53"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7i82m"]
+atlas = ExtResource("5_yll53")
+region = Rect2(0, 0, 361, 558)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_us6ak"]
+atlas = ExtResource("5_yll53")
+region = Rect2(361, 0, 361, 558)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1hhl7"]
+atlas = ExtResource("5_yll53")
+region = Rect2(722, 0, 361, 558)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_6q6db"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7i82m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_us6ak")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1hhl7")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 15.0
+}]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_6q6db"]
 radius = 0.1377443
@@ -21,11 +52,17 @@ explosion_damage = 20.0
 hitbox = NodePath("Hitbox")
 explosion_hitbox = NodePath("ExplosionHitbox")
 explosion_sprite = NodePath("ExplosionSprite")
-hide_on_hit = [NodePath("ShadowComponent"), NodePath("Sprite3D")]
+hide_on_hit = [NodePath("ShadowComponent"), NodePath("Sprite3D"), NodePath("AnimatedSprite3D")]
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
-transform = Transform3D(0.2, 0, 0, 0, -8.742278e-09, 0.2, 0, -0.2, -8.742278e-09, 0, 0, 0)
-texture = ExtResource("2_vkrc5")
+transform = Transform3D(-0.0022336345, 0.19998753, 8.741733e-09, 0, -8.742278e-09, 0.2, 0.19998753, 0.0022336345, 9.763527e-11, -0.19264263, 2.3841858e-07, 0.06542659)
+texture = ExtResource("2_w8ylx")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="." unique_id=68559792]
+transform = Transform3D(5.029142e-08, 0.4, -1.7484567e-08, 1.5959456e-15, 1.7484556e-08, 0.39999986, 0.4, -5.029142e-08, 6.800116e-16, -1.413543, 3.1347975e-07, -0.034196094)
+sprite_frames = SubResource("SpriteFrames_6q6db")
+autoplay = "default"
+frame_progress = 0.40056482
 
 [node name="Hitbox" type="Area3D" parent="." unique_id=164628878]
 
@@ -41,8 +78,10 @@ shape = SubResource("SphereShape3D_vkrc5")
 mesh = NodePath("ShadowMesh")
 
 [node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=268478568]
+transform = Transform3D(0.022847764, 0, -2.7462354, 0, 0.9418375, 0, 0.89569587, 0, 0.070052, 0.027644947, 0.08731341, 0.049494803)
 mesh = SubResource("CylinderMesh_6q6db")
 
 [node name="ExplosionSprite" type="Sprite3D" parent="." unique_id=619356830]
 transform = Transform3D(3, 0, 0, 0, -1.3113416e-07, 3, 0, -3, -1.3113416e-07, 0, 0, 0)
+visible = false
 texture = ExtResource("2_vkrc5")

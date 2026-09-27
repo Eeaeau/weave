@@ -46,6 +46,24 @@ func hit(hurtbox: Hurtbox3D) -> void:
 
 func launch(direction: float, power: float) -> void:
 	velocity = Vector3(4, 2, 0).rotated(Vector3(0, 1, 0), direction) * power
+	rotate_y(direction)
+
+
+func get_all_children(node):
+	var array = []
+	array.push_back(node)
+	for child in node.get_children():
+		array.append_array(get_all_children(child))
+	return array
+
+
+func get_all_webs() -> Array[Web3D]:
+	var array: Array[Web3D]
+	var everything = get_all_children(get_tree().get_root())
+	for thing in everything:
+		if thing is Web3D:
+			array.append(thing)
+	return array
 
 
 func explode() -> void:
@@ -56,6 +74,18 @@ func explode() -> void:
 		explosion_sprite.visible = true
 	explosion_hitbox.set_deferred("disabled", false)
 
+	var blast_radius: float = 0.0
+	var hitbox_children = explosion_hitbox.get_children()
+	for child in hitbox_children:
+		if child is CollisionShape3D:
+			if child.shape is SphereShape3D:
+				blast_radius = child.shape.radius
+				break
+
+	var point2d: Vector2 = Vector2(position.x, position.z)
+	var webs: Array[Web3D] = get_all_webs()
+	for web in webs:
+		web.deal_damage(point2d, blast_radius, explosion_damage)
 	# TODO: should probably connect to animation ending instead
 	# when we have animation
 	get_tree().create_timer(1.0).timeout.connect(queue_free)

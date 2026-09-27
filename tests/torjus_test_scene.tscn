@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="3_x3kcl"]
 [ext_resource type="PackedScene" uid="uid://5q78y45hys3h" path="res://src/features/collectibles/weapons/weapon_throw_pebble.tscn" id="5_vo601"]
 [ext_resource type="PackedScene" uid="uid://b5c0ba23l4csk" path="res://src/features/collectibles/weapons/weapon_rocket_launcher.tscn" id="6_4qxe5"]
+[ext_resource type="PackedScene" uid="uid://bu81h1e2g7ldm" path="res://src/features/web/web_3d.tscn" id="7_4dta3"]
 
 [node name="TorjusTestScene" type="Node3D" unique_id=1972552716]
 
@@ -52,3 +53,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.494231, 0, -1.8104334)
 
 [node name="WeaponRocketLauncher3" parent="." unique_id=319203876 instance=ExtResource("6_4qxe5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.401922, 0, -4.2983685)
+
+[node name="Web3D" parent="." unique_id=1225174860 instance=ExtResource("7_4dta3")]
