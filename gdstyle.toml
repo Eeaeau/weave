@@ -2,3 +2,6 @@
 "quality/max-branches" = "off"
 "quality/max-function-length" = "off"
 "quality/max-parameters" = "off"
+"quality/max-class-variables" = "off"
+"quality/max-nesting-depth" = "off"
+"quality/max-local-variables" = "off"

@@ -86,7 +86,8 @@ var _catch_regions: Dictionary = {}
 # Generated geometry
 # ============================================================
 var polygon_container: Node3D
-
+var triangles: Array = []
+var stand_alone_edges: Array = []
 
 # ============================================================
 # Lifecycle
@@ -185,6 +186,8 @@ func rebuild() -> void:
 
 	var face_edges: Dictionary = {}
 
+	triangles = []
+
 	for face in faces:
 
 		if face.size() != 3:
@@ -198,9 +201,17 @@ func rebuild() -> void:
 		face_edges[_edge_key(b, c)] = true
 		face_edges[_edge_key(c, a)] = true
 
+		var a_position = _node_global_position_2d(a)
+		var b_position = _node_global_position_2d(b)
+		var c_position = _node_global_position_2d(c)
+
+		triangles.append([a_position, b_position, c_position])
+
 	# --------------------------------------------------------
 	# Render edges that are NOT part of a face.
 	# --------------------------------------------------------
+
+	stand_alone_edges = []
 
 	for edge in edges:
 
@@ -211,6 +222,11 @@ func rebuild() -> void:
 			continue
 
 		create_polygon([a, b])
+
+		var a_position = _node_global_position_2d(a)
+		var b_position = _node_global_position_2d(b)
+
+		stand_alone_edges.append([a_position, b_position])
 
 	# --------------------------------------------------------
 	# Render the triangular faces.
@@ -283,6 +299,8 @@ func deal_damage(point: Vector2, radius: float, damage: float):
 	if damage <= 0.0 or radius < 0.0:
 		return
 
+	var local_point_3d := to_local(Vector3(point.x, global_position.y, point.y))
+	var local_point := Vector2(local_point_3d.x, local_point_3d.z)
 	var radius_squared := radius * radius
 
 	# First find how many edges to spread the damage over
@@ -298,7 +316,7 @@ func deal_damage(point: Vector2, radius: float, damage: float):
 		var a := _node_position_2d(edge.x)
 		var b := _node_position_2d(edge.y)
 
-		if _distance_squared_to_segment(point, a, b) <= radius_squared:
+		if _distance_squared_to_segment(local_point, a, b) <= radius_squared:
 			edges_to_deal_damage_to.append(i)
 
 	if edges_to_deal_damage_to.size() == 0:
@@ -630,6 +648,13 @@ func _node_position_2d(index: int) -> Vector2:
 	)
 
 
+func _node_global_position_2d(index: int) -> Vector2:
+	var node := valid_nodes[index]
+	if node == null:
+		return Vector2.ZERO
+	return Vector2(node.global_position.x, node.global_position.z)
+
+
 # ============================================================
 # Find triangular faces
 # ============================================================
@@ -713,53 +738,10 @@ func find_faces() -> Array:
 
 func get_triangles() -> Array:
 
-	var triangles: Array = []
-
-	for face in find_faces():
-		var a = _node_position_2d(face[0])
-		var b = _node_position_2d(face[1])
-		var c = _node_position_2d(face[2])
-
-		var triangle: Array[Vector2] = [a, b, c]
-
-		triangles.append(triangle)
-
 	return triangles
 
 
 func get_stand_alone_edges() -> Array:
-
-	var faces := find_faces()
-
-	var face_edges: Dictionary = {}
-
-	for face in faces:
-
-		if face.size() != 3:
-			continue
-
-		var a: int = face[0]
-		var b: int = face[1]
-		var c: int = face[2]
-
-		face_edges[_edge_key(a, b)] = true
-		face_edges[_edge_key(b, c)] = true
-		face_edges[_edge_key(c, a)] = true
-
-	var stand_alone_edges: Array
-
-	for edge in edges:
-
-		var a: int = edge.x
-		var b: int = edge.y
-
-		if face_edges.has(_edge_key(a, b)):
-			continue
-
-		var a_position = _node_position_2d(a)
-		var b_position = _node_position_2d(b)
-
-		stand_alone_edges.append([a_position, b_position])
 
 	return stand_alone_edges
 
