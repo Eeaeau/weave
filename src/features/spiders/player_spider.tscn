@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://q14ib70ntabd" path="res://src/features/spiders/player_spider.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://ccsdepia2rl4" path="res://src/features/spiders/assets/circle.svg" id="3_gntsc"]
 [ext_resource type="Texture2D" uid="uid://p482fx31sjtm" path="res://src/features/spiders/assets/arrow.svg" id="3_uju3x"]
+[ext_resource type="Script" uid="uid://dmwaqsvei8rvr" path="res://src/features/systems/hurtbox.gd" id="5_vlacf"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6q6db"]
 height = 0.29162598
@@ -26,8 +27,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36917466, 0, 0.0024330616)
 transform = Transform3D(1, 0, 0, 0, -4.371141e-08, 1.0000005, 0, -1.0000005, -4.371141e-08, 0.2735563, 0, 0.00019228458)
 texture = ExtResource("3_uju3x")
 
-[node name="Hitbox" type="Area3D" parent="." index="3" unique_id=1214358080]
+[node name="Hurtbox3D" type="Area3D" parent="." index="3" unique_id=1338872525]
+script = ExtResource("5_vlacf")
+metadata/_custom_type_script = "uid://dmwaqsvei8rvr"
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" index="0" unique_id=1335947700]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox3D" index="0" unique_id=1335947700]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3119725, 0)
 shape = SubResource("CylinderShape3D_6q6db")
+
+[connection signal="hurt" from="Hurtbox3D" to="." method="_on_hurtbox_3d_hurt"]

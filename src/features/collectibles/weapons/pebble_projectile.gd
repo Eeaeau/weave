@@ -21,7 +21,6 @@ func launch(direction: float, power: float) -> void:
 
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
-	var parent = area.get_parent_node_3d()
-	if parent and parent is PlayerSpider3D:
-		parent.take_damage(10)
+	if area is Hurtbox3D:
+		area.take_damage(10)
 		queue_free()
