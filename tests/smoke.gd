@@ -147,7 +147,7 @@ func _check_sprite_visuals(match_scene: Node3D) -> bool:
 			and mesh.get_parent() is StaticBody3D)
 		if (not mesh is SpiderLegStroke3D and not _is_health_bar_mesh(mesh)
 				and not _is_web_mesh(mesh) and not is_branch_blocker):
-			return _fail("Only leg strokes, health bars, web strands, and branch blockers may use 3D meshes")
+			return _fail("Unexpected 3D mesh in world scene")
 	if sprites.size() < 20:
 		return _fail("World placeholders must remain 2D sprites in the 3D scene")
 	return true
