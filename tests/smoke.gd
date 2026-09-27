@@ -21,6 +21,7 @@ func _run() -> void:
 	var map_ok: bool = await _check_map(match_scene)
 	if not (map_ok
 			and _check_local_camera_sway()
+			and _check_rocket_exhaust_visual()
 			and _check_sun_visual(match_scene)
 			and _check_webs(match_scene) and _check_collectibles(match_scene)
 			and _check_sprite_visuals(match_scene) and _check_audio()):
@@ -78,6 +79,35 @@ func _check_local_camera_sway() -> bool:
 	camera.free()
 	if not is_local or not kept_orientation:
 		return _fail("Camera sway must use the camera's local coordinate system")
+	return true
+
+
+func _check_rocket_exhaust_visual() -> bool:
+	var scene := load(
+		"res://src/features/collectibles/weapons/rocket_exhaust.tscn"
+	) as PackedScene
+	if scene == null:
+		return _fail("Rocket exhaust visual failed to load")
+	var exhaust := scene.instantiate() as AnimatedSprite3D
+	if exhaust == null:
+		return _fail("Rocket exhaust must use an AnimatedSprite3D root")
+	var frames := exhaust.sprite_frames
+	if (frames == null or not frames.has_animation(&"burn")
+			or frames.get_frame_count(&"burn") != 3
+			or not is_equal_approx(frames.get_animation_speed(&"burn"), 12.0)
+			or not frames.get_animation_loop(&"burn")
+			or exhaust.autoplay != &"burn"):
+		exhaust.free()
+		return _fail("Rocket exhaust must autoplay a looping three-frame burn animation")
+	for frame_index in frames.get_frame_count(&"burn"):
+		var frame := frames.get_frame_texture(&"burn", frame_index) as AtlasTexture
+		if (frame == null or frame.atlas == null
+				or frame.atlas.resource_path != (
+					"res://src/features/collectibles/weapons/assets/rocket_fire_strip.png"
+				)):
+			exhaust.free()
+			return _fail("Rocket exhaust frames must share the packed fire strip")
+	exhaust.free()
 	return true
 
 
