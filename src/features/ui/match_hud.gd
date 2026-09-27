@@ -8,6 +8,8 @@ var show_hints := true
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 @onready var team_label: Label = $LowerLeftPanel/TeamLabel
 @onready var actions_remaining_label: Label = $LowerLeftPanel/ActionsRemainingLabel
+@onready var silk_bar: ProgressBar = $LowerLeftPanel/SilkBar
+@onready var silk_label: Label = $LowerLeftPanel/SilkLabel
 @onready var weapons_container: BoxContainer = $WeaponsContainer
 
 
@@ -27,7 +29,8 @@ func _update_status() -> void:
 		return
 	status.text = "WEAVE  |  2.5D scene prototype"
 	if show_hints:
-		status.text += "\nBranches, spiders, webs, and collectibles are placeholders.\nEsc: pause"
+		status.text += "\nWASD move · Arrows aim · Space action"
+		status.text += "\n1–5 select · 2 Silk · Q/E target · X cancel · Esc pause"
 
 
 func update_energy(energy: float) -> void:
@@ -46,6 +49,14 @@ func update_team_label(text: String) -> void:
 func update_actions_remaining(n: int) -> void:
 	if actions_remaining_label:
 		actions_remaining_label.text = "Actions remaining: " + str(n)
+
+
+func update_silk(amount: int, capacity: int) -> void:
+	if silk_bar:
+		silk_bar.max_value = capacity
+		silk_bar.value = amount
+	if silk_label:
+		silk_label.text = "Silk: %d/%d" % [amount, capacity]
 
 
 func update_weapon(weapons: Array[Weapon3D], selected_weapon_idx: int) -> void:

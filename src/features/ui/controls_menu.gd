@@ -12,11 +12,15 @@ const ACTIONS := [
 	{ "name": "Move Down", "action": "move_down" },
 	{ "name": "Aim Left", "action": "aim_left" },
 	{ "name": "Aim Right", "action": "aim_right" },
-	{ "name": "Use Weapon", "action": "action" },
+	{ "name": "Use Action", "action": "action" },
 	{ "name": "Select Weapon 1", "action": "select_1" },
-	{ "name": "Select Weapon 2", "action": "select_2" },
+	{ "name": "Select Silk", "action": "select_2" },
 	{ "name": "Select Weapon 3", "action": "select_3" },
 	{ "name": "Select Weapon 4", "action": "select_4" },
+	{ "name": "Select Weapon 5", "action": "select_5" },
+	{ "name": "Cycle Silk Target Previous", "action": "cycle_silk_target_previous" },
+	{ "name": "Cycle Silk Target Next", "action": "cycle_silk_target_next" },
+	{ "name": "Cancel Silk Build", "action": "cancel_silk_build" },
 ]
 const BINDING_ROW: PackedScene = preload("res://src/features/ui/control_binding_row.tscn")
 

@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/features/collectibles/weapons/silk_build_action.gd" id="1"]
+[ext_resource type="Texture2D" path="res://src/features/collectibles/weapons/assets/silk_action.svg" id="2"]
+
+[node name="SilkBuildAction" type="Node3D"]
+script = ExtResource("1")
+icon = ExtResource("2")
