@@ -24,6 +24,9 @@ func _run() -> void:
 	if not await _check_all_feet_share_one_strand():
 		quit(1)
 		return
+	if not await _check_dense_web_cases():
+		quit(1)
+		return
 	print("SPIDER WEB STEP PASS: visible support, thresholds, and strand replacement")
 	quit(0)
 
@@ -261,6 +264,105 @@ func _check_all_feet_share_one_strand() -> bool:
 		destinations.append(point)
 		strand_ids.append(strand_id)
 	_free_nodes(spider, web)
+	return true
+
+
+func _check_dense_web_cases() -> bool:
+	if not await _check_removed_web_releases_cached_support():
+		return false
+	return await _check_dense_web_landings()
+
+
+func _check_dense_web_landings() -> bool:
+	var web := Web3D.new()
+	web.rings = 8
+	web.curve_segments = 8
+	web.valid_nodes.append(_add_web_node(web, Vector3(0.0, 0.5, 0.0)))
+	for index in range(8):
+		var angle := TAU * float(index) / 8.0
+		web.valid_nodes.append(_add_web_node(
+			web, Vector3(cos(angle) * 3.0, 0.5, sin(angle) * 3.0)
+		))
+		web.edges.append(Vector2i(index + 1, (index + 1) % 8 + 1))
+		web.edges.append(Vector2i(0, index + 1))
+	root.add_child(web)
+	var spider := SPIDER_SCENE.instantiate() as BaseSpider3D
+	root.add_child(spider)
+	var controller := spider.get_node("SpiderRig/LegController") as Node
+	controller.set_process(false)
+	await process_frame
+	_freeze_spider_animation(spider)
+	controller.set("support_web", web)
+	_mark_feet_dangling(controller)
+	var segments: Array = web.get_support_segments()
+	if segments.size() < 1000:
+		_free_nodes(spider, web)
+		return _fail("Dense web fixture must include at least 1000 visible segments")
+	var start := Time.get_ticks_usec()
+	for foot_index in range(8):
+		var landing: Dictionary = controller.call("_choose_destination", foot_index)
+		if landing.is_empty():
+			_free_nodes(spider, web)
+			return _fail("Every foot must find a dense-web landing")
+		var point: Vector3 = landing["point"]
+		if (not controller.call("has_web_support", point)
+				or not _is_within_leg_reach(controller, foot_index, point)
+				or not controller.call("can_land", foot_index, point)):
+			_free_nodes(spider, web)
+			return _fail("Dense-web landings must be visible, reachable, and non-crossing")
+		_set_foot_support(controller, foot_index, point, landing["strand_id"])
+	var duration_ms := float(Time.get_ticks_usec() - start) / 1000.0
+	print("DENSE WEB TARGET BENCH: %d segments, eight feet, %.2f ms" % [
+		segments.size(), duration_ms,
+	])
+	start = Time.get_ticks_usec()
+	for frame in range(60):
+		controller.call("advance", 0.016)
+	print("DENSE WEB ADVANCE BENCH: 60 frames, %.2f ms/frame" % (
+		float(Time.get_ticks_usec() - start) / 60.0 / 1000.0
+	))
+	var passed := _check_dense_web_support_invalidation(controller, web)
+	_free_nodes(spider, web)
+	return passed
+
+
+func _check_dense_web_support_invalidation(controller: Node, web: Web3D) -> bool:
+	var foot_states: Array = controller.get("_feet")
+	var moved_foot := foot_states[0].get("marker") as Marker3D
+	moved_foot.global_position += Vector3.UP * 2.0
+	controller.call("advance", 0.016)
+	if not controller.call("is_dangling", 0):
+		return _fail("Moving a planted foot off the web must invalidate cached support")
+	web.edges.clear()
+	web.rebuild()
+	for foot_index in range(1, 8):
+		if not controller.call("is_dangling", foot_index):
+			return _fail("Removing dense-web geometry must invalidate planted support")
+	return true
+
+
+func _check_removed_web_releases_cached_support() -> bool:
+	var spider := SPIDER_SCENE.instantiate() as BaseSpider3D
+	root.add_child(spider)
+	var controller := spider.get_node("SpiderRig/LegController") as Node
+	controller.set_process(false)
+	await process_frame
+	_freeze_spider_animation(spider)
+	var foot := spider.get_node("SpiderRig/FootTargets/FootFrontLeft") as Marker3D
+	var web := _make_support_web(foot.global_position)
+	root.add_child(web)
+	await process_frame
+	controller.set("support_web", web)
+	controller.call("_release_crossed_feet")
+	if controller.call("is_dangling", 0):
+		_free_nodes(spider, web)
+		return _fail("A planted foot must remain supported while its web exists")
+	web.free()
+	controller.call("advance", 0.016)
+	var released: bool = controller.call("is_dangling", 0)
+	spider.free()
+	if not released:
+		return _fail("Removing a web must release support cached by the controller")
 	return true
 
 

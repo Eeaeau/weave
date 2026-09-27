@@ -80,12 +80,11 @@ func _initialize_foot(targets: Node, foot_name: String) -> void:
 func _refresh_web_binding() -> void:
 	if targeting_mode != TargetingMode.WEB:
 		_disconnect_web()
-		_cycle.support_segments.clear()
 		return
 	if support_web == null or not is_instance_valid(support_web):
 		support_web = _find_nearest_web()
 	if support_web == null:
-		_cycle.support_segments.clear()
+		_clear_support_segments()
 		return
 	if not support_web.geometry_changed.is_connected(_on_web_geometry_changed):
 		support_web.geometry_changed.connect(_on_web_geometry_changed)
@@ -113,15 +112,21 @@ func _disconnect_web() -> void:
 		if support_web.geometry_changed.is_connected(_on_web_geometry_changed):
 			support_web.geometry_changed.disconnect(_on_web_geometry_changed)
 	if _cycle != null:
-		_cycle.support_segments.clear()
+		_clear_support_segments()
 
 
 func _refresh_support_segments() -> void:
-	_cycle.support_segments.clear()
+	_clear_support_segments()
 	if not is_instance_valid(support_web):
 		return
 	for segment in support_web.get_support_segments():
 		_cycle.support_segments.append(segment)
+
+
+func _clear_support_segments() -> void:
+	_cycle.support_segments.clear()
+	for foot in _feet:
+		foot.support_checked = false
 
 
 func _on_web_geometry_changed() -> void:
@@ -266,8 +271,18 @@ func _release_crossed_feet() -> void:
 	for foot_index in range(_feet.size()):
 		if _feet[foot_index].dangling or _is_stepping(foot_index):
 			continue
-		var support := _find_support(_feet[foot_index].marker.global_position)
-		if (not can_land(foot_index, _feet[foot_index].marker.global_position)
+		var foot := _feet[foot_index]
+		var foot_position := foot.marker.global_position
+		var support: Dictionary = {}
+		if targeting_mode == TargetingMode.WEB:
+			if (not foot.support_checked or foot.support_position != foot_position
+					or foot.support_checked_tolerance != support_tolerance):
+				foot.support = _find_support(foot_position)
+				foot.support_position = foot_position
+				foot.support_checked_tolerance = support_tolerance
+				foot.support_checked = true
+			support = foot.support
+		if (not can_land(foot_index, foot_position)
 				or (targeting_mode == TargetingMode.WEB and support.is_empty())):
 			_feet[foot_index].dangling = true
 			_feet[foot_index].strand_id = ""
@@ -337,15 +352,23 @@ func _choose_web_destination(foot_index: int) -> Dictionary:
 	var desired := _rest_destination(foot_index)
 	var preferred_strand: String = _feet[foot_index].strand_id
 	var maximum_reach := _max_leg_reach(foot_index)
+	var lift_position := _lift_position(foot_index)
+	var reach_squared := maximum_reach * maximum_reach
 	var best_score := INF
 	var best_destination: Dictionary = {}
 	for segment in _cycle.support_segments:
+		# No point on a segment outside the reach sphere can become a landing.
+		if lift_position.distance_squared_to(_closest_point_on_segment(
+			lift_position, segment["start"], segment["end"]
+		)) > reach_squared + 0.000001:
+			continue
 		var candidate := _best_web_target_on_segment(
 			foot_index,
 			desired,
 			preferred_strand,
 			maximum_reach,
-			segment
+			segment,
+			best_score
 		)
 		if not candidate.is_empty() and candidate["score"] < best_score:
 			best_score = candidate["score"]
@@ -359,21 +382,19 @@ func _best_web_target_on_segment(
 	desired: Vector3,
 	preferred_strand: String,
 	maximum_reach: float,
-	segment: Dictionary
+	segment: Dictionary,
+	score_limit: float
 ) -> Dictionary:
 	var start: Vector3 = segment["start"]
 	var end: Vector3 = segment["end"]
 	var nearest_t := _closest_planar_parameter(desired, start, end)
-	var best_score := INF
+	var best_score := score_limit
 	var best_point := Vector3.ZERO
+	var found := false
 	var strand_id: String = segment["strand_id"]
 	for t in [nearest_t, 0.0, 0.25, 0.5, 0.75, 1.0]:
 		var candidate := start.lerp(end, t)
 		if _lift_position(foot_index).distance_to(candidate) > maximum_reach:
-			continue
-		if not can_land(foot_index, candidate):
-			continue
-		if not _has_shared_strand_clearance(foot_index, candidate, strand_id):
 			continue
 		var score := _planar(candidate).distance_to(_planar(desired))
 		score += absf(candidate.y - desired.y) * 0.5
@@ -382,10 +403,17 @@ func _best_web_target_on_segment(
 			score += 0.35
 		if strand_id == preferred_strand:
 			score = maxf(0.0, score - 0.2)
+		if score >= best_score:
+			continue
+		if not can_land(foot_index, candidate):
+			continue
+		if not _has_shared_strand_clearance(foot_index, candidate, strand_id):
+			continue
 		if score < best_score:
 			best_score = score
 			best_point = candidate
-	if is_inf(best_score):
+			found = true
+	if not found:
 		return {}
 	return { "point": best_point, "strand_id": strand_id, "score": best_score }
 
@@ -533,6 +561,10 @@ class FootState:
 	var ground_height: float
 	var dangling := false
 	var strand_id := ""
+	var support: Dictionary = {}
+	var support_position := Vector3.ZERO
+	var support_checked_tolerance := 0.0
+	var support_checked := false
 
 	func _init(foot_marker: Marker3D, offset: Vector3, height: float) -> void:
 		marker = foot_marker
