@@ -22,6 +22,13 @@
 [ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/mid_forest.svg" id="21_mid"]
 [ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/god_rays.svg" id="22_rays"]
 
+; Bounding boxes follow the foreground sprites' nontransparent alpha bounds.
+[sub_resource type="BoxShape3D" id="BoxShape3D_right_branch_blocker"]
+size = Vector3(4.84, 2.33, 0.12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_left_branch_blocker"]
+size = Vector3(0.9, 2.25, 0.12)
+
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 script = ExtResource("1")
 
@@ -90,6 +97,14 @@ texture = ExtResource("12_nukbw")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5243998, 0.46367395, -1.1354756)
 texture = ExtResource("13_6diav")
 
+[node name="RightBranchBlocker" type="StaticBody3D" parent="RightBranch"]
+position = Vector3(8.4807135, -0.6425977, 1.1057911)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RightBranch/RightBranchBlocker"]
+shape = SubResource("BoxShape3D_right_branch_blocker")
+
 [node name="LeftBranch" type="Node3D" parent="." unique_id=148347526]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -7.3, 0, 0)
 
@@ -108,6 +123,14 @@ texture = ExtResource("15_lyog6")
 [node name="FarBackground" type="Sprite3D" parent="LeftBranch" unique_id=2017132181]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
 texture = ExtResource("16_owa7m")
+
+[node name="LeftBranchBlocker" type="StaticBody3D" parent="LeftBranch"]
+position = Vector3(0.9496848, -2.1498662, 0.5269489)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LeftBranch/LeftBranchBlocker"]
+shape = SubResource("BoxShape3D_left_branch_blocker")
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
