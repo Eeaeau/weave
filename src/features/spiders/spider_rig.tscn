@@ -550,6 +550,10 @@ gizmo_extents = 0.07
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22418164, 0, -3.3086417)
 gizmo_extents = 0.1
 
+[node name="WeaponEquipTarget" type="Marker3D" parent="BoneAttachment3D/BodyOffset"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0.85, 0.45, -0.1)
+gizmo_extents = 0.15
+
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1309729961]
 libraries/ = SubResource("AnimationLibrary_rparr")
 autoplay = &"eye_idle"

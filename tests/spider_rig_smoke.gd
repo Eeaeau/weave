@@ -2,6 +2,13 @@ extends SceneTree
 ## Verify the Blender-authored rig is wrapped with external foot targets.
 
 const RIG_SCENE := preload("res://src/features/spiders/spider_rig.tscn")
+const PLAYER_SCENE := preload("res://src/features/spiders/player_spider.tscn")
+const PEBBLE_WEAPON_SCENE := preload(
+	"res://src/features/collectibles/weapons/weapon_throw_pebble.tscn"
+)
+const ROCKET_WEAPON_SCENE := preload(
+	"res://src/features/collectibles/weapons/weapon_rocket_launcher.tscn"
+)
 const EXPECTED_FOOT_TARGETS := [
 	"FootBackLeft",
 	"FootBackRight",
@@ -135,7 +142,7 @@ func _run() -> void:
 		return
 	if not await _check_gameplay_spiders():
 		return
-	if not _check_player_faces_movement():
+	if not await _check_player_equipment() or not _check_player_faces_movement():
 		return
 	if not await _check_eye_tracking(rig):
 		return
@@ -175,6 +182,129 @@ func _check_body_attachment(rig: Node, skeleton: Skeleton3D) -> bool:
 		return _fail("Spider body attachment must follow CTRL_root")
 	if attachment.get_skeleton() != skeleton:
 		return _fail("Spider body attachment did not resolve its external skeleton")
+	var equip_target := rig.get_node_or_null(
+		"BoneAttachment3D/BodyOffset/WeaponEquipTarget"
+	) as Marker3D
+	if equip_target == null:
+		return _fail("Spider rig must expose a weapon equipment target on its body")
+	return true
+
+
+func _check_player_equipment() -> bool:
+	var player := PLAYER_SCENE.instantiate() as PlayerSpider3D
+	root.add_child(player)
+	player.set_process(false)
+	await process_frame
+	var target := player.get_node_or_null(
+		"SpiderRig/BoneAttachment3D/BodyOffset/WeaponEquipTarget"
+	) as Marker3D
+	if target == null:
+		player.free()
+		return _fail("Player spider must resolve the rig weapon equipment target")
+	var pebble := PEBBLE_WEAPON_SCENE.instantiate() as Weapon3D
+	var rocket := ROCKET_WEAPON_SCENE.instantiate() as Weapon3D
+	root.add_child(pebble)
+	root.add_child(rocket)
+	var succeeded := await _check_weapon_pickups(player, target, pebble, rocket)
+	if succeeded:
+		succeeded = _check_weapon_selection(player, pebble, rocket)
+	if succeeded:
+		succeeded = _check_projectile_spawn(pebble)
+	if succeeded:
+		succeeded = _check_weapon_aim(player, target)
+	if succeeded:
+		succeeded = await _check_used_weapon_cleanup(player, rocket)
+	player.free()
+	return succeeded
+
+
+func _check_weapon_pickups(
+	player: PlayerSpider3D,
+	target: Marker3D,
+	pebble: Weapon3D,
+	rocket: Weapon3D,
+) -> bool:
+	if not player.pick_up(pebble) or not player.pick_up(rocket):
+		return _fail("Player spider must accept weapon pickups")
+	pebble.after_picked_up()
+	rocket.after_picked_up()
+	await process_frame
+	if pebble.get_parent() != target or rocket.get_parent() != target:
+		return _fail("Picked-up weapons must attach to the rig equipment target")
+	if not pebble.transform.is_equal_approx(Transform3D.IDENTITY):
+		return _fail("Equipped weapons must use the equipment target transform")
+	return true
+
+
+func _check_weapon_selection(
+	player: PlayerSpider3D,
+	pebble: Weapon3D,
+	rocket: Weapon3D,
+) -> bool:
+	var no_action := player.weapons[0]
+	if not no_action is WeaponNoAction or no_action.visible:
+		return _fail("The permanent no-action slot must not render as equipment")
+	var pebble_index := player.weapons.find(pebble)
+	var rocket_index := player.weapons.find(rocket)
+	if not player.select_weapon(pebble_index) or not pebble.visible or rocket.visible:
+		return _fail("Only the selected equipped weapon must be visible")
+	if not player.select_weapon(rocket_index) or pebble.visible or not rocket.visible:
+		return _fail("Changing weapon must update the carried weapon visual")
+	var selected_index := player.selected_weapon_idx
+	if player.select_weapon(-1) or player.selected_weapon_idx != selected_index:
+		return _fail("Invalid weapon selection must preserve the equipped weapon")
+	return true
+
+
+func _check_projectile_spawn(pebble: Weapon3D) -> bool:
+	var projectile_container := Node3D.new()
+	root.add_child(projectile_container)
+	var previous_scene := current_scene
+	current_scene = projectile_container
+	var expected_spawn := pebble.global_position
+	(pebble as ProjectileWeapon3D).fire(0.0, 0.0)
+	var projectile := projectile_container.get_child(0) as Projectile3D
+	current_scene = previous_scene
+	if projectile == null or not projectile.global_position.is_equal_approx(expected_spawn):
+		projectile_container.free()
+		return _fail("Carried projectile weapons must fire from their equipment target")
+	projectile_container.free()
+	return true
+
+
+func _check_weapon_aim(player: PlayerSpider3D, target: Marker3D) -> bool:
+	player.spider_rig.rotation.y = 1.1
+	player.aim_angle = 0.75
+	player.is_active = true
+	player._process(0.0)
+	var expected_aim := Vector3.RIGHT.rotated(Vector3.UP, player.aim_angle)
+	if target.global_basis.x.normalized().dot(expected_aim) < 0.999:
+		return _fail("Weapon equipment target must face the player's world-space aim")
+	return true
+
+
+func _check_used_weapon_cleanup(player: PlayerSpider3D, rocket: Weapon3D) -> bool:
+	var projectile_container := Node3D.new()
+	root.add_child(projectile_container)
+	var previous_scene := current_scene
+	current_scene = projectile_container
+	var weapon_count := player.weapons.size()
+	player.select_weapon(player.weapons.find(rocket))
+	player.n_remaining_actions = 1
+	player.set_process(true)
+	Input.action_press("action")
+	await process_frame
+	Input.action_release("action")
+	await process_frame
+	await process_frame
+	player.set_process(false)
+	current_scene = previous_scene
+	var cleaned_up := (player.weapons.size() == weapon_count - 1
+			and not is_instance_valid(rocket)
+			and player.selected_weapon_idx == 0)
+	projectile_container.free()
+	if not cleaned_up:
+		return _fail("A used-up equipped weapon must be freed and select no action")
 	return true
 
 
@@ -224,8 +354,7 @@ func _check_gameplay_spiders(scene_index: int = 0) -> bool:
 
 
 func _check_player_faces_movement() -> bool:
-	var scene := load("res://src/features/spiders/player_spider.tscn") as PackedScene
-	var spider := scene.instantiate() as PlayerSpider3D
+	var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
 	root.add_child(spider)
 	spider.set_process(false)
 	spider.is_active = true

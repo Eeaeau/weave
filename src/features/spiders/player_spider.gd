@@ -84,6 +84,7 @@ func _process(delta: float) -> void:
 		aim_angle += AIM_SPEED * delta
 	if Input.is_action_pressed("aim_right"):
 		aim_angle -= AIM_SPEED * delta
+	_update_weapon_pose()
 	if Input.is_action_just_pressed("action"):
 		action_charged_time = 0.0
 	if Input.is_action_just_released("action"):
@@ -93,8 +94,9 @@ func _process(delta: float) -> void:
 			selected_weapon.fire(aim_angle, aim_magnitude)
 			if selected_weapon.is_used_up():
 				weapons.remove_at(selected_weapon_idx)
-				remove_child(selected_weapon)
-				selected_weapon_idx = 0
+				selected_weapon.queue_free()
+				select_weapon(0)
+				selected_weapon = weapons[selected_weapon_idx]
 			n_remaining_actions -= 1
 
 	if Input.is_action_pressed("action"):
@@ -105,7 +107,7 @@ func _process(delta: float) -> void:
 	var number_input = get_number_input()
 	if (number_input > 0 and not Input.is_action_pressed("action")
 			and number_input <= len(weapons)):
-		selected_weapon_idx = number_input - 1
+		select_weapon(number_input - 1)
 
 	if selected_weapon is SilkBuildAction3D:
 		if Input.is_action_just_pressed("cycle_silk_target_next"):
@@ -169,10 +171,42 @@ func pick_up(collectible: Collectible3D) -> bool:
 		health = minf(1.0, health + insect_data.health_amount)
 		return true
 	if collectible is Weapon3D:
-		collectible.call_deferred("reparent", self)
 		weapons.append(collectible)
+		call_deferred("_attach_weapon", collectible)
 		return true
 	return false
+
+
+func select_weapon(index: int) -> bool:
+	if index < 0 or index >= weapons.size():
+		return false
+	selected_weapon_idx = index
+	_sync_equipped_weapon_visuals()
+	return true
+
+
+func _attach_weapon(weapon: Weapon3D) -> void:
+	if not is_instance_valid(weapon):
+		return
+	weapon.reparent(_get_weapon_equip_target())
+	weapon.transform = Transform3D.IDENTITY
+	_sync_equipped_weapon_visuals()
+
+
+func _sync_equipped_weapon_visuals() -> void:
+	var equip_target := _get_weapon_equip_target()
+	for index in range(weapons.size()):
+		var weapon := weapons[index]
+		if is_instance_valid(weapon) and weapon.get_parent() == equip_target:
+			weapon.visible = index == selected_weapon_idx and not weapon is WeaponNoAction
+
+
+func _update_weapon_pose() -> void:
+	_get_weapon_equip_target().global_rotation = Vector3(PI / 2.0, aim_angle, 0.0)
+
+
+func _get_weapon_equip_target() -> Marker3D:
+	return get_node("SpiderRig/BoneAttachment3D/BodyOffset/WeaponEquipTarget") as Marker3D
 
 
 func take_damage(damage: float) -> void:
@@ -211,7 +245,7 @@ func cycle_silk_target(direction: int) -> void:
 
 ## Cancels targeting by returning to the permanent pass option without spending anything.
 func cancel_silk_build() -> void:
-	selected_weapon_idx = 0
+	select_weapon(0)
 	silk_builder.hide_preview()
 
 

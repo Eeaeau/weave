@@ -82,7 +82,10 @@ func cycle_silk_target(direction: int) -> void:
 
 func cancel_selection() -> void:
 	if spider != null:
-		spider.set("selected_weapon_idx", 0)
+		if spider.has_method("select_weapon"):
+			spider.call("select_weapon", 0)
+		else:
+			spider.set("selected_weapon_idx", 0)
 	hide_preview()
 
 

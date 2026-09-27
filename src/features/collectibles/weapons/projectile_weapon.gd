@@ -8,7 +8,7 @@ var is_thrown: bool = false
 func fire(direction: float, power: float) -> void:
 	var projectile: Projectile3D = projectile_scene.instantiate()
 	get_tree().current_scene.add_child(projectile)
-	projectile.global_position = get_parent_node_3d().global_position + Vector3.UP * 2
+	projectile.global_position = global_position
 	projectile.launch(direction, power)
 	is_thrown = true
 
