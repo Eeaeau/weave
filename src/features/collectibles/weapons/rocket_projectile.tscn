@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dnkvwxmnh2yko" path="res://src/features/collectibles/weapons/projectile.gd" id="1_vkrc5"]
 [ext_resource type="Texture2D" uid="uid://qedq4mdaomd6" path="res://src/features/collectibles/weapons/assets/pebble.svg" id="2_vkrc5"]
+[ext_resource type="Texture2D" uid="uid://rwop8oahm3d7" path="res://src/features/collectibles/weapons/assets/rocket.png" id="2_w8ylx"]
 [ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_yll53"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_6q6db"]
@@ -25,7 +26,7 @@ hide_on_hit = [NodePath("ShadowComponent"), NodePath("Sprite3D")]
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
 transform = Transform3D(0.2, 0, 0, 0, -8.742278e-09, 0.2, 0, -0.2, -8.742278e-09, 0, 0, 0)
-texture = ExtResource("2_vkrc5")
+texture = ExtResource("2_w8ylx")
 
 [node name="Hitbox" type="Area3D" parent="." unique_id=164628878]
 
@@ -41,8 +42,10 @@ shape = SubResource("SphereShape3D_vkrc5")
 mesh = NodePath("ShadowMesh")
 
 [node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=268478568]
+transform = Transform3D(0.89598715, 0, 0, 0, 0.9418374, 0, 0, 0, 2.7471282, 0.016407251, 0.08731341, -0.107384205)
 mesh = SubResource("CylinderMesh_6q6db")
 
 [node name="ExplosionSprite" type="Sprite3D" parent="." unique_id=619356830]
 transform = Transform3D(3, 0, 0, 0, -1.3113416e-07, 3, 0, -3, -1.3113416e-07, 0, 0, 0)
+visible = false
 texture = ExtResource("2_vkrc5")
