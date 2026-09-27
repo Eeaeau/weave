@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cjr2bhdata12b"]
 
 [ext_resource type="Script" uid="uid://c7qoxha3sjtqr" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
-[ext_resource type="Script" uid="uid://brhk4mdjy55q6" path="res://src/features/world/maps/branch_canopy/parallax_camera.gd" id="2"]
+[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/action_camera.gd" id="2"]
 [ext_resource type="PackedScene" path="res://src/features/wind/wind_event.tscn" id="5"]
 [ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
 [ext_resource type="AudioStream" uid="uid://dvecvqgunvqet" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
@@ -109,11 +109,12 @@ texture = ExtResource("15_lyog6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
 texture = ExtResource("16_owa7m")
 
-[node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
+[node name="ActionCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
 current = true
 fov = 65.0
 script = ExtResource("2")
+waypoint_path = NodePath("../WindEvent/WebPlane/CameraWaypoint")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1916680696]
 

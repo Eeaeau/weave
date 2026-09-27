@@ -9,7 +9,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	if not (_camera_relative_path() and _staggered_group_and_contact()
+	if not (_stable_plane_path_is_camera_independent() and _staggered_group_and_contact()
 			and _empty_group_finishes()
 			and _removed_item_does_not_stall()
 			and _debug_contact_markers_toggle() and _debug_contact_marker_crossing()
@@ -24,39 +24,54 @@ func _run() -> void:
 	quit(0)
 
 
-func _camera_relative_path() -> bool:
+func _stable_plane_path_is_camera_independent() -> bool:
 	var container := Node3D.new()
 	root.add_child(container)
 	var camera := Camera3D.new()
-	camera.name = "ParallaxCamera"
+	camera.name = "ActionCamera"
 	camera.position = Vector3(0.0, 12.0, 1.0)
 	camera.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
 	container.add_child(camera)
 	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
 	container.add_child(event)
+	var plane: Node3D = event.get_node("WebPlane")
+	plane.rotation = Vector3(0.3, 0.5, -0.2)
 	event.reset_match(42)
 	var path := event._sample_path(
 		event.get_node("Lanes/PlayerLane") as WindLane3D
 	)
-	var approach := (path[1] - path[0]).dot(camera.global_basis.z.normalized())
-	var departure := (path[2] - path[1]).dot(camera.global_basis.z.normalized())
-	var contact_local: Vector3 = (
-		event.get_node("WebPlane") as Node3D
-	).to_local(path[1])
+	var stable_basis: Basis = event._plane_camera_basis()
+	camera.position = Vector3(20.0, -4.0, 9.0)
+	camera.rotation = Vector3(0.6, -1.1, 0.4)
+	event.reset_match(42)
+	var path_after_camera_move := event._sample_path(
+		event.get_node("Lanes/PlayerLane") as WindLane3D
+	)
 	event.group_size = 1
 	event.start_round(1)
-	var uses_camera_axes := (
-		event.get_node("Flights").get_child(0) as WindFlight3D
-	).global_basis.is_equal_approx(
-		camera.global_basis.orthonormalized()
-	)
+	var camera_independent := _paths_are_equal(path, path_after_camera_move)
+	var contact_on_plane := is_zero_approx(plane.to_local(path[1]).y)
+	var flight_uses_plane_axes := (event.get_node("Flights").get_child(0) as WindFlight3D
+		).global_basis.is_equal_approx(stable_basis)
 	container.free()
-	if approach <= 0.0 or departure <= 0.0:
-		return _fail("Wind must travel through the web toward the camera")
-	if not is_zero_approx(contact_local.y):
-		return _fail("Camera-relative wind must preserve its web-plane contact")
-	if not uses_camera_axes:
-		return _fail("Wind turbulence must use the camera's coordinate system")
+	if ((path[1] - path[0]).dot(stable_basis.z) <= 0.0
+			or (path[2] - path[1]).dot(stable_basis.z) <= 0.0):
+		return _fail("Wind must travel through the web along its stable plane normal")
+	if not contact_on_plane:
+		return _fail("Plane-relative wind must preserve its web-plane contact")
+	if not camera_independent:
+		return _fail("Moving the camera must not change the wind path")
+	if not flight_uses_plane_axes:
+		return _fail("Wind turbulence must use the stable web-plane frame")
+	return true
+
+
+func _paths_are_equal(first_path: PackedVector3Array, second_path: PackedVector3Array) -> bool:
+	if first_path.size() != second_path.size():
+		return false
+	for point_index in range(first_path.size()):
+		if not first_path[point_index].is_equal_approx(second_path[point_index]):
+			return false
 	return true
 
 

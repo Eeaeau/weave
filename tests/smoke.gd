@@ -39,11 +39,16 @@ func _check_map(match_scene: Node3D) -> bool:
 	if (map.get_node_or_null("PlayerBranchStart") == null
 			or map.get_node_or_null("OpponentBranchStart") == null
 			or map.get_node_or_null("BackgroundMusic") == null
-			or map.get_node_or_null("ParallaxCamera") == null):
+			or map.get_node_or_null("ActionCamera") == null):
 		return _fail("Map start markers or music slot are missing")
-	var camera: Camera3D = map.get_node("ParallaxCamera")
+	var camera: Camera3D = map.get_node("ActionCamera")
 	if not camera.current or camera.projection != Camera3D.PROJECTION_PERSPECTIVE:
 		return _fail("The arena needs an active perspective camera")
+	var cameras := map.find_children("*", "Camera3D", true, false)
+	if cameras.size() != 1:
+		return _fail("The gameplay map must use one active camera")
+	if map.get_node_or_null("WindEvent/WebPlane/CameraWaypoint") == null:
+		return _fail("The action camera needs its pose waypoint on the gameplay plane")
 	var camera_x := camera.position.x
 	await create_timer(0.1).timeout
 	if is_equal_approx(camera.position.x, camera_x):
@@ -54,7 +59,7 @@ func _check_map(match_scene: Node3D) -> bool:
 func _check_local_camera_sway() -> bool:
 	var camera := Camera3D.new()
 	camera.set_script(load(
-		"res://src/features/world/maps/branch_canopy/parallax_camera.gd"
+		"res://src/features/world/maps/branch_canopy/action_camera.gd"
 	))
 	camera.transform = Transform3D(
 		Basis.from_euler(Vector3(-0.6, 0.4, 0.2)), Vector3(3.0, 5.0, 7.0)
