@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cjr2bhdata12b"]
 
 [ext_resource type="Script" uid="uid://c7qoxha3sjtqr" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
-[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/action_camera.gd" id="2"]
+[ext_resource type="Script" uid="uid://0t3i56jevefa" path="res://src/features/world/maps/branch_canopy/action_camera.gd" id="2"]
 [ext_resource type="PackedScene" path="res://src/features/wind/wind_event.tscn" id="5"]
 [ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
 [ext_resource type="AudioStream" uid="uid://dvecvqgunvqet" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
@@ -16,53 +16,48 @@
 [ext_resource type="Texture2D" uid="uid://bk1fwk56vjxh6" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/foreground.png" id="15_lyog6"]
 [ext_resource type="Texture2D" uid="uid://cki0sfwbmnew3" path="res://src/features/world/maps/branch_canopy/assets/sprites/left_branch/far_background.png" id="16_owa7m"]
 [ext_resource type="Texture2D" uid="uid://d1ep2utqq105v" path="res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png" id="17_sun"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/sunset_sky.svg" id="18_sky"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/far_forest.svg" id="19_far"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/atmosphere.svg" id="20_mist"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/mid_forest.svg" id="21_mid"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/god_rays.svg" id="22_rays"]
-[ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/branch_blocker.tscn" id="23_blocker"]
+[ext_resource type="Texture2D" uid="uid://c0niwu8qctjnx" path="res://src/features/world/maps/branch_canopy/assets/background/sunset_sky.svg" id="18_sky"]
+[ext_resource type="Texture2D" uid="uid://cmbogprbrcsbe" path="res://src/features/world/maps/branch_canopy/assets/background/far_forest.svg" id="19_far"]
+[ext_resource type="Texture2D" uid="uid://djnb3oepy5f8t" path="res://src/features/world/maps/branch_canopy/assets/background/atmosphere.svg" id="20_mist"]
+[ext_resource type="Texture2D" uid="uid://bpa2567c5gyhe" path="res://src/features/world/maps/branch_canopy/assets/background/mid_forest.svg" id="21_mid"]
+[ext_resource type="Texture2D" uid="uid://cideutdsv401y" path="res://src/features/world/maps/branch_canopy/assets/background/god_rays.svg" id="22_rays"]
+[ext_resource type="PackedScene" uid="uid://vnj15op678e4" path="res://src/features/world/maps/branch_canopy/branch_blocker.tscn" id="23_blocker"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 script = ExtResource("1")
 
-[node name="BackgroundLayers" type="Node3D" parent="."]
-rotation = Vector3(-1.5707964, 0, 0)
+[node name="BackgroundLayers" type="Node3D" parent="." unique_id=1101808637]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 
-[node name="SunsetSky" type="Sprite3D" parent="BackgroundLayers"]
-position = Vector3(0, 0, -18)
-scale = Vector3(3.2, 2.6, 2.6)
+[node name="SunsetSky" type="Sprite3D" parent="BackgroundLayers" unique_id=525478528]
+transform = Transform3D(3.2, 0, 0, 0, 2.6, 0, 0, 0, 2.6, 0, 0, -18)
 pixel_size = 0.018
 texture = ExtResource("18_sky")
 
-[node name="Sun" type="Sprite3D" parent="BackgroundLayers"]
-position = Vector3(-7, 2.1, -16.5)
+[node name="Sun" type="Sprite3D" parent="BackgroundLayers" unique_id=128839524]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.1, -16.5)
 pixel_size = 0.008
 texture = ExtResource("17_sun")
 
-[node name="FarForest" type="Sprite3D" parent="BackgroundLayers"]
-position = Vector3(0, 0, -14)
-scale = Vector3(2.8, 2.5, 2.5)
+[node name="FarForest" type="Sprite3D" parent="BackgroundLayers" unique_id=305455880]
+transform = Transform3D(2.8, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -14)
 pixel_size = 0.018
 texture = ExtResource("19_far")
 
-[node name="AtmosphericEffects" type="Node3D" parent="BackgroundLayers"]
+[node name="AtmosphericEffects" type="Node3D" parent="BackgroundLayers" unique_id=534539806]
 
-[node name="Haze" type="Sprite3D" parent="BackgroundLayers/AtmosphericEffects"]
-position = Vector3(0, 0, -12)
-scale = Vector3(2.7, 2.5, 2.5)
+[node name="Haze" type="Sprite3D" parent="BackgroundLayers/AtmosphericEffects" unique_id=1589448207]
+transform = Transform3D(2.7, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -12)
 pixel_size = 0.018
 texture = ExtResource("20_mist")
 
-[node name="GodRays" type="Sprite3D" parent="BackgroundLayers/AtmosphericEffects"]
-position = Vector3(0, 0, -10.5)
-scale = Vector3(2.6, 2.5, 2.5)
+[node name="GodRays" type="Sprite3D" parent="BackgroundLayers/AtmosphericEffects" unique_id=1923299801]
+transform = Transform3D(2.6, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -10.5)
 pixel_size = 0.018
 texture = ExtResource("22_rays")
 
-[node name="MidForest" type="Sprite3D" parent="BackgroundLayers"]
-position = Vector3(0, 0, -9)
-scale = Vector3(2.5, 2.5, 2.5)
+[node name="MidForest" type="Sprite3D" parent="BackgroundLayers" unique_id=1137769655]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -9)
 pixel_size = 0.018
 texture = ExtResource("21_mid")
 
@@ -110,11 +105,11 @@ texture = ExtResource("15_lyog6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
 texture = ExtResource("16_owa7m")
 
-[node name="RightBranchBlocker" parent="." instance=ExtResource("23_blocker")]
-position = Vector3(8.4807135, 1.1, 0.6425977)
+[node name="RightBranchBlocker" parent="." unique_id=1257226542 instance=ExtResource("23_blocker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.480714, 1.1, 0.6425977)
 
-[node name="LeftBranchBlocker" parent="." instance=ExtResource("23_blocker")]
-position = Vector3(-6.350315, 1.1, 2.1498662)
+[node name="LeftBranchBlocker" parent="." unique_id=1461877807 instance=ExtResource("23_blocker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3003626, 0.050912976, 1.8755305)
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
