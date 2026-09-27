@@ -2,7 +2,7 @@ class_name SilkBuildAction3D
 extends Weapon3D
 ## Permanent action slot used to select and place a silk strand.
 
-const VERTEX_INTERACTION_DISTANCE: float = 0.35
+const VERTEX_INTERACTION_DISTANCE: float = 0.75
 const MAX_WEB_PLANE_DISTANCE: float = 0.5
 const MAX_STRAND_LENGTH: float = 3.0
 
@@ -57,7 +57,7 @@ func refresh_silk_build_options() -> void:
 		var source := web.valid_nodes[source_index]
 		if not is_instance_valid(source):
 			continue
-		var distance: float = spider.global_position.distance_to(source.global_position)
+		var distance := _planar_vertex_distance(web, local_spider_position, source)
 		if distance > nearest_distance:
 			continue
 		var eligible_targets := _find_targets(web, source_index)
@@ -103,7 +103,8 @@ func build_silk_strand(web: Web3D, source_index: int, target_index: int) -> bool
 	if absf(local_spider_position.y) > MAX_WEB_PLANE_DISTANCE:
 		return false
 	var source := web.valid_nodes[source_index]
-	if spider.global_position.distance_to(source.global_position) > VERTEX_INTERACTION_DISTANCE:
+	if (_planar_vertex_distance(web, local_spider_position, source)
+			> VERTEX_INTERACTION_DISTANCE):
 		return false
 	if not _find_targets(web, source_index).has(target_index):
 		return false
@@ -113,6 +114,14 @@ func build_silk_strand(web: Web3D, source_index: int, target_index: int) -> bool
 	spider.set("n_remaining_actions", spider.get("n_remaining_actions") - 1)
 	refresh_silk_build_options()
 	return true
+
+
+func _planar_vertex_distance(web: Web3D, local_spider_position: Vector3,
+		source: Node3D) -> float:
+	var local_source := web.to_local(source.global_position)
+	return Vector2(local_spider_position.x, local_spider_position.z).distance_to(
+		Vector2(local_source.x, local_source.z)
+	)
 
 
 func _can_build_on_web(web: Web3D, source_index: int, target_index: int) -> bool:

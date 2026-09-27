@@ -99,13 +99,15 @@ func _check_build_and_selection() -> bool:
 	opponent_web.add_to_group("buildable_webs")
 	spider.silk_builder.set_build_web(web)
 	spider.activate()
-	spider.position = Vector3(0.35, 0.0, 0.25)
+	spider.position = Vector3(0.9, 0.0, 0.9)
 	spider_b.position = Vector3(20, 0, 0)
 	spider_b.activate()
 	spider_b.set("silk_amount", 4)
 	spider.set("silk_amount", 2)
 	spider.set("n_remaining_actions", 1)
-	var check_ok := _check_anchor_selection(spider, web)
+	var check_ok := _check_visible_vertex_proximity()
+	if check_ok:
+		check_ok = _check_anchor_selection(spider, web)
 	if check_ok:
 		check_ok = _check_strand_build(spider, spider_b, web)
 	if check_ok:
@@ -116,6 +118,26 @@ func _check_build_and_selection() -> bool:
 	_free_nodes([opponent_web])
 	_free_nodes([spider_b])
 	return check_ok
+
+
+func _check_visible_vertex_proximity() -> bool:
+	var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
+	var web := _make_web()
+	root.add_child(web)
+	root.add_child(spider)
+	spider.global_position = web.valid_nodes[0].global_position + Vector3(0.55, 0.25, 0.0)
+	spider.set_build_web(web)
+	spider.activate()
+	spider.silk_amount = 1
+	spider.n_remaining_actions = 1
+	spider.silk_builder.refresh_silk_build_options()
+	var source_index := spider.silk_builder.silk_source_index
+	var has_targets := not spider.silk_builder.silk_target_indices.is_empty()
+	var built := spider.try_build_selected_silk()
+	_free_nodes([web, spider])
+	if source_index != 0 or not has_targets or not built:
+		return _fail("A spider near a vertex must see targets and build despite depth offset")
+	return true
 
 
 func _check_target_range_and_crossing() -> bool:
