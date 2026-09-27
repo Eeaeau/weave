@@ -67,7 +67,7 @@ func _check_insect_proximity() -> bool:
 	beetle.collectible = beetle_data
 	root.add_child(beetle)
 	spider_a.set("health", 0.5)
-	beetle.call("_area_entered", spider_a.get("hitbox"))
+	beetle.call("_area_entered", spider_a.get("hurtbox"))
 	if not is_equal_approx(spider_a.get("health"), 1.0):
 		_free_nodes([beetle, spider_a, spider_b])
 		return _fail("Health beetles must heal the spider that eats them")
@@ -196,11 +196,11 @@ func _check_triangle_fill_lifecycle() -> bool:
 	var closes_triangle := spider.silk_builder.silk_target_indices.has(2)
 	var built := spider.build_silk_strand(web, 0, 2)
 	var fill_created := (web.find_faces().size() == 1
-			and web.polygon_container.get_child_count() == 1
+			and _count_web_polygons(web) == 1
 			and not web.find_catch_face(Vector3(0.5, 0, 0.5)).is_empty())
 	var removed := web.remove_edge(0, 1)
 	var fill_removed := (web.find_faces().is_empty()
-			and web.polygon_container.get_child_count() == 2
+			and _count_web_polygons(web) == 2
 			and web.find_catch_face(Vector3(0.5, 0, 0.5)).is_empty())
 	_free_nodes([web, spider])
 	if not closes_triangle or not built or not fill_created:
@@ -208,6 +208,14 @@ func _check_triangle_fill_lifecycle() -> bool:
 	if not removed or not fill_removed:
 		return _fail("Removing a triangle edge must remove its fill and catch contact")
 	return true
+
+
+func _count_web_polygons(web: Web3D) -> int:
+	var count := 0
+	for child in web.polygon_container.get_children():
+		if child is WebPolygon3D:
+			count += 1
+	return count
 
 
 func _check_tab_and_space_controls() -> bool:
