@@ -377,6 +377,9 @@ func _best_web_target_on_segment(
 			continue
 		var score := _planar(candidate).distance_to(_planar(desired))
 		score += absf(candidate.y - desired.y) * 0.5
+		var local_candidate := _rig.to_local(candidate)
+		if local_candidate.x * _feet[foot_index].rest_offset.x <= 0.0:
+			score += 0.35
 		if strand_id == preferred_strand:
 			score = maxf(0.0, score - 0.2)
 		if score < best_score:
@@ -433,7 +436,8 @@ func can_land(foot_index: int, candidate: Vector3) -> bool:
 	if foot_index < 0 or foot_index >= _feet.size():
 		return false
 	var local_candidate := _rig.to_local(candidate)
-	if local_candidate.x * _feet[foot_index].rest_offset.x <= 0.0:
+	if (targeting_mode != TargetingMode.WEB
+			and local_candidate.x * _feet[foot_index].rest_offset.x <= 0.0):
 		return false
 	var from_point := _planar(_lift_position(foot_index))
 	var to_point := _planar(candidate)
