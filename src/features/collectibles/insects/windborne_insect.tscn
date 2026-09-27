@@ -1,13 +1,47 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://src/features/collectibles/collectible.tscn" id="1"]
 [ext_resource type="Script" path="res://src/features/collectibles/insects/windborne_insect.gd" id="2"]
-[ext_resource type="Texture2D" path="res://src/features/collectibles/insects/assets/moth.svg" id="3"]
+[ext_resource type="Texture2D" path="res://src/features/collectibles/insects/assets/moth_flight_strip.png" id="3_moth"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_closed"]
+atlas = ExtResource("3_moth")
+region = Rect2(0, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_middle"]
+atlas = ExtResource("3_moth")
+region = Rect2(512, 0, 512, 512)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_open"]
+atlas = ExtResource("3_moth")
+region = Rect2(1024, 0, 512, 512)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_flight"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_closed")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_middle")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_open")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_middle")
+}],
+"loop": true,
+"name": &"flight",
+"speed": 8.0
+}]
 
 [node name="WindborneInsect" instance=ExtResource("1")]
 script = ExtResource("2")
 
-[node name="Sprite3D" type="Sprite3D" parent="."]
-pixel_size = 0.005
+[node name="AnimatedMoth" type="AnimatedSprite3D" parent="."]
+pixel_size = 0.00125
 billboard = 1
-texture = ExtResource("3")
+sprite_frames = SubResource("SpriteFrames_flight")
+animation = &"flight"
+autoplay = "flight"
