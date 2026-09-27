@@ -19,6 +19,9 @@ func _run() -> void:
 	if not _check_build_and_selection():
 		quit(1)
 		return
+	if not _check_origin_on_existing_strand():
+		quit(1)
+		return
 	if not await _check_match_spawns():
 		quit(1)
 		return
@@ -81,7 +84,7 @@ func _check_build_and_selection() -> bool:
 	root.add_child(spider)
 	root.add_child(spider_b)
 	var web := _make_web()
-	web.position = Vector3(2, 0, 0)
+	web.position = Vector3.ZERO
 	root.add_child(web)
 	web.add_to_group("buildable_webs")
 	var opponent_web := _make_web()
@@ -89,7 +92,7 @@ func _check_build_and_selection() -> bool:
 	opponent_web.add_to_group("buildable_webs")
 	spider.silk_builder.set_build_web(web)
 	spider.activate()
-	spider.position = Vector3.ZERO
+	spider.position = Vector3(0.35, 0.0, 0.25)
 	spider_b.position = Vector3(20, 0, 0)
 	spider_b.activate()
 	spider_b.set("silk_amount", 4)
@@ -106,6 +109,29 @@ func _check_build_and_selection() -> bool:
 	_free_nodes([opponent_web])
 	_free_nodes([spider_b])
 	return check_ok
+
+
+func _check_origin_on_existing_strand() -> bool:
+	var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
+	root.add_child(spider)
+	var web := _make_web()
+	root.add_child(web)
+	web.add_edge(0, 1)
+	spider.position = Vector3(0.35, 0.0, 0.0)
+	spider.set_build_web(web)
+	spider.activate()
+	spider.silk_amount = 1
+	spider.n_remaining_actions = 1
+	var built := spider.try_build_selected_silk()
+	var vertex_index := web.valid_nodes.size() - 1
+	var origin_ok := web.valid_nodes.size() == 5 and (
+		web.valid_nodes[vertex_index].global_position.is_equal_approx(spider.global_position)
+	)
+	var connected := web.has_edge(0, vertex_index)
+	_free_nodes([web, spider])
+	if not built or not origin_ok or not connected:
+		return _fail("A spider on an existing strand near a vertex must be able to build")
+	return true
 
 
 func _check_anchor_selection(spider: PlayerSpider3D, owned_web: Web3D) -> bool:
@@ -126,10 +152,25 @@ func _check_anchor_selection(spider: PlayerSpider3D, owned_web: Web3D) -> bool:
 		return _fail("Cancelling a strand preview must spend neither silk nor an action")
 	spider.selected_weapon_idx = 1
 	builder.update_preview()
+	return _check_preview(spider, owned_web)
+
+
+func _check_preview(spider: PlayerSpider3D, owned_web: Web3D) -> bool:
+	var builder := spider.silk_builder
 	var preview := spider.get_node("SilkBuildAction/SilkPreview/SilkPreviewLine") as Sprite3D
 	var highlight := spider.get_node("SilkBuildAction/SilkTargetHighlight") as Sprite3D
 	if not preview.visible or not highlight.visible:
 		return _fail("Selecting silk must show a ghost strand and target highlight")
+	var target_index: int = builder.silk_target_indices[
+		builder.selected_silk_target_index
+	]
+	var target_position := owned_web.valid_nodes[target_index].global_position
+	var preview_center := preview.get_parent_node_3d().global_position
+	var expected_center := (spider.global_position + target_position) * 0.5
+	if preview_center.distance_to(expected_center) > 0.06:
+		return _fail("The strand preview must begin at the spider's current position")
+	if owned_web.valid_nodes.size() != 4 or not owned_web.edges.is_empty():
+		return _fail("A strand preview must not change the web graph")
 	return true
 
 
@@ -139,18 +180,44 @@ func _check_strand_build(spider: PlayerSpider3D, spider_b: PlayerSpider3D,
 	builder.refresh_silk_build_options()
 	var source := builder.silk_source_index
 	var target := builder.silk_target_indices[builder.selected_silk_target_index]
+	var previous_node_count := web.valid_nodes.size()
+	var origin := spider.global_position
 	if not spider.try_build_selected_silk():
-		return _fail("A valid strand between eligible anchors must be built")
-	if not web.has_edge(source, target):
-		return _fail("A successful build must add an edge to the Web3D graph")
+		return _fail("A nearby spider must build a strand from its current position")
+	if not _check_new_vertex(web, previous_node_count, origin, source, target):
+		return false
 	if spider.silk_amount != 1 or spider.n_remaining_actions != 0:
 		return _fail("A valid strand must spend one silk and one action from its spider")
+	return _check_rejected_builds(spider, spider_b, web, source, target, origin)
+
+
+func _check_new_vertex(web: Web3D, previous_node_count: int, origin: Vector3,
+		source: int, target: int) -> bool:
+	if web.valid_nodes.size() != previous_node_count + 1:
+		return _fail("Building must create a web vertex at the spider's position")
+	var new_index := previous_node_count
+	if not web.valid_nodes[new_index].global_position.is_equal_approx(origin):
+		return _fail("The new strand must begin at the spider's position")
+	if not web.has_edge(source, new_index) or not web.has_edge(new_index, target):
+		return _fail("The new vertex must connect to the nearby web and target")
+	return true
+
+
+func _check_rejected_builds(spider: PlayerSpider3D, spider_b: PlayerSpider3D,
+		web: Web3D, source: int, target: int, origin: Vector3) -> bool:
 	spider.n_remaining_actions = 1
 	if spider.build_silk_strand(web, source, target):
 		return _fail("An invalid duplicate strand must not be built")
 	if (spider.silk_amount != 1 or spider.n_remaining_actions != 1
 			or spider_b.silk_amount != 4):
 		return _fail("An invalid strand must not spend silk or an action")
+	spider.position = Vector3(8.0, 0.0, 0.0)
+	var node_count_before_far_build := web.valid_nodes.size()
+	if spider.build_silk_strand(web, source, target):
+		return _fail("A spider too far from a web vertex must not build")
+	if web.valid_nodes.size() != node_count_before_far_build:
+		return _fail("A rejected far build must not create a web vertex")
+	spider.position = origin
 	return true
 
 

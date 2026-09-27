@@ -2,7 +2,9 @@ class_name SilkBuildAction3D
 extends Weapon3D
 ## Permanent action slot used to select and place a silk strand.
 
-const MAX_SOURCE_ANCHOR_DISTANCE: float = 4.0
+const MAX_SOURCE_ANCHOR_DISTANCE: float = 1.5
+const MAX_WEB_PLANE_DISTANCE: float = 0.5
+const EXISTING_VERTEX_DISTANCE: float = 0.01
 
 var spider: Node
 var owned_web: Web3D
@@ -33,7 +35,7 @@ func set_build_web(web: Web3D) -> void:
 	refresh_silk_build_options()
 
 
-## Finds the nearest nearby web anchor as a fixed source for this selection.
+## Finds a nearby web vertex that can support a strand from the spider's position.
 func refresh_silk_build_options() -> void:
 	var previous_target := -1
 	if not silk_target_indices.is_empty():
@@ -44,27 +46,27 @@ func refresh_silk_build_options() -> void:
 	selected_silk_target_index = 0
 	if not is_inside_tree() or owned_web == null:
 		return
+	var web := owned_web
+	var local_origin := web.to_local(spider.global_position)
+	if absf(local_origin.y) > MAX_WEB_PLANE_DISTANCE:
+		return
+	local_origin.y = 0.0
+	var origin := web.to_global(local_origin)
 
 	var max_distance_squared := (
 		MAX_SOURCE_ANCHOR_DISTANCE * MAX_SOURCE_ANCHOR_DISTANCE
 	)
 	var nearest_distance_squared := max_distance_squared
-	var web := owned_web
 	for source_index in range(web.valid_nodes.size()):
 		var source := web.valid_nodes[source_index]
 		if source == null:
 			continue
-		var distance_squared: float = spider.global_position.distance_squared_to(
+		var distance_squared: float = origin.distance_squared_to(
 			source.global_position
 		)
 		if distance_squared > nearest_distance_squared:
 			continue
-		var eligible_targets: Array[int] = []
-		for target_index in range(web.valid_nodes.size()):
-			var target := web.valid_nodes[target_index]
-			if target == null or not web.can_add_edge(source_index, target_index):
-				continue
-			eligible_targets.append(target_index)
+		var eligible_targets := _find_targets(web, source_index, origin)
 		if eligible_targets.is_empty():
 			continue
 		nearest_distance_squared = distance_squared
@@ -101,6 +103,27 @@ func try_build_selected_silk() -> bool:
 
 
 func build_silk_strand(web: Web3D, source_index: int, target_index: int) -> bool:
+	if not _can_build_on_web(web, source_index, target_index):
+		return false
+	var local_origin := web.to_local(spider.global_position)
+	if absf(local_origin.y) > MAX_WEB_PLANE_DISTANCE:
+		return false
+	local_origin.y = 0.0
+	var origin := web.to_global(local_origin)
+	var source_position := web.valid_nodes[source_index].global_position
+	if origin.distance_to(source_position) > MAX_SOURCE_ANCHOR_DISTANCE:
+		return false
+	if not _find_targets(web, source_index, origin).has(target_index):
+		return false
+	if not _commit_strand(web, source_index, target_index, origin):
+		return false
+	spider.set("silk_amount", spider.get("silk_amount") - 1)
+	spider.set("n_remaining_actions", spider.get("n_remaining_actions") - 1)
+	refresh_silk_build_options()
+	return true
+
+
+func _can_build_on_web(web: Web3D, source_index: int, target_index: int) -> bool:
 	if spider == null or not spider.get("is_active"):
 		return false
 	if (web == null or web != owned_web
@@ -110,14 +133,7 @@ func build_silk_strand(web: Web3D, source_index: int, target_index: int) -> bool
 	if (source_index < 0 or source_index >= web.valid_nodes.size()
 			or target_index < 0 or target_index >= web.valid_nodes.size()):
 		return false
-	if not web.can_add_edge(source_index, target_index):
-		return false
-	if not web.add_edge(source_index, target_index):
-		return false
-	spider.set("silk_amount", spider.get("silk_amount") - 1)
-	spider.set("n_remaining_actions", spider.get("n_remaining_actions") - 1)
-	refresh_silk_build_options()
-	return true
+	return web.valid_nodes[source_index] != null and web.valid_nodes[target_index] != null
 
 
 func update_preview() -> void:
@@ -126,19 +142,76 @@ func update_preview() -> void:
 			or silk_source_web == null or silk_target_indices.is_empty()):
 		hide_preview()
 		return
-	var source := silk_source_web.valid_nodes[silk_source_index]
+	var local_origin := silk_source_web.to_local(spider.global_position)
+	local_origin.y = 0.0
+	var origin := silk_source_web.to_global(local_origin)
 	var target := silk_source_web.valid_nodes[
 		silk_target_indices[selected_silk_target_index]
 	]
-	var direction := target.global_position - source.global_position
+	var direction := target.global_position - origin
 	_preview_root.global_position = (
-		(source.global_position + target.global_position) * 0.5 + Vector3.UP * 0.05
+		(origin + target.global_position) * 0.5 + Vector3.UP * 0.05
 	)
 	_preview_root.global_rotation = Vector3(0.0, atan2(-direction.z, direction.x), 0.0)
 	_preview_line.scale.x = direction.length() / (256.0 * _preview_line.pixel_size)
 	_preview_line.visible = true
 	_target_highlight.global_position = target.global_position + Vector3.UP * 0.04
 	_target_highlight.visible = true
+
+
+func _find_targets(web: Web3D, source_index: int, origin: Vector3) -> Array[int]:
+	var targets: Array[int] = []
+	var source_position := web.valid_nodes[source_index].global_position
+	if origin.distance_to(source_position) <= EXISTING_VERTEX_DISTANCE:
+		for index in range(web.valid_nodes.size()):
+			if web.valid_nodes[index] != null and web.can_add_edge(source_index, index):
+				targets.append(index)
+		return targets
+
+	var probe := Node3D.new()
+	web.add_child(probe)
+	probe.global_position = origin
+	var probe_index := web.valid_nodes.size()
+	web.valid_nodes.append(probe)
+	if web.can_add_edge(source_index, probe_index):
+		web.edges.append(Vector2i(source_index, probe_index))
+		for index in range(probe_index):
+			if (index != source_index and web.valid_nodes[index] != null
+					and web.can_add_edge(probe_index, index)):
+				targets.append(index)
+		web.edges.pop_back()
+	web.valid_nodes.pop_back()
+	probe.free()
+	return targets
+
+
+func _commit_strand(web: Web3D, source_index: int, target_index: int,
+		origin: Vector3) -> bool:
+	var source_position := web.valid_nodes[source_index].global_position
+	if origin.distance_to(source_position) <= EXISTING_VERTEX_DISTANCE:
+		return web.add_edge(source_index, target_index)
+	var vertex := Node3D.new()
+	vertex.name = "SilkVertex"
+	var node_parent := web.get_node_or_null("Nodes") as Node3D
+	if node_parent == null:
+		node_parent = web
+	node_parent.add_child(vertex)
+	vertex.global_position = origin
+	var vertex_index := web.valid_nodes.size()
+	web.valid_nodes.append(vertex)
+	if not web.can_add_edge(source_index, vertex_index):
+		web.valid_nodes.pop_back()
+		vertex.free()
+		return false
+	web.edges.append(Vector2i(source_index, vertex_index))
+	if not web.can_add_edge(vertex_index, target_index):
+		web.edges.pop_back()
+		web.valid_nodes.pop_back()
+		vertex.free()
+		return false
+	web.edges.append(Vector2i(vertex_index, target_index))
+	web.rebuild()
+	return true
 
 
 func hide_preview() -> void:

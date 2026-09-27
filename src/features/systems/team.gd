@@ -27,7 +27,7 @@ func _process(delta: float) -> void:
 
 
 func spawn_spiders(number: int) -> void:
-	var spawn_position: Vector3 = self.position
+	var spawn_position := Vector3.ZERO
 	for i in range(number):
 		var instance: PlayerSpider3D = spider_scene.instantiate()
 		instance.position = spawn_position
