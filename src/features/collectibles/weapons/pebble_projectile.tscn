@@ -16,16 +16,16 @@ top_radius = 0.16455078
 bottom_radius = 0.16455078
 height = 0.001
 
-[node name="PebbleProjectile" type="Node3D" unique_id=387750299]
+[node name="PebbleProjectile" type="CharacterBody3D" unique_id=387750299]
+collision_layer = 8
+collision_mask = 3
 script = ExtResource("1_yybf2")
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
 transform = Transform3D(0.2, 0, 0, 0, -8.742278e-09, 0.2, 0, -0.2, -8.742278e-09, 0, 0, 0)
 texture = ExtResource("2_aq3jo")
 
-[node name="Area3D" type="Area3D" parent="." unique_id=164628878]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=247253188]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=247253188]
 shape = SubResource("SphereShape3D_6q6db")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1973022874]
@@ -37,5 +37,3 @@ mesh = NodePath("ShadowMesh")
 
 [node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=268478568]
 mesh = SubResource("CylinderMesh_6q6db")
-
-[connection signal="area_entered" from="Area3D" to="." method="_on_area_3d_area_entered"]
