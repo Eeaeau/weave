@@ -21,7 +21,9 @@ func _run() -> void:
 	await process_frame
 	var left_blocker := branch_scene.get_node_or_null("LeftBranchBlocker") as StaticBody3D
 	var right_blocker := branch_scene.get_node_or_null("RightBranchBlocker") as StaticBody3D
-	if not _check_visible_capsule(left_blocker) or not _check_visible_capsule(right_blocker):
+	if (not _check_instance_dimensions(left_blocker, right_blocker)
+			or not _check_visible_capsule(left_blocker)
+			or not _check_visible_capsule(right_blocker)):
 		branch_scene.free()
 		return
 	if left_blocker.collision_layer != 2 or right_blocker.collision_layer != 2:
@@ -49,6 +51,31 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	print("BRANCH COLLISION PASS: branch layers, movement blocking, and swept impacts")
 	quit(0)
+
+
+func _check_instance_dimensions(left_blocker: StaticBody3D,
+		right_blocker: StaticBody3D) -> bool:
+	if left_blocker == null or right_blocker == null:
+		return _fail("Both branches need named blockers")
+	var has_radius_property := false
+	var has_height_property := false
+	for property in right_blocker.get_property_list():
+		has_radius_property = has_radius_property or property["name"] == "capsule_radius"
+		has_height_property = has_height_property or property["name"] == "capsule_height"
+	if not has_radius_property or not has_height_property:
+		return _fail("Branch instances need editable radius and height properties")
+	var left_shape := left_blocker.get_node("CollisionShape3D").shape as CapsuleShape3D
+	var right_shape := right_blocker.get_node("CollisionShape3D").shape as CapsuleShape3D
+	if right_shape.height < 2.1 or not is_equal_approx(left_shape.radius, 0.125):
+		return _fail("The right example must reach the plane while the base stays thin")
+	right_blocker.set("capsule_radius", 0.2)
+	var right_mesh := right_blocker.get_node("VisualCapsule").mesh as CapsuleMesh
+	if (not is_equal_approx(right_shape.radius, 0.2)
+			or not is_equal_approx(right_mesh.radius, 0.2)
+			or not is_equal_approx(left_shape.radius, 0.125)):
+		return _fail("Editing one instance must resize its mesh and collision independently")
+	right_blocker.set("capsule_radius", 0.125)
+	return true
 
 
 func _check_visible_capsule(blocker: StaticBody3D) -> bool:
@@ -86,7 +113,14 @@ func _check_map_branch_movement(blocker: StaticBody3D) -> bool:
 	Input.action_press("move_right")
 	await _wait_physics_frames(120)
 	Input.action_release("move_right")
-	var stopped := spider.global_position.x < blocker.global_position.x - 1.0
+	var spider_radius := (
+		spider.get_node("BodyCollisionShape3D").shape as CylinderShape3D
+	).radius
+	var blocker_radius := (
+		blocker.get_node("CollisionShape3D").shape as CapsuleShape3D
+	).radius
+	var stopped := (spider.global_position.x
+		<= blocker.global_position.x - spider_radius - blocker_radius + 0.02)
 	spider.queue_free()
 	if not stopped:
 		return _fail("The visible map branch must block an approaching spider")

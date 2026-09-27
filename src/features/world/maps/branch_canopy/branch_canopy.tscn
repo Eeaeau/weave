@@ -107,6 +107,7 @@ texture = ExtResource("16_owa7m")
 
 [node name="RightBranchBlocker" parent="." unique_id=1257226542 instance=ExtResource("23_blocker")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.480714, 1.1, 0.6425977)
+capsule_height = 2.2
 
 [node name="LeftBranchBlocker" parent="." unique_id=1461877807 instance=ExtResource("23_blocker")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3003626, 0.050912976, 1.8755305)
