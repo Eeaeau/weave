@@ -52,10 +52,7 @@ var mesh_container: Node3D
 
 
 func _ready() -> void:
-	if Engine.is_editor_hint():
-		call_deferred("draw")
-	else:
-		draw()
+	draw()
 
 
 func draw() -> void:

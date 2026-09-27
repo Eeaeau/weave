@@ -830,12 +830,6 @@ func create_polygon(node_indices: Array[int]) -> void:
 	var polygon := WebPolygon3D.new()
 	polygon.name = "WebPolygon"
 
-	polygon_container.add_child(polygon)
-
-	# Generated editor nodes should not be saved.
-	if Engine.is_editor_hint():
-		polygon.owner = null
-
 	polygon.points.clear()
 
 	for node_index in node_indices:
@@ -862,7 +856,13 @@ func create_polygon(node_indices: Array[int]) -> void:
 	polygon.outer_curvature = outer_curvature
 	polygon.line_color = line_color
 
-	polygon.draw()
+	# Configure before entering the tree so each setter does not redraw the mesh.
+	polygon_container.add_child(polygon)
+
+	# Generated editor nodes should not be saved.
+	if Engine.is_editor_hint():
+		polygon.owner = null
+
 	if node_indices.size() == 3:
 		_catch_regions[_face_key(node_indices)] = polygon.get_catch_outline()
 
