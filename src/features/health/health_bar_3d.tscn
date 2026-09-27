@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://cr8pruprxlool"]
+
+[ext_resource type="Script" uid="uid://dy86b5ri5ixk0" path="res://src/features/health/health_bar_3d.gd" id="1_0sjn2"]
+[ext_resource type="Shader" uid="uid://ca8m0agtspbwp" path="res://src/features/health/health_bar_3d.gdshader" id="2_a7t7n"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mhsc8"]
+render_priority = 0
+shader = ExtResource("2_a7t7n")
+shader_parameter/health_color = Color(0, 1, 0, 1)
+shader_parameter/no_health_color = Color(1, 0, 0, 1)
+shader_parameter/background_color = Color(0.2, 0.2, 0.2, 1)
+shader_parameter/health_progress = 0.75
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_mhsc8"]
+
+[node name="HealthBar" type="Node3D" unique_id=454515290]
+transform = Transform3D(0.3, 0, 0, 0, -4.371139e-09, -0.1, 0, 0.1, -4.371139e-09, 0, 0, 0)
+script = ExtResource("1_0sjn2")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1808896402]
+material_override = SubResource("ShaderMaterial_mhsc8")
+mesh = SubResource("PlaneMesh_mhsc8")
