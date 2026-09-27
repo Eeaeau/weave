@@ -69,16 +69,18 @@ func _check_geometry_api() -> bool:
 	web.edges = [
 		Vector2i(0, 1), Vector2i(1, 2), Vector2i(2, 0), Vector2i(2, 3),
 	]
+	web.position = Vector3(10, 0, 20)
 	root.add_child(web)
+	web.rebuild()
 
 	var triangles: Array = web.get_triangles()
 	if triangles.size() != 1 or triangles[0].size() != 3:
 		web.free()
 		return _fail("get_triangles must return each connected triangular face once")
 	var triangle: Array = triangles[0]
-	if not _contains_point(triangle, Vector2.ZERO) \
-			or not _contains_point(triangle, Vector2(3, 0)) \
-			or not _contains_point(triangle, Vector2(0, 3)):
+	if not _contains_point(triangle, Vector2(10, 20)) \
+			or not _contains_point(triangle, Vector2(13, 20)) \
+			or not _contains_point(triangle, Vector2(10, 23)):
 		web.free()
 		return _fail("get_triangles must return triangle vertex positions")
 
@@ -87,7 +89,7 @@ func _check_geometry_api() -> bool:
 		web.free()
 		return _fail("get_stand_alone_edges must exclude triangle edges")
 	var edge: Array = standalone[0]
-	if not _contains_point(edge, Vector2(0, 3)) or not _contains_point(edge, Vector2(3, 3)):
+	if not _contains_point(edge, Vector2(10, 23)) or not _contains_point(edge, Vector2(13, 23)):
 		web.free()
 		return _fail("get_stand_alone_edges must return standalone endpoint positions")
 	web.free()

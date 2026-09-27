@@ -9,6 +9,7 @@ const STARTING_SILK: int = 3
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
 @export_range(0, 20) var silk_amount: int = STARTING_SILK
+@export var webs: Array[Web3D] = []
 
 var remaining_movement: float = 0
 var aim_angle: float = 0
@@ -46,6 +47,11 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+
+	if not webs.is_empty() and not is_on_web(Vector2(global_position.x, global_position.z)) \
+			and health > 0:
+		take_damage(1)
+
 	if not is_active:
 		selected_indicator.visible = false
 		aim_arrow.visible = false
@@ -77,8 +83,15 @@ func _process(delta: float) -> void:
 			var to_move = velocity * delta
 			if to_move.length() > remaining_movement:
 				to_move = to_move.normalized() * remaining_movement
-			remaining_movement -= to_move.length()
-			position += to_move
+
+			var new_position := Vector2(
+				global_position.x + to_move.x,
+				global_position.z + to_move.z,
+			)
+
+			if is_on_web(new_position):
+				remaining_movement -= to_move.length()
+				position += to_move
 
 	if Input.is_action_pressed("aim_left"):
 		aim_angle += AIM_SPEED * delta
@@ -123,6 +136,42 @@ func _process(delta: float) -> void:
 	else:
 		if silk_builder:
 			silk_builder.hide_preview()
+
+
+func is_on_web(pos: Vector2) -> bool:
+	for web in webs:
+		var triangles = web.get_triangles()
+		var stand_alone_edges = web.get_stand_alone_edges()
+
+		for triangle in triangles:
+			if Geometry2D.is_point_in_polygon(pos, PackedVector2Array(triangle)):
+				return true
+
+		for stand_alone_edge in stand_alone_edges:
+			if is_point_on_line_segment(pos, stand_alone_edge[0],
+			stand_alone_edge[1], 0.15):
+				return true
+
+	return false
+
+
+func is_point_on_line_segment(p: Vector2, a: Vector2, b: Vector2, margin: float) -> bool:
+	var ab = b - a
+	var ap = p - a
+	var line_len_squared = ab.length_squared()
+
+	# Prevent division by zero if point A and point B are the same
+	if line_len_squared == 0.0:
+		return p.distance_to(a) <= margin
+
+	# Find the projection of point P onto the line (clamped between 0.0 and 1.0)
+	var t = clamp(ap.dot(ab) / line_len_squared, 0.0, 1.0)
+
+	# Find the closest point on the segment
+	var closest_point = a + ab * t
+
+	# Check if the distance from P to the closest point is within the margin
+	return p.distance_to(closest_point) <= margin
 
 
 func activate() -> void:
