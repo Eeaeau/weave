@@ -95,43 +95,39 @@ transform = Transform3D(2, 0, 0, 0, -8.742278e-08, 2, 0, -2, -8.742278e-08, -9.0
 [node name="LeftRoot" type="Node3D" parent="Branches" unique_id=171336051]
 
 [node name="Left2" type="Sprite3D" parent="Branches/LeftRoot" unique_id=836908507]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, -0.1399999)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, -0.24559072)
 texture = ExtResource("8_pj3w8")
 
 [node name="Left3" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1792426267]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, -0.3531671)
 texture = ExtResource("9_wesyk")
 
 [node name="Left4" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1430825515]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.4311652)
 texture = ExtResource("10_p03h0")
 
 [node name="Left5" type="Sprite3D" parent="Branches/LeftRoot" unique_id=508542271]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.04173038)
 texture = ExtResource("11_svy6o")
 
 [node name="Left6" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1300594007]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.7830114, 2.2534776, 2.662702)
 texture = ExtResource("12_jddeu")
 
 [node name="Left7" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1299224368]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 1.8010993)
 texture = ExtResource("12_jddeu")
 
 [node name="Left8" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1585627520]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.6029792)
 texture = ExtResource("13_1lowl")
 
-[node name="Left9" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1725643001]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
-texture = ExtResource("14_sgapn")
-
 [node name="Left10" type="Sprite3D" parent="Branches/LeftRoot" unique_id=458013759]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.040906407)
 texture = ExtResource("15_t7dkw")
 
 [node name="Left11" type="Sprite3D" parent="Branches/LeftRoot" unique_id=850271987]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, -0.7091546)
 texture = ExtResource("16_1t75y")
 
 [node name="RightRoot" type="Node3D" parent="Branches" unique_id=368440301]
@@ -143,12 +139,12 @@ flip_h = true
 texture = ExtResource("8_pj3w8")
 
 [node name="Left3" type="Sprite3D" parent="Branches/RightRoot" unique_id=1380571246]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 1.4492316)
 flip_h = true
 texture = ExtResource("9_wesyk")
 
 [node name="Left4" type="Sprite3D" parent="Branches/RightRoot" unique_id=1395341987]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7866106, 1.3318663, 0.7595343)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7866106, 1.3318663, -0.6944452)
 flip_h = true
 texture = ExtResource("10_p03h0")
 
@@ -158,32 +154,27 @@ flip_h = true
 texture = ExtResource("11_svy6o")
 
 [node name="Left6" type="Sprite3D" parent="Branches/RightRoot" unique_id=1789924813]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, -0.2817865)
 flip_h = true
 texture = ExtResource("12_jddeu")
 
 [node name="Left7" type="Sprite3D" parent="Branches/RightRoot" unique_id=774506521]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 1.0613532)
 flip_h = true
 texture = ExtResource("12_jddeu")
 
-[node name="Left8" type="Sprite3D" parent="Branches/RightRoot" unique_id=133584020]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
-flip_h = true
-texture = ExtResource("13_1lowl")
-
 [node name="Left9" type="Sprite3D" parent="Branches/RightRoot" unique_id=500288160]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.64606994)
 flip_h = true
 texture = ExtResource("14_sgapn")
 
 [node name="Left10" type="Sprite3D" parent="Branches/RightRoot" unique_id=300669348]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 1.2967658)
 flip_h = true
 texture = ExtResource("15_t7dkw")
 
 [node name="Left11" type="Sprite3D" parent="Branches/RightRoot" unique_id=804353169]
-transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.10603088)
 flip_h = true
 texture = ExtResource("16_1t75y")
 
