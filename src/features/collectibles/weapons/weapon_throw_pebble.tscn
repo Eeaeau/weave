@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://5q78y45hys3h"]
 
 [ext_resource type="Script" uid="uid://0iv5rhgshan2" path="res://src/features/collectibles/weapons/weapon_throw_pebble.gd" id="1_o4n05"]
-[ext_resource type="Texture2D" uid="uid://qedq4mdaomd6" path="res://src/features/collectibles/weapons/assets/pebble.svg" id="2_7h37y"]
 [ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_1bouw"]
 [ext_resource type="Texture2D" uid="uid://cbrfngu8nypik" path="res://src/features/collectibles/weapons/assets/stone.png" id="4_stone"]
 
@@ -15,7 +14,7 @@ height = 0.001
 
 [node name="WeaponThrowPebble" type="Node3D" unique_id=1754921735 node_paths=PackedStringArray("pickup_area")]
 script = ExtResource("1_o4n05")
-icon = ExtResource("2_7h37y")
+icon = ExtResource("4_stone")
 pickup_area = NodePath("PickupArea")
 metadata/_custom_type_script = "uid://br605w6pc4cgw"
 
