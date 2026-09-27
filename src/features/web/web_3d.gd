@@ -299,6 +299,8 @@ func deal_damage(point: Vector2, radius: float, damage: float):
 	if damage <= 0.0 or radius < 0.0:
 		return
 
+	var local_point_3d := to_local(Vector3(point.x, global_position.y, point.y))
+	var local_point := Vector2(local_point_3d.x, local_point_3d.z)
 	var radius_squared := radius * radius
 
 	# First find how many edges to spread the damage over
@@ -314,7 +316,7 @@ func deal_damage(point: Vector2, radius: float, damage: float):
 		var a := _node_position_2d(edge.x)
 		var b := _node_position_2d(edge.y)
 
-		if _distance_squared_to_segment(point, a, b) <= radius_squared:
+		if _distance_squared_to_segment(local_point, a, b) <= radius_squared:
 			edges_to_deal_damage_to.append(i)
 
 	if edges_to_deal_damage_to.size() == 0:
