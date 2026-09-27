@@ -2,6 +2,8 @@ extends SceneTree
 ## Exercises plane-relative camera focus, framing, and zoom.
 
 const MATCH_SCENE: PackedScene = preload("res://src/game/web_match.tscn")
+const PEBBLE_SCENE: PackedScene = preload(
+	"res://src/features/collectibles/weapons/pebble_projectile.tscn")
 const CAMERA_SCRIPT: Script = preload(
 	"res://src/features/world/maps/branch_canopy/action_camera.gd")
 
@@ -66,7 +68,7 @@ func _check_spider_focus(match_scene: Node3D) -> bool:
 
 func _check_projectile_focus_and_smoothing(match_scene: Node3D) -> bool:
 	var camera: Camera3D = match_scene.get_node("BranchCanopy/ParallaxCamera")
-	var projectile := PebbleProjectile3D.new()
+	var projectile := PEBBLE_SCENE.instantiate() as Projectile3D
 	projectile.position = Vector3(5.0, 2.0, -3.0)
 	match_scene.add_child(projectile)
 	var request: Dictionary = camera.call("_resolve_focus_request")
