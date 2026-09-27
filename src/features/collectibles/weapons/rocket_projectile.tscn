@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://dhtiviswyot8s"]
+
+[ext_resource type="Script" uid="uid://dnkvwxmnh2yko" path="res://src/features/collectibles/weapons/projectile.gd" id="1_vkrc5"]
+[ext_resource type="Texture2D" uid="uid://qedq4mdaomd6" path="res://src/features/collectibles/weapons/assets/pebble.svg" id="2_vkrc5"]
+[ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_yll53"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_6q6db"]
+radius = 0.1377443
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_vkrc5"]
+radius = 1.0619427
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6q6db"]
+top_radius = 0.16455078
+bottom_radius = 0.16455078
+height = 0.001
+
+[node name="RocketProjectile" type="Node3D" unique_id=387750299 node_paths=PackedStringArray("hitbox", "explosion_hitbox", "explosion_sprite", "hide_on_hit")]
+script = ExtResource("1_vkrc5")
+explosion_damage = 20.0
+hitbox = NodePath("Hitbox")
+explosion_hitbox = NodePath("ExplosionHitbox")
+explosion_sprite = NodePath("ExplosionSprite")
+hide_on_hit = [NodePath("ShadowComponent"), NodePath("Sprite3D")]
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
+transform = Transform3D(0.2, 0, 0, 0, -8.742278e-09, 0.2, 0, -0.2, -8.742278e-09, 0, 0, 0)
+texture = ExtResource("2_vkrc5")
+
+[node name="Hitbox" type="Area3D" parent="." unique_id=164628878]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" unique_id=247253188]
+shape = SubResource("SphereShape3D_6q6db")
+
+[node name="ExplosionHitbox" type="Area3D" parent="." unique_id=996234194]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExplosionHitbox" unique_id=1265456667]
+shape = SubResource("SphereShape3D_vkrc5")
+
+[node name="ShadowComponent" parent="." unique_id=1817632336 node_paths=PackedStringArray("mesh") instance=ExtResource("3_yll53")]
+mesh = NodePath("ShadowMesh")
+
+[node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=268478568]
+mesh = SubResource("CylinderMesh_6q6db")
+
+[node name="ExplosionSprite" type="Sprite3D" parent="." unique_id=619356830]
+transform = Transform3D(3, 0, 0, 0, -1.3113416e-07, 3, 0, -3, -1.3113416e-07, 0, 0, 0)
+texture = ExtResource("2_vkrc5")

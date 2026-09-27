@@ -18,6 +18,7 @@ signal event_finished(round_number: int)
 @export var random_seed: int = 0
 @export var spawn_entries: Array[WindSpawnEntry] = [
 	preload("res://src/features/wind/entries/pebble.tres"),
+	preload("res://src/features/wind/entries/rocket_launcher.tres"),
 	preload("res://src/features/wind/entries/silk_moth.tres"),
 	preload("res://src/features/wind/entries/twig_cutter.tres"),
 	preload("res://src/features/wind/entries/health_beetle.tres"),

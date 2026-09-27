@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://ca8cqbxxkmgnw" path="res://src/features/systems/team.tscn" id="3_68q8q"]
 [ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="3_x3kcl"]
 [ext_resource type="PackedScene" uid="uid://5q78y45hys3h" path="res://src/features/collectibles/weapons/weapon_throw_pebble.tscn" id="5_vo601"]
+[ext_resource type="PackedScene" uid="uid://b5c0ba23l4csk" path="res://src/features/collectibles/weapons/weapon_rocket_launcher.tscn" id="6_4qxe5"]
 
 [node name="TorjusTestScene" type="Node3D" unique_id=1972552716]
 
@@ -42,3 +43,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43420053, 0, -6.500491)
 
 [node name="WeaponThrowPebble5" parent="." unique_id=1377695298 instance=ExtResource("5_vo601")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.39181876, 0, -4.0787306)
+
+[node name="WeaponRocketLauncher" parent="." unique_id=316889437 instance=ExtResource("6_4qxe5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.7237215, 0, -3.1367521)
+
+[node name="WeaponRocketLauncher2" parent="." unique_id=811347442 instance=ExtResource("6_4qxe5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.494231, 0, -1.8104334)
+
+[node name="WeaponRocketLauncher3" parent="." unique_id=319203876 instance=ExtResource("6_4qxe5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.401922, 0, -4.2983685)

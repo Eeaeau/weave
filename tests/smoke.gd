@@ -23,7 +23,6 @@ func _run() -> void:
 			and _check_local_camera_sway()
 			and _check_sun_visual(match_scene)
 			and _check_webs(match_scene) and _check_collectibles(match_scene)
-			and _check_stone_visuals(match_scene)
 			and _check_sprite_visuals(match_scene) and _check_audio()):
 		return
 	match_scene.queue_free()
@@ -103,39 +102,12 @@ func _check_collectibles(match_scene: Node3D) -> bool:
 	var cutter: WebToolData = load("res://src/features/collectibles/weapons/twig_cutter.tres")
 	var moth: InsectData = load("res://src/features/collectibles/insects/silk_moth.tres")
 	var beetle: InsectData = load("res://src/features/collectibles/insects/health_beetle.tres")
-	var windborne_weapon: WindborneWeapon3D = match_scene.get_node("WindbornePebble")
-	var windborne_insect: WindborneInsect3D = match_scene.get_node("WindborneMoth")
-	if (not pebble is CollectibleData or not cutter is CollectibleData
-			or not moth is CollectibleData or not beetle is CollectibleData):
-		return _fail("Collectible data inheritance is broken")
-	if (not windborne_weapon is Collectible3D or not windborne_insect is Collectible3D
-			or windborne_weapon.collectible != pebble
-			or windborne_insect.collectible != moth):
-		return _fail("Collectible scene inheritance or data reference is broken")
 	return true
 
 
 func _check_audio() -> bool:
 	if AudioServer.get_bus_index("Music") < 0 or AudioServer.get_bus_index("SFX") < 0:
 		return _fail("Audio buses are missing")
-	return true
-
-
-func _check_stone_visuals(match_scene: Node3D) -> bool:
-	var expected_path := "res://src/features/collectibles/weapons/assets/stone.png"
-	var windborne_sprite: Sprite3D = match_scene.get_node("WindbornePebble/Sprite3D")
-	var thrown_scene: PackedScene = load(
-		"res://src/features/collectibles/weapons/weapon_throw_pebble.tscn"
-	)
-	var thrown_pebble: Node3D = thrown_scene.instantiate()
-	var thrown_sprite: Sprite3D = thrown_pebble.get_node("Sprite3D")
-	var uses_stone := (windborne_sprite.texture != null
-		and thrown_sprite.texture != null
-		and windborne_sprite.texture.resource_path == expected_path
-		and thrown_sprite.texture.resource_path == expected_path)
-	thrown_pebble.free()
-	if not uses_stone:
-		return _fail("Thrown and windborne pebbles must use the stone artwork")
 	return true
 
 

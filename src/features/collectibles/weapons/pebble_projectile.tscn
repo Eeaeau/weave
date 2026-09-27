@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d04mskbfu15em"]
 
-[ext_resource type="Script" uid="uid://dnkvwxmnh2yko" path="res://src/features/collectibles/weapons/pebble_projectile.gd" id="1_yybf2"]
+[ext_resource type="Script" uid="uid://dnkvwxmnh2yko" path="res://src/features/collectibles/weapons/projectile.gd" id="1_yybf2"]
 [ext_resource type="Texture2D" uid="uid://cbrfngu8nypik" path="res://src/features/collectibles/weapons/assets/stone.png" id="2_aq3jo"]
 [ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_aq3jo"]
 
@@ -16,16 +16,19 @@ top_radius = 0.16455078
 bottom_radius = 0.16455078
 height = 0.001
 
-[node name="PebbleProjectile" type="Node3D" unique_id=387750299]
+[node name="PebbleProjectile" type="Node3D" unique_id=387750299 node_paths=PackedStringArray("hitbox", "hide_on_hit")]
 script = ExtResource("1_yybf2")
+damage = 10.0
+hitbox = NodePath("Hitbox")
+hide_on_hit = [NodePath("Sprite3D"), NodePath("ShadowComponent")]
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
 transform = Transform3D(0.2, 0, 0, 0, -8.742278e-09, 0.2, 0, -0.2, -8.742278e-09, 0, 0, 0)
 texture = ExtResource("2_aq3jo")
 
-[node name="Area3D" type="Area3D" parent="." unique_id=164628878]
+[node name="Hitbox" type="Area3D" parent="." unique_id=164628878]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=247253188]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" unique_id=247253188]
 shape = SubResource("SphereShape3D_6q6db")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1973022874]
@@ -37,5 +40,3 @@ mesh = NodePath("ShadowMesh")
 
 [node name="ShadowMesh" type="MeshInstance3D" parent="ShadowComponent" unique_id=268478568]
 mesh = SubResource("CylinderMesh_6q6db")
-
-[connection signal="area_entered" from="Area3D" to="." method="_on_area_3d_area_entered"]

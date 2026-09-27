@@ -7,8 +7,6 @@
 [ext_resource type="Resource" path="res://src/features/collectibles/weapons/pebble.tres" id="7"]
 [ext_resource type="PackedScene" path="res://src/features/ui/match_hud.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://src/features/ui/pause_menu.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://src/features/collectibles/insects/windborne_insect.tscn" id="10"]
-[ext_resource type="Resource" path="res://src/features/collectibles/insects/silk_moth.tres" id="11"]
 [ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="11_m5no2"]
 [ext_resource type="PackedScene" uid="uid://ca8cqbxxkmgnw" path="res://src/features/systems/team.tscn" id="11_pd16p"]
 [ext_resource type="PackedScene" uid="uid://bu81h1e2g7ldm" path="res://src/features/web/web_3d.tscn" id="12_web"]
@@ -28,15 +26,7 @@ web_width = 0.009999999999999998
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0.1, 0)
 web_width = 0.009999999999999998
 
-[node name="CaughtItems" type="Node3D" parent="WebB" unique_id=610194344]
-
-[node name="WindbornePebble" parent="." unique_id=1505872068 instance=ExtResource("6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.8, -2)
-collectible = ExtResource("7")
-
-[node name="WindborneMoth" parent="." unique_id=214741206 instance=ExtResource("10")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0.9, -3)
-collectible = ExtResource("11")
+[node name="CaughtItems" type="Node3D" parent="WebB" unique_id=1027188632]
 
 [node name="MatchHud" parent="." unique_id=1199369611 instance=ExtResource("8")]
 
