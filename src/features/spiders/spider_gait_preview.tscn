@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://src/features/spiders/base_spider.tscn" id="1_spider"]
 [ext_resource type="Script" path="res://src/features/spiders/spider_gait_preview.gd" id="2_preview"]
+[ext_resource type="PackedScene" path="res://src/features/web/web_3d.tscn" id="3_web"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_1"]
 size = Vector2(24, 24)
@@ -12,6 +13,9 @@ roughness = 1.0
 
 [node name="SpiderGaitPreview" type="Node3D"]
 script = ExtResource("2_preview")
+
+[node name="PreviewWeb" parent="." instance=ExtResource("3_web")]
+position = Vector3(0, 0.1, 0)
 
 [node name="Spider" parent="." instance=ExtResource("1_spider")]
 
@@ -37,4 +41,4 @@ offset_top = 20.0
 offset_right = 650.0
 offset_bottom = 58.0
 theme_override_font_sizes/font_size = 22
-text = "Move: WASD / arrows   |   Free-step gait preview"
+text = "Move: WASD / arrows   |   Inspector: Web or Free-step debug"

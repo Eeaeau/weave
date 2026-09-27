@@ -94,6 +94,7 @@ var polygon_container: Node3D
 
 
 func _ready() -> void:
+	add_to_group("web_support")
 
 	if Engine.is_editor_hint():
 		set_process(true)
@@ -238,6 +239,24 @@ func find_catch_face(world_point: Vector3) -> String:
 
 func has_catch_face(face_key: String) -> bool:
 	return _catch_regions.has(face_key)
+
+
+## Returns the visible polygon line segments in world space.
+func get_support_segments() -> Array[Dictionary]:
+	var segments: Array[Dictionary] = []
+	if polygon_container == null or not is_instance_valid(polygon_container):
+		return segments
+	for polygon_index in range(polygon_container.get_child_count()):
+		var polygon := polygon_container.get_child(polygon_index) as WebPolygon3D
+		if polygon == null:
+			continue
+		for local_segment in polygon.get_support_segments():
+			segments.append({
+				"start": polygon.to_global(local_segment["start"]),
+				"end": polygon.to_global(local_segment["end"]),
+				"strand_id": "%d:%s" % [polygon_index, local_segment["strand_id"]],
+			})
+	return segments
 
 
 # ============================================================

@@ -168,6 +168,73 @@ func add_curved_line(
 		previous = p
 
 
+## Returns the exact local line segments created by draw(), grouped by strand.
+func get_support_segments() -> Array[Dictionary]:
+	var segments: Array[Dictionary] = []
+	if points.size() < 2:
+		return segments
+	var center := Vector3.ZERO
+	for point in points:
+		center += point
+	center /= points.size()
+	for side in range(points.size()):
+		_append_curved_support(
+			segments,
+			points[side],
+			points[(side + 1) % points.size()],
+			center,
+			outer_curvature,
+		_support_strand_id("outer:%d" % side)
+		)
+	if not filled:
+		return segments
+	for ring in range(1, rings + 1):
+		var t := float(ring) / float(rings + 1)
+		var ring_points: Array[Vector3] = []
+		for point in points:
+			ring_points.append(point.lerp(center, t))
+		for side in range(ring_points.size()):
+			_append_curved_support(
+				segments,
+				ring_points[side],
+				ring_points[(side + 1) % ring_points.size()],
+				center,
+				ring_curvature,
+				_support_strand_id("ring:%d:%d" % [ring, side])
+			)
+	for point_index in range(points.size()):
+		segments.append({
+		"start": points[point_index],
+		"end": center,
+		"strand_id": _support_strand_id("radial:%d" % point_index),
+	})
+	return segments
+
+
+func _support_strand_id(family_id: String) -> String:
+	return "line" if points.size() == 2 else family_id
+
+
+func _append_curved_support(
+	segments: Array[Dictionary],
+	start: Vector3,
+	end: Vector3,
+	center: Vector3,
+	bend: float,
+	strand_id: String
+) -> void:
+	var previous := start
+	for segment_index in range(1, curve_segments + 1):
+		var t := float(segment_index) / float(curve_segments)
+		var point := _curve_point(start, end, center, bend, t)
+		segments.append({
+			"start": previous,
+			"end": point,
+			"strand_id": strand_id,
+		})
+		previous = point
+
+
 ## The catch boundary uses the same sampled curves as the visible outer strands.
 func get_catch_outline() -> PackedVector2Array:
 	var outline := PackedVector2Array()
