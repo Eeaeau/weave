@@ -20,7 +20,7 @@ var health: float = 1.0
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
-@onready var hitbox: Area3D = $Hitbox
+@onready var hurtbox: Hurtbox3D = $Hurtbox3D
 @onready var spider_rig: Node3D = $SpiderRig
 
 
@@ -144,9 +144,13 @@ func take_damage(damage: float) -> void:
 	health -= damage
 	if is_dead():
 		visible = false
-		hitbox.set_deferred("monitorable", false)
-		hitbox.set_deferred("monitoring", false)
+		hurtbox.set_deferred("monitorable", false)
+		hurtbox.set_deferred("monitoring", false)
 
 
 func is_dead() -> bool:
 	return health <= 0
+
+
+func _on_hurtbox_3d_hurt(damage: float) -> void:
+	take_damage(damage)
