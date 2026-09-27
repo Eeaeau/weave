@@ -6,8 +6,16 @@
 [ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
 [ext_resource type="AudioStream" uid="uid://dvecvqgunvqet" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
 [ext_resource type="AudioStream" uid="uid://dugi670rbirir" path="res://src/features/world/maps/branch_canopy/assets/audio/soft_wind.mp3" id="8"]
-[ext_resource type="Texture2D" uid="uid://cyt7crqsbf06u" path="res://assets/sprites/handdrawn-tree-branch-lined-vector-illustration_1034910-89997-3199870124.jpg" id="8_swqb0"]
+[ext_resource type="Texture2D" uid="uid://hlsilsyw77ew" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521038001.png" id="8_pj3w8"]
 [ext_resource type="Script" uid="uid://drmrmaw5eynfc" path="res://src/features/world/maps/branch_canopy/soft_wind_layer.gd" id="9"]
+[ext_resource type="Texture2D" uid="uid://dbvknvw4k3f74" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521113218.png" id="9_wesyk"]
+[ext_resource type="Texture2D" uid="uid://deargsrvfnmvn" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521162695.png" id="10_p03h0"]
+[ext_resource type="Texture2D" uid="uid://dhqbpl47qg1i" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521188178.png" id="11_svy6o"]
+[ext_resource type="Texture2D" uid="uid://e1snvr42ldy8" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521222609.png" id="12_jddeu"]
+[ext_resource type="Texture2D" uid="uid://c2du28wbcf65p" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521253202.png" id="13_1lowl"]
+[ext_resource type="Texture2D" uid="uid://bole6e5qc8d3w" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521264014.png" id="14_sgapn"]
+[ext_resource type="Texture2D" uid="uid://0lutwucffsvp" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521280210.png" id="15_t7dkw"]
+[ext_resource type="Texture2D" uid="uid://kclx2j6wcs5s" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521398763.png" id="16_1t75y"]
 [ext_resource type="Texture2D" uid="uid://d1ep2utqq105v" path="res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png" id="17_sun"]
 [ext_resource type="Texture2D" uid="uid://c0niwu8qctjnx" path="res://src/features/world/maps/branch_canopy/assets/background/sunset_sky.svg" id="18_sky"]
 [ext_resource type="Texture2D" uid="uid://cmbogprbrcsbe" path="res://src/features/world/maps/branch_canopy/assets/background/far_forest.svg" id="19_far"]
@@ -62,16 +70,100 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
 [node name="Branches" type="Node3D" parent="." unique_id=1951663678]
 transform = Transform3D(2, 0, 0, 0, -8.742278e-08, 2, 0, -2, -8.742278e-08, -9.09235, 0, 0)
 
-[node name="Left" type="Sprite3D" parent="Branches" unique_id=142453769]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3.3236303, -0.13999985)
-visible = false
-texture = ExtResource("8_swqb0")
+[node name="LeftRoot" type="Node3D" parent="Branches" unique_id=171336051]
 
-[node name="Right" type="Sprite3D" parent="Branches" unique_id=888606238]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.965639, -1.9198952, -0.14000009)
-visible = false
+[node name="Left2" type="Sprite3D" parent="Branches/LeftRoot" unique_id=836908507]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, -0.1399999)
+texture = ExtResource("8_pj3w8")
+
+[node name="Left3" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1792426267]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("9_wesyk")
+
+[node name="Left4" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1430825515]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("10_p03h0")
+
+[node name="Left5" type="Sprite3D" parent="Branches/LeftRoot" unique_id=508542271]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("11_svy6o")
+
+[node name="Left6" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1300594007]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("12_jddeu")
+
+[node name="Left7" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1299224368]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("12_jddeu")
+
+[node name="Left8" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1585627520]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("13_1lowl")
+
+[node name="Left9" type="Sprite3D" parent="Branches/LeftRoot" unique_id=1725643001]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("14_sgapn")
+
+[node name="Left10" type="Sprite3D" parent="Branches/LeftRoot" unique_id=458013759]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("15_t7dkw")
+
+[node name="Left11" type="Sprite3D" parent="Branches/LeftRoot" unique_id=850271987]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -4.75933, 2.245604, 0.7567878)
+texture = ExtResource("16_1t75y")
+
+[node name="RightRoot" type="Node3D" parent="Branches" unique_id=368440301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.49982, -4.1149635, -1.7987077e-07)
+
+[node name="Left2" type="Sprite3D" parent="Branches/RightRoot" unique_id=1850897314]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, -0.13999994)
 flip_h = true
-texture = ExtResource("8_swqb0")
+texture = ExtResource("8_pj3w8")
+
+[node name="Left3" type="Sprite3D" parent="Branches/RightRoot" unique_id=1380571246]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("9_wesyk")
+
+[node name="Left4" type="Sprite3D" parent="Branches/RightRoot" unique_id=1395341987]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("10_p03h0")
+
+[node name="Left5" type="Sprite3D" parent="Branches/RightRoot" unique_id=418377970]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("11_svy6o")
+
+[node name="Left6" type="Sprite3D" parent="Branches/RightRoot" unique_id=1789924813]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("12_jddeu")
+
+[node name="Left7" type="Sprite3D" parent="Branches/RightRoot" unique_id=774506521]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("12_jddeu")
+
+[node name="Left8" type="Sprite3D" parent="Branches/RightRoot" unique_id=133584020]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("13_1lowl")
+
+[node name="Left9" type="Sprite3D" parent="Branches/RightRoot" unique_id=500288160]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("14_sgapn")
+
+[node name="Left10" type="Sprite3D" parent="Branches/RightRoot" unique_id=300669348]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("15_t7dkw")
+
+[node name="Left11" type="Sprite3D" parent="Branches/RightRoot" unique_id=804353169]
+transform = Transform3D(0.509, 0, 0, 0, 0.509, 0, 0, 0, 0.509, -5.7873526, 1.3177214, 0.7567877)
+flip_h = true
+texture = ExtResource("16_1t75y")
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
