@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://cbs1sven7fvks" path="res://src/features/wind/wind_event.tscn" id="5"]
 [ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
 [ext_resource type="AudioStream" uid="uid://dvecvqgunvqet" path="res://src/features/world/maps/branch_canopy/assets/audio/forest_wind_birds.mp3" id="7"]
+[ext_resource type="Texture2D" uid="uid://cre5odthyaego" path="res://src/features/world/maps/branch_canopy/assets/sprites/718df2e0-581a-4bd3-be50-f37b180e5c7f.png" id="7_pj3w8"]
 [ext_resource type="AudioStream" uid="uid://dugi670rbirir" path="res://src/features/world/maps/branch_canopy/assets/audio/soft_wind.mp3" id="8"]
 [ext_resource type="Texture2D" uid="uid://hlsilsyw77ew" path="res://src/features/world/maps/branch_canopy/assets/sprites/HiPaint_1790521038001.png" id="8_pj3w8"]
 [ext_resource type="Script" uid="uid://drmrmaw5eynfc" path="res://src/features/world/maps/branch_canopy/soft_wind_layer.gd" id="9"]
@@ -20,7 +21,6 @@
 [ext_resource type="Texture2D" uid="uid://c0niwu8qctjnx" path="res://src/features/world/maps/branch_canopy/assets/background/sunset_sky.svg" id="18_sky"]
 [ext_resource type="Texture2D" uid="uid://cmbogprbrcsbe" path="res://src/features/world/maps/branch_canopy/assets/background/far_forest.svg" id="19_far"]
 [ext_resource type="Texture2D" uid="uid://djnb3oepy5f8t" path="res://src/features/world/maps/branch_canopy/assets/background/atmosphere.svg" id="20_mist"]
-[ext_resource type="Texture2D" uid="uid://bpa2567c5gyhe" path="res://src/features/world/maps/branch_canopy/assets/background/mid_forest.svg" id="21_mid"]
 [ext_resource type="Texture2D" uid="uid://cideutdsv401y" path="res://src/features/world/maps/branch_canopy/assets/background/god_rays.svg" id="22_rays"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
@@ -57,9 +57,9 @@ pixel_size = 0.018
 texture = ExtResource("22_rays")
 
 [node name="MidForest" type="Sprite3D" parent="BackgroundLayers" unique_id=1013388720]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, -9)
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 2.7906651e-08, -9.63843)
 pixel_size = 0.018
-texture = ExtResource("21_mid")
+texture = ExtResource("7_pj3w8")
 
 [node name="PlayerBranchStart" type="Marker3D" parent="." unique_id=1827103423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 0)
