@@ -2,5 +2,14 @@
 
 [ext_resource type="Script" uid="uid://dx072bnl6mr2f" path="res://src/features/collectibles/collectible.gd" id="1"]
 
-[node name="Collectible" type="Node3D" unique_id=575243754]
+[sub_resource type="SphereShape3D" id="1_shape"]
+radius = 0.28
+
+[node name="Collectible" type="Node3D" unique_id=575243754 node_paths=PackedStringArray("pickup_area")]
 script = ExtResource("1")
+pickup_area = NodePath("PickupArea")
+
+[node name="PickupArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea"]
+shape = SubResource("1_shape")

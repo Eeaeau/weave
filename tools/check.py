@@ -197,6 +197,7 @@ def main() -> int:
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),
         ("wind_match_smoke", "WIND MATCH PASS:"),
         ("wind_event_smoke", "WIND EVENT PASS:"),
+        ("web_catch_smoke", "WEB CATCH PASS:"),
     ):
         run(
             base + ["--script", f"res://tests/{script}.gd", "--log-file", str(check_dir / f"{script}.log")],

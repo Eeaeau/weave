@@ -138,11 +138,20 @@ func _check_sprite_visuals(match_scene: Node3D) -> bool:
 	var sprites := match_scene.find_children("*", "Sprite3D", true, false)
 	var meshes := match_scene.find_children("*", "MeshInstance3D", true, false)
 	for mesh in meshes:
-		if not mesh is SpiderLegStroke3D:
-			return _fail("Only procedural spider leg strokes may use 3D meshes")
+		if not mesh is SpiderLegStroke3D and not _is_web_mesh(mesh):
+			return _fail("Only spider leg strokes and web strands may use 3D meshes")
 	if sprites.size() < 20:
 		return _fail("World placeholders must remain 2D sprites in the 3D scene")
 	return true
+
+
+func _is_web_mesh(mesh: Node) -> bool:
+	var ancestor := mesh.get_parent()
+	while ancestor != null:
+		if ancestor is WebPolygon3D:
+			return true
+		ancestor = ancestor.get_parent()
+	return false
 
 
 func _fail(message: String) -> bool:
