@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cv8ktabectcam" path="res://src/features/ui/main_menu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/features/ui/settings_menu.tscn" id="2"]
+[ext_resource type="AudioStream" uid="uid://fpg0qjm58l6g" path="res://assets/music/Menu.wav" id="3_0of7v"]
 
 [node name="MainMenu" type="Control" unique_id=1319209700]
 layout_mode = 3
@@ -61,3 +62,8 @@ text = "Quit"
 
 [node name="SettingsMenu" parent="." unique_id=1483647561 instance=ExtResource("2")]
 layout_mode = 1
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=628101610]
+stream = ExtResource("3_0of7v")
+volume_db = -25.0
+autoplay = true
