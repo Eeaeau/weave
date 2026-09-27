@@ -3,20 +3,21 @@ extends BaseSpider3D
 
 const AIM_SPEED: float = 3.0
 const MOVE_SPEED: float = 2.0
+const SILK_CAPACITY: int = 5
+const STARTING_SILK: int = 3
 
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
+@export_range(0, 20) var silk_amount: int = STARTING_SILK
 
 var remaining_movement: float = 0
 var aim_angle: float = 0
 var action_charged_time: float = 0
-var charging_action: bool = false
 var aim_arrow_offset: Vector3 = Vector3(0.75, 0, 0)
 var weapons: Array[Weapon3D]
 var selected_weapon_idx: int = 0
-var scene_weapon_no_action = preload(
-	"res://src/features/collectibles/weapons/weapon_no_action.tscn")
 var health: float = 1.0
+var silk_builder: SilkBuildAction3D
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -30,9 +31,17 @@ func _ready() -> void:
 	aim_arrow_offset = aim_arrow.position
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
-	var no_action = scene_weapon_no_action.instantiate()
+	var no_action = load(
+		"res://src/features/collectibles/weapons/weapon_no_action.tscn"
+	).instantiate()
 	add_child(no_action)
 	pick_up(no_action)
+	var silk_action := load(
+		"res://src/features/collectibles/weapons/silk_build_action.tscn"
+	).instantiate() as SilkBuildAction3D
+	silk_builder = silk_action
+	add_child(silk_action)
+	weapons.insert(1, silk_action)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -40,6 +49,8 @@ func _process(delta: float) -> void:
 	if not is_active:
 		selected_indicator.visible = false
 		aim_arrow.visible = false
+		if silk_builder:
+			silk_builder.hide_preview()
 		return
 
 	selected_indicator.visible = true
@@ -48,6 +59,8 @@ func _process(delta: float) -> void:
 
 	var selected_weapon: Weapon3D = weapons[selected_weapon_idx]
 	if not selected_weapon or selected_weapon is WeaponNoAction:
+		aim_arrow.visible = false
+	elif selected_weapon is SilkBuildAction3D:
 		aim_arrow.visible = false
 	else:
 		aim_arrow.visible = true
@@ -72,27 +85,42 @@ func _process(delta: float) -> void:
 	if Input.is_action_pressed("aim_right"):
 		aim_angle -= AIM_SPEED * delta
 	if Input.is_action_just_pressed("action"):
-		charging_action = true
+		action_charged_time = 0.0
 	if Input.is_action_just_released("action"):
-		charging_action = false
-		if selected_weapon:
+		if selected_weapon is SilkBuildAction3D:
+			silk_builder.try_build_selected_silk()
+		elif selected_weapon:
 			selected_weapon.fire(aim_angle, aim_magnitude)
 			if selected_weapon.is_used_up():
 				weapons.remove_at(selected_weapon_idx)
 				remove_child(selected_weapon)
 				selected_weapon_idx = 0
+			n_remaining_actions -= 1
 
-		n_remaining_actions -= 1
-
-	if charging_action:
+	if Input.is_action_pressed("action"):
 		action_charged_time += delta
 	else:
 		action_charged_time = 0
 
 	var number_input = get_number_input()
-	if number_input > 0 and not charging_action and number_input <= len(weapons):
+	if (number_input > 0 and not Input.is_action_pressed("action")
+			and number_input <= len(weapons)):
 		selected_weapon_idx = number_input - 1
-		print("selected " + str(selected_weapon_idx))
+
+	if selected_weapon is SilkBuildAction3D:
+		if Input.is_action_just_pressed("cycle_silk_target_next"):
+			silk_builder.cycle_silk_target(1)
+		if Input.is_action_just_pressed("cycle_silk_target_previous"):
+			silk_builder.cycle_silk_target(-1)
+		if Input.is_action_just_pressed("cancel_silk_build"):
+			cancel_silk_build()
+		if selected_weapon_idx == 1:
+			silk_builder.update_preview()
+		else:
+			silk_builder.hide_preview()
+	else:
+		if silk_builder:
+			silk_builder.hide_preview()
 
 
 func activate() -> void:
@@ -112,6 +140,8 @@ func get_number_input() -> int:
 		return 3
 	if Input.is_action_just_pressed("select_4"):
 		return 4
+	if Input.is_action_just_pressed("select_5"):
+		return 5
 	return -1
 
 
@@ -133,10 +163,16 @@ func is_done() -> bool:
 
 
 func pick_up(collectible: Collectible3D) -> bool:
+	if collectible.collectible is InsectData:
+		var insect_data := collectible.collectible as InsectData
+		silk_amount = mini(get_silk_capacity(), silk_amount + insect_data.silk_amount)
+		health = minf(1.0, health + insect_data.health_amount)
+		return true
 	if collectible is Weapon3D:
 		collectible.call_deferred("reparent", self)
 		weapons.append(collectible)
-	return true
+		return true
+	return false
 
 
 func take_damage(damage: float) -> void:
@@ -154,3 +190,34 @@ func is_dead() -> bool:
 
 func _on_hurtbox_3d_hurt(damage: float) -> void:
 	take_damage(damage)
+
+
+func get_silk_capacity() -> int:
+	return SILK_CAPACITY
+
+
+func refresh_silk_build_options() -> void:
+	silk_builder.refresh_silk_build_options()
+
+
+func set_build_web(web: Web3D) -> void:
+	if silk_builder:
+		silk_builder.set_build_web(web)
+
+
+func cycle_silk_target(direction: int) -> void:
+	silk_builder.cycle_silk_target(direction)
+
+
+## Cancels targeting by returning to the permanent pass option without spending anything.
+func cancel_silk_build() -> void:
+	selected_weapon_idx = 0
+	silk_builder.hide_preview()
+
+
+func try_build_selected_silk() -> bool:
+	return silk_builder.try_build_selected_silk()
+
+
+func build_silk_strand(web: Web3D, source_index: int, target_index: int) -> bool:
+	return silk_builder.build_silk_strand(web, source_index, target_index)

@@ -384,7 +384,7 @@ func _create_edge_health_bars() -> void:
 ## Returns true if the edge would be valid.
 func can_add_edge(a: int, b: int) -> bool:
 
-	if a == b or a < 0 or a >= valid_nodes.size() or b < 0 or b > valid_nodes.size():
+	if a == b or a < 0 or a >= valid_nodes.size() or b < 0 or b >= valid_nodes.size():
 		return false
 
 	if has_edge(a, b):

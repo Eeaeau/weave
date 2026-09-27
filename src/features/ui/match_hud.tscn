@@ -21,7 +21,7 @@ layout_mode = 2
 
 [node name="LowerLeftPanel" type="Panel" parent="." unique_id=751979801]
 offset_left = 10.0
-offset_top = 568.0
+offset_top = 548.0
 offset_right = 305.0
 offset_bottom = 699.0
 
@@ -58,11 +58,29 @@ offset_right = 73.0
 offset_bottom = 109.0
 text = "Energy"
 
+[node name="SilkLabel" type="Label" parent="LowerLeftPanel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 115.0
+offset_right = 82.0
+offset_bottom = 138.0
+text = "Silk: 3/5"
+
+[node name="SilkBar" type="ProgressBar" parent="LowerLeftPanel"]
+layout_mode = 0
+offset_left = 98.0
+offset_top = 114.0
+offset_right = 276.0
+offset_bottom = 140.0
+max_value = 5.0
+value = 3.0
+show_percentage = false
+
 [node name="WeaponsContainer" type="HBoxContainer" parent="." unique_id=1619650059]
 custom_maximum_size = Vector2(-1, 64)
 offset_left = 314.0
 offset_top = 633.0
-offset_right = 646.0
+offset_right = 716.0
 offset_bottom = 697.0
 
 [node name="WeaponContainer1" type="PanelContainer" parent="WeaponsContainer" unique_id=33153483]
@@ -138,4 +156,22 @@ offset_top = 40.0
 offset_right = 61.0
 offset_bottom = 63.0
 text = "1"
+horizontal_alignment = 2
+
+[node name="WeaponContainer5" type="PanelContainer" parent="WeaponsContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="WeaponsContainer/WeaponContainer5"]
+custom_minimum_size = Vector2(64, 64)
+custom_maximum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 2
+
+[node name="Label" type="Label" parent="WeaponsContainer/WeaponContainer5/TextureRect"]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 40.0
+offset_right = 61.0
+offset_bottom = 63.0
+text = "5"
 horizontal_alignment = 2

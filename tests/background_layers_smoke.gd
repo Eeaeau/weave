@@ -39,7 +39,7 @@ func _run() -> void:
 	map.free()
 	scene = null
 	await process_frame
-	await create_timer(0.2).timeout
+	await create_timer(1.0).timeout
 	print("BACKGROUND LAYERS PASS: bright gradient, parallax forest, and optional effects")
 	quit(0)
 

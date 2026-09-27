@@ -1,6 +1,7 @@
 class_name Team extends Node3D
 
 @export var spider_scene: PackedScene
+@export var home_web: Web3D
 
 var spiders: Array[PlayerSpider3D] = []
 var spawn_offset: Vector3 = Vector3(0.5, 0, 0)
@@ -26,11 +27,12 @@ func _process(delta: float) -> void:
 
 
 func spawn_spiders(number: int) -> void:
-	var spawn_position: Vector3 = self.position
+	var spawn_position := Vector3.ZERO
 	for i in range(number):
 		var instance: PlayerSpider3D = spider_scene.instantiate()
 		instance.position = spawn_position
 		add_child(instance)
+		instance.call_deferred("set_build_web", home_web)
 		spiders.append(instance)
 		instance.deactivate()
 		spawn_position += spawn_offset

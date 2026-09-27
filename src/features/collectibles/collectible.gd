@@ -18,6 +18,8 @@ func after_picked_up() -> void:
 
 
 func _area_entered(area: Area3D) -> void:
+	if not visible:
+		return
 	var parent = area.get_parent_node_3d()
 	if parent and parent is PlayerSpider3D:
 		if parent.pick_up(self):

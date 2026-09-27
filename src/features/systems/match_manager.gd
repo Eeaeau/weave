@@ -39,6 +39,7 @@ func _process(delta: float) -> void:
 	if active_spider:
 		match_hud.update_energy(active_spider.remaining_movement / movement_per_turn)
 		match_hud.update_actions_remaining(active_spider.n_remaining_actions)
+		match_hud.update_silk(active_spider.silk_amount, active_spider.get_silk_capacity())
 		match_hud.update_weapon(active_spider.weapons, active_spider.selected_weapon_idx)
 
 
