@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://rwop8oahm3d7" path="res://src/features/collectibles/weapons/assets/rocket.png" id="2_w8ylx"]
 [ext_resource type="PackedScene" uid="uid://ddt3h3368ybcj" path="res://src/features/systems/shadow_component.tscn" id="3_yll53"]
 [ext_resource type="Texture2D" uid="uid://b1sl3kac2etfw" path="res://src/features/collectibles/weapons/assets/rocket_fire_strip.png" id="5_yll53"]
+[ext_resource type="Texture2D" uid="uid://bdhkfoa4p5kq1" path="res://src/features/collectibles/weapons/assets/rocket_explosion_atlas.png" id="6_7i82m"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_7i82m"]
 atlas = ExtResource("5_yll53")
@@ -46,12 +47,76 @@ top_radius = 0.16455078
 bottom_radius = 0.16455078
 height = 0.001
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_3rdyv"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(0, 0, 922, 845)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bhk2g"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(922, 0, 922, 845)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lfefh"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(1844, 0, 922, 845)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b2q62"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(2766, 0, 922, 845)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r82ui"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(0, 845, 922, 845)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wlbtj"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(922, 845, 922, 845)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ojrku"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(1844, 845, 922, 845)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k6v0j"]
+atlas = ExtResource("6_7i82m")
+region = Rect2(2766, 845, 922, 845)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_gkjsn"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3rdyv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bhk2g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lfefh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b2q62")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r82ui")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wlbtj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ojrku")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k6v0j")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 16.0
+}]
+
 [node name="RocketProjectile" type="Node3D" unique_id=387750299 node_paths=PackedStringArray("hitbox", "explosion_hitbox", "explosion_sprite", "hide_on_hit")]
 script = ExtResource("1_vkrc5")
 explosion_damage = 20.0
 hitbox = NodePath("Hitbox")
 explosion_hitbox = NodePath("ExplosionHitbox")
-explosion_sprite = NodePath("ExplosionSprite")
+explosion_sprite = NodePath("AnimatedExplosion")
 hide_on_hit = [NodePath("ShadowComponent"), NodePath("Sprite3D"), NodePath("AnimatedSprite3D")]
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=476535687]
@@ -85,3 +150,10 @@ mesh = SubResource("CylinderMesh_6q6db")
 transform = Transform3D(3, 0, 0, 0, -1.3113416e-07, 3, 0, -3, -1.3113416e-07, 0, 0, 0)
 visible = false
 texture = ExtResource("2_vkrc5")
+
+[node name="AnimatedExplosion" type="AnimatedSprite3D" parent="." unique_id=1594505036]
+transform = Transform3D(0.5, 0, 0, 0, -2.1855694e-08, 0.5, 0, -0.5, -2.1855694e-08, 0, 0, 0)
+visible = false
+sprite_frames = SubResource("SpriteFrames_gkjsn")
+autoplay = "default"
+frame_progress = 0.51301765

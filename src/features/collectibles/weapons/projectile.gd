@@ -4,7 +4,7 @@ class_name Projectile3D extends Node3D
 @export var explosion_damage: float = 0.0
 @export var hitbox: Area3D
 @export var explosion_hitbox: Area3D
-@export var explosion_sprite: Sprite3D
+@export var explosion_sprite: SpriteBase3D
 @export var hide_on_hit: Array[Node3D]
 
 var velocity: Vector3 = Vector3.ZERO
@@ -88,7 +88,7 @@ func explode() -> void:
 		web.deal_damage(point2d, blast_radius, explosion_damage)
 	# TODO: should probably connect to animation ending instead
 	# when we have animation
-	get_tree().create_timer(1.0).timeout.connect(queue_free)
+	get_tree().create_timer(0.5).timeout.connect(queue_free)
 
 
 func _hitbox_entered(area: Area3D) -> void:
