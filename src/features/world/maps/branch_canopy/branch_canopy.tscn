@@ -109,7 +109,7 @@ texture = ExtResource("15_lyog6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
 texture = ExtResource("16_owa7m")
 
-[node name="ActionCamera" type="Camera3D" parent="." unique_id=2032489736]
+[node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
 current = true
 fov = 65.0

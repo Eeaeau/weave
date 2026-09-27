@@ -39,9 +39,9 @@ func _check_map(match_scene: Node3D) -> bool:
 	if (map.get_node_or_null("PlayerBranchStart") == null
 			or map.get_node_or_null("OpponentBranchStart") == null
 			or map.get_node_or_null("BackgroundMusic") == null
-			or map.get_node_or_null("ActionCamera") == null):
+			or map.get_node_or_null("ParallaxCamera") == null):
 		return _fail("Map start markers or music slot are missing")
-	var camera: Camera3D = map.get_node("ActionCamera")
+	var camera: Camera3D = map.get_node("ParallaxCamera")
 	if not camera.current or camera.projection != Camera3D.PROJECTION_PERSPECTIVE:
 		return _fail("The arena needs an active perspective camera")
 	var cameras := map.find_children("*", "Camera3D", true, false)

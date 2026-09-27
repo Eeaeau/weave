@@ -50,7 +50,7 @@ func _check_layer_contract(map: BranchCanopy3D) -> bool:
 		return _fail("BackgroundLayers must exist")
 	if not is_equal_approx(layers.rotation.x, -PI * 0.5):
 		return _fail("Background cards must share the fixed map orientation")
-	var camera := map.get_node("ActionCamera") as Camera3D
+	var camera := map.get_node("ParallaxCamera") as Camera3D
 	var previous_depth := -INF
 	for layer_name: String in EXPECTED_LAYERS:
 		var card := layers.get_node_or_null(layer_name) as Sprite3D

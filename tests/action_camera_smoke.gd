@@ -24,9 +24,12 @@ func _focus_sources_and_smoothing() -> bool:
 	var match_scene: Node3D = MATCH_SCENE.instantiate()
 	root.add_child(match_scene)
 	await process_frame
-	var camera: Camera3D = match_scene.get_node("BranchCanopy/ActionCamera")
+	var camera: Camera3D = match_scene.get_node("BranchCanopy/ParallaxCamera")
 	camera.set_process(false)
-	var checks_ok := _check_wind_focus(match_scene)
+	var checks_ok := match_scene.find_children("*", "Camera3D", true, false).size() == 1
+	if not checks_ok:
+		_fail("The match must use its single existing camera")
+	checks_ok = _check_wind_focus(match_scene) and checks_ok
 	checks_ok = _check_spider_focus(match_scene) and checks_ok
 	checks_ok = _check_projectile_focus_and_smoothing(match_scene) and checks_ok
 	checks_ok = _check_arena_fallback(match_scene) and checks_ok
@@ -35,7 +38,7 @@ func _focus_sources_and_smoothing() -> bool:
 
 
 func _check_wind_focus(match_scene: Node3D) -> bool:
-	var camera: Camera3D = match_scene.get_node("BranchCanopy/ActionCamera")
+	var camera: Camera3D = match_scene.get_node("BranchCanopy/ParallaxCamera")
 	var event: WindEvent3D = match_scene.get_node("BranchCanopy/WindEvent")
 	var request: Dictionary = camera.call("_resolve_focus_request")
 	if request.get("kind") != "wind":
@@ -47,7 +50,7 @@ func _check_wind_focus(match_scene: Node3D) -> bool:
 
 
 func _check_spider_focus(match_scene: Node3D) -> bool:
-	var camera: Camera3D = match_scene.get_node("BranchCanopy/ActionCamera")
+	var camera: Camera3D = match_scene.get_node("BranchCanopy/ParallaxCamera")
 	var manager: MatchManager = match_scene.get_node("MatchManager")
 	var event: WindEvent3D = match_scene.get_node("BranchCanopy/WindEvent")
 	event.is_active = false
@@ -62,7 +65,7 @@ func _check_spider_focus(match_scene: Node3D) -> bool:
 
 
 func _check_projectile_focus_and_smoothing(match_scene: Node3D) -> bool:
-	var camera: Camera3D = match_scene.get_node("BranchCanopy/ActionCamera")
+	var camera: Camera3D = match_scene.get_node("BranchCanopy/ParallaxCamera")
 	var projectile := PebbleProjectile3D.new()
 	projectile.position = Vector3(5.0, 2.0, -3.0)
 	match_scene.add_child(projectile)
@@ -99,7 +102,7 @@ func _target_keeps_requested_plane_distance(
 
 
 func _check_arena_fallback(match_scene: Node3D) -> bool:
-	var camera: Camera3D = match_scene.get_node("BranchCanopy/ActionCamera")
+	var camera: Camera3D = match_scene.get_node("BranchCanopy/ParallaxCamera")
 	var manager: MatchManager = match_scene.get_node("MatchManager")
 	var waypoint: Node3D = camera.get_node(camera.get("waypoint_path"))
 	var plane := waypoint.get_parent_node_3d()
