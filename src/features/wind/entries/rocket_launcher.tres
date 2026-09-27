@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="WindSpawnEntry" format=3 uid="uid://cip11d017cdob"]
+
+[ext_resource type="Resource" path="res://src/features/collectibles/weapons/pebble.tres" id="1_ffxmm"]
+[ext_resource type="PackedScene" uid="uid://5q78y45hys3h" path="res://src/features/collectibles/weapons/weapon_throw_pebble.tscn" id="2_wpxbu"]
+[ext_resource type="Script" uid="uid://dhxf2ilqjqqsh" path="res://src/features/wind/wind_spawn_entry.gd" id="3_kjtoh"]
+
+[resource]
+script = ExtResource("3_kjtoh")
+scene = ExtResource("2_wpxbu")
+data = ExtResource("1_ffxmm")
+base_weight = 10.0
