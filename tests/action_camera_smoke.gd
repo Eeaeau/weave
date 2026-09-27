@@ -32,7 +32,9 @@ func _focus_sources_and_smoothing() -> bool:
 	if not checks_ok:
 		_fail("The match must use its single existing camera")
 	checks_ok = _check_wind_focus(match_scene) and checks_ok
+	checks_ok = _check_wind_group_change(match_scene) and checks_ok
 	checks_ok = _check_spider_focus(match_scene) and checks_ok
+	checks_ok = (await _check_same_frame_spider_follow(match_scene)) and checks_ok
 	checks_ok = _check_projectile_focus_and_smoothing(match_scene) and checks_ok
 	checks_ok = _check_arena_fallback(match_scene) and checks_ok
 	_free_scene(match_scene)
@@ -51,6 +53,30 @@ func _check_wind_focus(match_scene: Node3D) -> bool:
 	return true
 
 
+func _check_wind_group_change(match_scene: Node3D) -> bool:
+	var camera := match_scene.get_node("BranchCanopy/ParallaxCamera") as ActionCamera3D
+	var event := match_scene.get_node("BranchCanopy/WindEvent") as WindEvent3D
+	var waypoint := camera.get_node(camera.waypoint_path) as Node3D
+	var first_focus := event.get_camera_focus_point()
+	var original_transform := camera.global_transform
+	camera.global_transform = camera._build_waypoint_transform(
+		waypoint, first_focus, camera.wind_distance)
+	camera._process(1.0 / 60.0)
+	var previous_position := camera.global_position
+	var new_flight := WindFlight3D.new()
+	event.get_node("Flights").add_child(new_flight)
+	new_flight.set_process(false)
+	new_flight.global_position = first_focus + Vector3(10.0, 0.0, 0.0)
+	var focus_jump := event.get_camera_focus_point().distance_to(first_focus)
+	camera._process(1.0 / 60.0)
+	var camera_step := camera.global_position.distance_to(previous_position)
+	new_flight.free()
+	camera.global_transform = original_transform
+	if focus_jump < 4.0 or camera_step > 0.08:
+		return _fail("A new wind item must not jerk the camera across the arena")
+	return true
+
+
 func _check_spider_focus(match_scene: Node3D) -> bool:
 	var camera: Camera3D = match_scene.get_node("BranchCanopy/ParallaxCamera")
 	var manager: MatchManager = match_scene.get_node("MatchManager")
@@ -63,6 +89,31 @@ func _check_spider_focus(match_scene: Node3D) -> bool:
 	if request.get("kind") != "spider" or not focus_position.is_equal_approx(
 			spider.global_position):
 		return _fail("The active spider must be the normal gameplay focus")
+	return true
+
+
+func _check_same_frame_spider_follow(match_scene: Node3D) -> bool:
+	var camera := match_scene.get_node("BranchCanopy/ParallaxCamera") as ActionCamera3D
+	var manager := match_scene.get_node("MatchManager") as MatchManager
+	var spider := manager.teams[manager.active_team_idx].get_active_spider()
+	manager.teams[manager.active_team_idx].start_turn(10.0)
+	var waypoint := camera.get_node(camera.waypoint_path) as Node3D
+	var original_sway := camera.sway_distance
+	camera.sway_distance = 0.0
+	camera.global_transform = camera._build_waypoint_transform(
+		waypoint, spider.global_position, camera.spider_distance)
+	var camera_before := camera.global_position
+	var spider_before := spider.global_position
+	camera.set_process(true)
+	Input.action_press("move_right")
+	await create_timer(0.0).timeout
+	Input.action_release("move_right")
+	camera.set_process(false)
+	camera.sway_distance = original_sway
+	if spider.global_position.x <= spider_before.x + 0.0001:
+		return _fail("The spider must move during the camera follow test")
+	if camera.global_position.x <= camera_before.x + 0.000001:
+		return _fail("The camera must follow spider movement in the same frame")
 	return true
 
 

@@ -106,6 +106,7 @@ texture = ExtResource("16_owa7m")
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
+process_priority = 100
 current = true
 fov = 65.0
 script = ExtResource("2")
