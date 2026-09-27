@@ -152,20 +152,12 @@ func add_curved_line(
 	segments: int,
 	material: Material
 ) -> void:
-
-	var midpoint := (start + end) / 2.0
-
-	var control := midpoint.lerp(center, bend)
-
 	var previous := start
 
 	for i in range(1, segments + 1):
 		var t := float(i) / float(segments)
 
-		var p := (
-			start.lerp(control, t)
-			.lerp(control.lerp(end, t), t)
-		)
+		var p := _curve_point(start, end, center, bend, t)
 
 		add_cylinder_between(
 			previous,
@@ -174,6 +166,28 @@ func add_curved_line(
 		)
 
 		previous = p
+
+
+## The catch boundary uses the same sampled curves as the visible outer strands.
+func get_catch_outline() -> PackedVector2Array:
+	var outline := PackedVector2Array()
+	if points.size() != 3 or not filled:
+		return outline
+	var center := (points[0] + points[1] + points[2]) / 3.0
+	for side in range(3):
+		var start: Vector3 = points[side]
+		var end: Vector3 = points[(side + 1) % 3]
+		for index in range(curve_segments):
+			var t := float(index) / float(curve_segments)
+			var point := _curve_point(start, end, center, outer_curvature, t)
+			outline.append(Vector2(point.x, point.z))
+	return outline
+
+
+func _curve_point(start: Vector3, end: Vector3, center: Vector3,
+		bend: float, t: float) -> Vector3:
+	var control := ((start + end) * 0.5).lerp(center, bend)
+	return start.lerp(control, t).lerp(control.lerp(end, t), t)
 
 
 func add_cylinder_between(

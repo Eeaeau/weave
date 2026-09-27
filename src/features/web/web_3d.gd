@@ -2,11 +2,12 @@
 class_name Web3D
 extends Node3D
 
+signal geometry_changed
 
+@export_range(0.01, 1.0, 0.01) var catch_plane_tolerance: float = 0.25
 # ============================================================
 # Nodes
 # ============================================================
-
 @export_category("Nodes")
 
 ## The nodes that can be connected by the web.
@@ -76,6 +77,7 @@ var line_color: Color = Color.WHITE:
 			rebuild()
 
 var _last_node_positions: Array[Vector3] = []
+var _catch_regions: Dictionary = {}
 # ============================================================
 # Generated geometry
 # ============================================================
@@ -144,8 +146,10 @@ func rebuild() -> void:
 		return
 
 	_clear_polygons()
+	_catch_regions.clear()
 
 	if valid_nodes.size() < 2:
+		geometry_changed.emit()
 		return
 
 	polygon_container = Node3D.new()
@@ -207,6 +211,24 @@ func rebuild() -> void:
 
 	for face in faces:
 		create_polygon(face)
+	geometry_changed.emit()
+
+
+## Returns the stable node-index key of the visible face under a plane contact.
+func find_catch_face(world_point: Vector3) -> String:
+	var local_point := to_local(world_point)
+	if absf(local_point.y) > catch_plane_tolerance:
+		return ""
+	var contact := Vector2(local_point.x, local_point.z)
+	for face_key in _catch_regions:
+		var outline: PackedVector2Array = _catch_regions[face_key]
+		if Geometry2D.is_point_in_polygon(contact, outline):
+			return face_key
+	return ""
+
+
+func has_catch_face(face_key: String) -> bool:
+	return _catch_regions.has(face_key)
 
 
 # ============================================================
@@ -662,3 +684,11 @@ func create_polygon(node_indices: Array[int]) -> void:
 	polygon.line_color = line_color
 
 	polygon.draw()
+	if node_indices.size() == 3:
+		_catch_regions[_face_key(node_indices)] = polygon.get_catch_outline()
+
+
+func _face_key(node_indices: Array[int]) -> String:
+	var ordered := node_indices.duplicate()
+	ordered.sort()
+	return "%d:%d:%d" % [ordered[0], ordered[1], ordered[2]]

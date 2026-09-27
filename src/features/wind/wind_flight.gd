@@ -35,6 +35,8 @@ func configure(collectible: Collectible3D, path_points: PackedVector3Array,
 	_crossed = false
 	_done = false
 	_phase = _start.x * 1.37 + _contact.z
+	if item.pickup_area:
+		item.pickup_area.monitoring = false
 	add_child(item)
 	item.position = Vector3.ZERO
 	global_position = _start
