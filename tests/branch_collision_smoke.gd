@@ -19,12 +19,8 @@ func _run() -> void:
 	var branch_scene := BRANCH_SCENE.instantiate()
 	root.add_child(branch_scene)
 	await process_frame
-	var left_blocker := branch_scene.get_node_or_null(
-		"LeftBranch/LeftBranchBlocker"
-	) as StaticBody3D
-	var right_blocker := branch_scene.get_node_or_null(
-		"RightBranch/RightBranchBlocker"
-	) as StaticBody3D
+	var left_blocker := branch_scene.get_node_or_null("LeftBranchBlocker") as StaticBody3D
+	var right_blocker := branch_scene.get_node_or_null("RightBranchBlocker") as StaticBody3D
 	if not _check_visible_capsule(left_blocker) or not _check_visible_capsule(right_blocker):
 		branch_scene.free()
 		return
@@ -59,13 +55,16 @@ func _check_visible_capsule(blocker: StaticBody3D) -> bool:
 	if blocker == null:
 		return _fail("Both branches need named StaticBody3D blockers")
 	var shape_node := blocker.get_node_or_null("CollisionShape3D") as CollisionShape3D
-	var marker := blocker.get_node_or_null("VisualMarker") as Sprite3D
+	var marker := blocker.get_node_or_null("VisualCapsule") as MeshInstance3D
 	if shape_node == null or not shape_node.shape is CapsuleShape3D:
 		return _fail("Each branch blocker needs a capsule collision shape")
-	if marker == null or marker.texture == null or not marker.visible:
-		return _fail("Each branch blocker needs a visible placeholder sprite")
-	if absf(blocker.global_position.y) > 0.4:
-		return _fail("Branch blockers must overlap the spider's gameplay plane")
+	if marker == null or not marker.mesh is CapsuleMesh or not marker.visible:
+		return _fail("Each branch blocker needs a visible 3D capsule")
+	if shape_node.global_basis.y.normalized().dot(Vector3.UP) < 0.95:
+		return _fail("Blocker capsules must extend toward the camera")
+	var capsule := shape_node.shape as CapsuleShape3D
+	if blocker.global_position.y - capsule.height * 0.5 > 0.1:
+		return _fail("Branch capsules must reach the spider's gameplay plane")
 	return true
 
 

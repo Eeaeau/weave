@@ -21,15 +21,7 @@
 [ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/atmosphere.svg" id="20_mist"]
 [ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/mid_forest.svg" id="21_mid"]
 [ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/background/god_rays.svg" id="22_rays"]
-[ext_resource type="Texture2D" path="res://src/features/world/maps/branch_canopy/assets/sprites/branch_blocker_placeholder.svg" id="23_blocker"]
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_right_branch_blocker"]
-radius = 0.9
-height = 4.84
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_left_branch_blocker"]
-radius = 0.45
-height = 2.25
+[ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/branch_blocker.tscn" id="23_blocker"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 script = ExtResource("1")
@@ -99,21 +91,6 @@ texture = ExtResource("12_nukbw")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5243998, 0.46367395, -1.1354756)
 texture = ExtResource("13_6diav")
 
-[node name="RightBranchBlocker" type="StaticBody3D" parent="RightBranch"]
-position = Vector3(8.4807135, -0.6425977, 0.1)
-collision_layer = 2
-collision_mask = 0
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RightBranch/RightBranchBlocker"]
-rotation = Vector3(0, 0, 1.5707964)
-shape = SubResource("CapsuleShape3D_right_branch_blocker")
-
-[node name="VisualMarker" type="Sprite3D" parent="RightBranch/RightBranchBlocker"]
-position = Vector3(0, 0, 0.2)
-pixel_size = 0.01875
-texture = ExtResource("23_blocker")
-no_depth_test = true
-
 [node name="LeftBranch" type="Node3D" parent="." unique_id=148347526]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -7.3, 0, 0)
 
@@ -133,21 +110,11 @@ texture = ExtResource("15_lyog6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8531103)
 texture = ExtResource("16_owa7m")
 
-[node name="LeftBranchBlocker" type="StaticBody3D" parent="LeftBranch"]
-position = Vector3(0.9496848, -2.1498662, 0.1)
-collision_layer = 2
-collision_mask = 0
+[node name="RightBranchBlocker" parent="." instance=ExtResource("23_blocker")]
+position = Vector3(8.4807135, 1.1, 0.6425977)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="LeftBranch/LeftBranchBlocker"]
-shape = SubResource("CapsuleShape3D_left_branch_blocker")
-
-[node name="VisualMarker" type="Sprite3D" parent="LeftBranch/LeftBranchBlocker"]
-position = Vector3(0, 0, 0.2)
-rotation = Vector3(0, 0, 1.5707964)
-scale = Vector3(0.47, 0.5, 1)
-pixel_size = 0.01875
-texture = ExtResource("23_blocker")
-no_depth_test = true
+[node name="LeftBranchBlocker" parent="." instance=ExtResource("23_blocker")]
+position = Vector3(-6.350315, 1.1, 2.1498662)
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
