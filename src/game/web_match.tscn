@@ -59,7 +59,7 @@ spider_scene = ExtResource("3")
 home_web = NodePath("../WebA")
 
 [node name="TeamB" parent="." unique_id=1203086720 node_paths=PackedStringArray("webs", "home_web") instance=ExtResource("11_pd16p")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5236, -4.7683716e-07, 0.14235687)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -4.7683716e-07, 7.5)
 webs = [NodePath("../WebA"), NodePath("../WebB")]
 spider_scene = ExtResource("3")
 home_web = NodePath("../WebB")

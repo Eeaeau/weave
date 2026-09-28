@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://src/features/web/web_anchor_preview_3d.gd" id="1"]
 
 [node name="WebAnchorSet" type="Node3D"]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 script = ExtResource("1")
 
 [node name="Anchor01" type="Marker3D" parent="." unique_id=2105407740]

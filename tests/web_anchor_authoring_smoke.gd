@@ -21,7 +21,7 @@ func _run() -> void:
 		var anchor_template := load(left_anchors.scene_file_path) as PackedScene
 		var authored_set := anchor_template.instantiate() as Node3D
 		shared_anchor_scene = (shared_anchor_scene
-			and absf(authored_set.transform.basis.y.normalized().dot(Vector3.BACK)) > 0.99)
+			and authored_set.transform.basis.is_equal_approx(Basis.IDENTITY))
 		authored_set.free()
 		shared_anchor_scene = (shared_anchor_scene
 			and left_anchors.scale.x * right_anchors.scale.x < 0.0)
@@ -70,14 +70,30 @@ func _run() -> void:
 		discovered = discovered and edge.x % 2 == 0 and edge.y % 2 == 0
 	for edge in web_b.edges:
 		discovered = discovered and edge.x % 2 == 1 and edge.y % 2 == 1
+	var starting_web_support := true
+	for team_name in ["TeamA", "TeamB"]:
+		var team := match_scene.get_node(team_name) as Team
+		starting_web_support = starting_web_support and not team.spiders.is_empty()
+		for spider in team.spiders:
+			var position_2d := Vector2(spider.global_position.x, spider.global_position.y)
+			if not spider.is_on_web(position_2d):
+				print("UNSUPPORTED STARTING SPIDER: %s at %s" % [team_name, position_2d])
+				starting_web_support = false
+	await create_timer(0.15).timeout
+	for team_name in ["TeamA", "TeamB"]:
+		var team := match_scene.get_node(team_name) as Team
+		for spider in team.spiders:
+			starting_web_support = starting_web_support and spider.health > 0.0
 	discovered = discovered and extra_anchor.get_node_or_null("EditorPreview") == null
 	discovered = discovered and extra_right_anchor.get_node_or_null("EditorPreview") == null
 	_stop_audio(match_scene)
 	match_scene.free()
 	current_scene = null
-	if not (shared_anchor_scene and visible_markers and previews and shared_branch and discovered):
+	if not (shared_anchor_scene and visible_markers and previews and shared_branch
+			and discovered and starting_web_support):
 		push_error("WEB ANCHOR AUTHORING FAIL: %s"
-			% [[shared_anchor_scene, visible_markers, previews, shared_branch, discovered]])
+			% [[shared_anchor_scene, visible_markers, previews, shared_branch,
+				discovered, starting_web_support]])
 		quit(1)
 		return
 	await create_timer(0.5).timeout
