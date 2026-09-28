@@ -15,6 +15,7 @@
 [ext_resource type="AudioStream" uid="uid://fpg0qjm58l6g" path="res://assets/music/Menu.wav" id="13_gmg8k"]
 
 [node name="WebMatch" type="Node3D" unique_id=1817038654]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 script = ExtResource("1")
 sound_tracks = Array[AudioStream]([ExtResource("4_xyjxb"), ExtResource("5_p1esv"), ExtResource("6_0rucu"), ExtResource("13_gmg8k"), ExtResource("3_ggfpk")])
 

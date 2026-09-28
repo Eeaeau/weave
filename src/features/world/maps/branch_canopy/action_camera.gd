@@ -1,6 +1,6 @@
 class_name ActionCamera3D
 extends Camera3D
-## Follows match action through a pose waypoint attached to the gameplay plane.
+## Pans across the gameplay plane and zooms without changing camera depth.
 
 const WIND_FOCUS_SMOOTHING: float = 3.0
 
@@ -8,10 +8,10 @@ const WIND_FOCUS_SMOOTHING: float = 3.0
 @export_range(0.1, 20.0, 0.1) var pan_smoothing: float = 5.0
 @export var sway_distance: float = 0.45
 @export var sway_speed: float = 0.65
-@export_range(1.0, 40.0, 0.1) var arena_distance: float = 12.081
-@export_range(1.0, 40.0, 0.1) var spider_distance: float = 11.0
-@export_range(1.0, 40.0, 0.1) var wind_distance: float = 12.081
-@export_range(1.0, 40.0, 0.1) var projectile_distance: float = 9.5
+@export_range(1.0, 40.0, 0.1) var arena_zoom: float = 19.0
+@export_range(1.0, 40.0, 0.1) var spider_zoom: float = 14.0
+@export_range(1.0, 40.0, 0.1) var wind_zoom: float = 19.0
+@export_range(1.0, 40.0, 0.1) var projectile_zoom: float = 13.0
 
 var _authored_transform: Transform3D
 var _elapsed: float = 0.0
@@ -24,6 +24,8 @@ var _wind_focus: Dictionary = {}
 
 func _ready() -> void:
 	_authored_transform = transform
+	projection = PROJECTION_ORTHOGONAL
+	size = arena_zoom
 	if not waypoint_path.is_empty():
 		_waypoint = get_node_or_null(waypoint_path) as Node3D
 	if _waypoint != null:
@@ -51,17 +53,14 @@ func _process(delta: float) -> void:
 		focus_position = _wind_focus["position"]
 	else:
 		_wind_focus.clear()
-	var target_transform := _build_waypoint_transform(
-		_waypoint,
-		focus_position,
-		focus_request["distance"],
-	)
+	var target_transform := _build_waypoint_transform(_waypoint, focus_position)
 	target_transform.origin += target_transform.basis.x * sin(_elapsed * sway_speed) * sway_distance
 	var weight := 1.0 - exp(-pan_smoothing * maxf(delta, 0.0))
 	global_transform = Transform3D(
 		global_basis.slerp(target_transform.basis, weight),
 		global_position.lerp(target_transform.origin, weight),
 	)
+	size = lerpf(size, focus_request["zoom"], weight)
 
 
 func _resolve_focus_request() -> Dictionary:
@@ -69,14 +68,14 @@ func _resolve_focus_request() -> Dictionary:
 		if node is Node3D and is_instance_valid(node) and not node.is_queued_for_deletion():
 			return {
 				"position": node.global_position,
-				"distance": projectile_distance,
+				"zoom": projectile_zoom,
 				"kind": "projectile",
 			}
 
 	if _wind_event != null and _wind_event.is_active:
 		return {
 			"position": _wind_event.get_camera_focus_point(),
-			"distance": wind_distance,
+			"zoom": wind_zoom,
 			"kind": "wind",
 		}
 
@@ -88,7 +87,7 @@ func _resolve_focus_request() -> Dictionary:
 			if spider != null and is_instance_valid(spider):
 				return {
 					"position": spider.global_position,
-					"distance": spider_distance,
+					"zoom": spider_zoom,
 					"kind": "spider",
 				}
 
@@ -96,20 +95,18 @@ func _resolve_focus_request() -> Dictionary:
 	var fallback_position := plane.global_position if plane != null else global_position
 	return {
 		"position": fallback_position,
-		"distance": arena_distance,
+		"zoom": arena_zoom,
 		"kind": "arena",
 	}
 
 
-func _build_waypoint_transform(
-		waypoint: Node3D, focus_position: Vector3, target_distance: float) -> Transform3D:
+func _build_waypoint_transform(waypoint: Node3D, focus_position: Vector3) -> Transform3D:
 	var plane := waypoint.get_parent_node_3d()
 	if plane == null:
 		return waypoint.global_transform
 	var plane_basis := plane.global_basis.orthonormalized()
 	var focus_offset_from_plane := focus_position - plane.global_position
 	var waypoint_offset_from_plane := waypoint.global_position - plane.global_position
-	var waypoint_distance := (waypoint.global_position - plane.global_position).dot(plane_basis.y)
 	var focus_offset := plane_basis.x * (
 		focus_offset_from_plane.dot(plane_basis.x)
 		- waypoint_offset_from_plane.dot(plane_basis.x)
@@ -119,7 +116,6 @@ func _build_waypoint_transform(
 		- waypoint_offset_from_plane.dot(plane_basis.z)
 	)
 	var origin := waypoint.global_position + focus_offset
-	origin += plane_basis.y * (target_distance - waypoint_distance)
 	return Transform3D(waypoint.global_basis.orthonormalized(), origin)
 
 

@@ -1,6 +1,6 @@
 class_name MatchHud
 extends CanvasLayer
-## Identifies the scene as an editable layout prototype.
+## Shows match resources and optional control hints.
 
 var show_hints := true
 
@@ -27,9 +27,9 @@ func set_show_hints(enabled: bool) -> void:
 func _update_status() -> void:
 	if not is_node_ready():
 		return
-	status.text = "WEAVE  |  2.5D scene prototype"
+	$Margin.visible = show_hints
 	if show_hints:
-		status.text += "\nWASD move · Arrows aim · Space action"
+		status.text = "WASD move · Arrows aim · Space action"
 		status.text += "\n1–5 select · 2 Silk · reach node · Tab cycle · Space build · X cancel"
 
 

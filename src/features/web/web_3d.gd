@@ -300,7 +300,7 @@ func deal_damage(point: Vector2, radius: float, damage: float):
 	if damage <= 0.0 or radius < 0.0:
 		return
 
-	var local_point_3d := to_local(Vector3(point.x, global_position.y, point.y))
+	var local_point_3d := to_local(Vector3(point.x, point.y, global_position.z))
 	var local_point := Vector2(local_point_3d.x, local_point_3d.z)
 	var radius_squared := radius * radius
 
@@ -653,7 +653,7 @@ func _node_global_position_2d(index: int) -> Vector2:
 	var node := valid_nodes[index]
 	if node == null:
 		return Vector2.ZERO
-	return Vector2(node.global_position.x, node.global_position.z)
+	return Vector2(node.global_position.x, node.global_position.y)
 
 
 # ============================================================

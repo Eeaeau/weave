@@ -18,7 +18,7 @@ func _run() -> void:
 		quit(1)
 		return
 	await create_timer(0.5).timeout
-	print("ACTION CAMERA PASS: focus, rotated waypoint, and normal-axis zoom")
+	print("ACTION CAMERA PASS: focus, rotated waypoint, and fixed-depth zoom")
 	quit(0)
 
 
@@ -59,8 +59,7 @@ func _check_wind_group_change(match_scene: Node3D) -> bool:
 	var waypoint := camera.get_node(camera.waypoint_path) as Node3D
 	var first_focus := event.get_camera_focus_point()
 	var original_transform := camera.global_transform
-	camera.global_transform = camera._build_waypoint_transform(
-		waypoint, first_focus, camera.wind_distance)
+	camera.global_transform = camera._build_waypoint_transform(waypoint, first_focus)
 	camera._process(1.0 / 60.0)
 	var previous_position := camera.global_position
 	var new_flight := WindFlight3D.new()
@@ -100,8 +99,7 @@ func _check_same_frame_spider_follow(match_scene: Node3D) -> bool:
 	var waypoint := camera.get_node(camera.waypoint_path) as Node3D
 	var original_sway := camera.sway_distance
 	camera.sway_distance = 0.0
-	camera.global_transform = camera._build_waypoint_transform(
-		waypoint, spider.global_position, camera.spider_distance)
+	camera.global_transform = camera._build_waypoint_transform(waypoint, spider.global_position)
 	var camera_before := camera.global_position
 	var spider_before := spider.global_position
 	camera.set_process(true)
@@ -129,14 +127,16 @@ func _check_projectile_focus_and_smoothing(match_scene: Node3D) -> bool:
 		return _fail("A moving projectile must take focus while it is in flight")
 	var waypoint: Node3D = camera.get_node(camera.get("waypoint_path"))
 	var target_transform: Transform3D = camera.call(
-		"_build_waypoint_transform", waypoint, projectile.global_position,
-		request.get("distance"))
-	if not _target_keeps_requested_plane_distance(
-			target_transform.origin, waypoint, request.get("distance")):
+		"_build_waypoint_transform", waypoint, projectile.global_position)
+	if not _target_keeps_waypoint_depth(target_transform.origin, waypoint):
 		return _fail("An airborne projectile must not change camera distance from the plane")
-	var starting_distance := camera.global_position.distance_to(target_transform.origin)
-	camera.global_position += Vector3(12.0, 4.0, -6.0)
+	var size_before := camera.size
+	camera.call("_process", 1.0)
+	if camera.size >= size_before or camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
+		return _fail("Projectile focus must zoom with orthographic size")
+	camera.global_position += Vector3(12.0, 4.0, 0.0)
 	var before_smoothing := camera.global_position
+	var starting_distance := before_smoothing.distance_to(target_transform.origin)
 	camera.call("_process", 0.1)
 	if camera.global_position.distance_to(before_smoothing) <= 0.01:
 		return _fail("The action camera must pan smoothly toward its focus")
@@ -146,12 +146,12 @@ func _check_projectile_focus_and_smoothing(match_scene: Node3D) -> bool:
 	return true
 
 
-func _target_keeps_requested_plane_distance(
-		target_position: Vector3, waypoint: Node3D, target_distance: float) -> bool:
+func _target_keeps_waypoint_depth(target_position: Vector3, waypoint: Node3D) -> bool:
 	var plane := waypoint.get_parent_node_3d()
 	var plane_normal := plane.global_basis.y.normalized()
 	var camera_plane_distance := (target_position - plane.global_position).dot(plane_normal)
-	return is_equal_approx(camera_plane_distance, target_distance)
+	var waypoint_distance := (waypoint.global_position - plane.global_position).dot(plane_normal)
+	return is_equal_approx(camera_plane_distance, waypoint_distance)
 
 
 func _check_arena_fallback(match_scene: Node3D) -> bool:
@@ -173,14 +173,14 @@ func _rotated_waypoint_and_zoom() -> bool:
 	var rig := _create_rotated_camera_rig()
 	var distance_ok := _rotated_focus_is_centered(rig)
 	var orientation_ok := _rotated_camera_orientation_matches(rig)
-	var zoom_ok := _zoom_moves_on_normal_only(rig)
+	var zoom_ok := _zoom_keeps_camera_depth(rig)
 	_clear_camera_rig(rig)
 	if not distance_ok:
-		return _fail("A rotated waypoint must keep and center its requested focus distance")
+		return _fail("A rotated waypoint must keep its authored depth and center the focus")
 	if not orientation_ok:
 		return _fail("A rotated waypoint must carry the camera's complete orientation")
 	if not zoom_ok:
-		return _fail("Zoom must move only along the plane normal and leave FOV unchanged")
+		return _fail("Zoom must change orthographic size without moving the camera")
 	return true
 
 
@@ -210,12 +210,13 @@ func _rotated_focus_is_centered(rig: Dictionary) -> bool:
 	var camera: Camera3D = rig["camera"]
 	var waypoint: Node3D = rig["waypoint"]
 	var focus: Vector3 = rig["focus"]
-	var target: Transform3D = camera.call("_build_waypoint_transform", waypoint, focus, 7.0)
+	var target: Transform3D = camera.call("_build_waypoint_transform", waypoint, focus)
 	var normal := plane.global_basis.y.normalized()
 	var camera_plane_distance := (target.origin - plane.global_position).dot(normal)
+	var authored_depth := (waypoint.global_position - plane.global_position).dot(normal)
 	var camera_target_offset := target.origin - focus
 	var target_tangent_offset := camera_target_offset - normal * camera_target_offset.dot(normal)
-	return is_equal_approx(camera_plane_distance, 7.0) and (
+	return is_equal_approx(camera_plane_distance, authored_depth) and (
 			target_tangent_offset.length() < 0.001)
 
 
@@ -223,25 +224,22 @@ func _rotated_camera_orientation_matches(rig: Dictionary) -> bool:
 	var camera: Camera3D = rig["camera"]
 	var waypoint: Node3D = rig["waypoint"]
 	var focus: Vector3 = rig["focus"]
-	var target: Transform3D = camera.call("_build_waypoint_transform", waypoint, focus, 7.0)
+	var target: Transform3D = camera.call("_build_waypoint_transform", waypoint, focus)
 	return target.basis.is_equal_approx(waypoint.global_basis.orthonormalized())
 
 
-func _zoom_moves_on_normal_only(rig: Dictionary) -> bool:
-	var plane: Node3D = rig["plane"]
+func _zoom_keeps_camera_depth(rig: Dictionary) -> bool:
 	var camera: Camera3D = rig["camera"]
 	var waypoint: Node3D = rig["waypoint"]
 	var focus: Vector3 = rig["focus"]
-	var initial_fov: float = camera.fov
-	var near_transform: Transform3D = camera.call(
-		"_build_waypoint_transform", waypoint, focus, 7.0)
-	var far_transform: Transform3D = camera.call(
-		"_build_waypoint_transform", waypoint, focus, 12.0)
-	var zoom_delta := far_transform.origin - near_transform.origin
-	var normal := plane.global_basis.y.normalized()
-	return is_equal_approx(zoom_delta.dot(normal), 5.0) and (
-			zoom_delta - normal * 5.0).length() <= 0.001 and is_equal_approx(
-			camera.fov, initial_fov)
+	var original: Transform3D = camera.call("_build_waypoint_transform", waypoint, focus)
+	camera.size = 7.0
+	var near_transform: Transform3D = camera.call("_build_waypoint_transform", waypoint, focus)
+	camera.size = 12.0
+	var far_transform: Transform3D = camera.call("_build_waypoint_transform", waypoint, focus)
+	return (camera.projection == Camera3D.PROJECTION_ORTHOGONAL
+		and original.origin.is_equal_approx(near_transform.origin)
+		and near_transform.origin.is_equal_approx(far_transform.origin))
 
 
 func _clear_camera_rig(rig: Dictionary) -> void:

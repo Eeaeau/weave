@@ -1,4 +1,4 @@
-# Weave
+# Spiders
 
 A turn based jam project inspired by worms, but with spiders building webs between branches.
 
@@ -9,12 +9,12 @@ project.godot
 src/
   game/                         Match composition root
   features/
-    spiders/                    BaseSpider3D and inherited player/opponent sprite scenes
+    spiders/                    Spider scenes, movement, and leg animation
     collectibles/               Shared collectible scene and data parents
-      insects/                  Insect data and windborne placeholder
-      weapons/                  Weapon data and windborne placeholder
-    web/                        WebStrand3D sprite placeholder
-    world/maps/branch_canopy/   Layered tree sprites, camera, and branch start markers
+      insects/                  Catchable insects and silk refills
+      weapons/                  Equippable weapons and projectiles
+    web/                        Web nodes, strands, and triangle surfaces
+    world/maps/branch_canopy/   Branches, layered backgrounds, camera, and wind
     ui/                         Title, settings, input, pause, game over, match HUD
 assets/                          Assets shared across features
 addons/                          Optional Godot plugins
@@ -25,9 +25,9 @@ tools/                           Local quality checker
 
 Keep a scene, its script, and assets used only by that scene in one feature folder. This lets a feature move or be removed without chasing files across the project. Use top-level `assets/` for files shared by several features. Empty placeholder folders contain `.gitkeep` so they remain visible in Git.
 
-The match uses 3D positions and a perspective camera, but its visible objects are flat `Sprite3D` nodes with 2D SVG placeholder art. `BaseSpider3D` is the shared spider scene and script. Player and opponent scenes inherit it, giving each a clear place for later controls or AI. Weapons and insects both inherit `CollectibleData` and `Collectible3D`. Weapon and insect resources are examples; spawning, catching, and effects are not connected. `WebStrand3D` exposes endpoints and durability as editable data, but no damage behavior is connected. The camera sways gently to show parallax between foreground branches and distant foliage. The map's `BackgroundMusic` node has no stream assigned yet.
+The match plays in world X/Y: X is horizontal, Y is vertical, and Z provides depth for the 2.5D presentation. Its visible objects are flat `Sprite3D` nodes. The camera uses orthographic zoom at a fixed depth; background layers move by different amounts during pans to retain parallax. Spiders can traverse and build webs, and wind events carry collectible weapons and insects toward them. `BaseSpider3D` is the shared spider scene, while weapons and insects share `CollectibleData` and `Collectible3D` parents.
 
-The scene coordinates and art are disposable placeholders. Planned work is tracked in [GitHub Issues](https://github.com/Eeaeau/weave/issues) and the [Weave board](https://github.com/users/Eeaeau/projects/3/views/2).
+Planned work is tracked in [GitHub Issues](https://github.com/Eeaeau/weave/issues) and the [project board](https://github.com/users/Eeaeau/projects/3/views/2).
 
 ## Local checks and export
 

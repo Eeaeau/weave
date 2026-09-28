@@ -26,8 +26,8 @@ func _run() -> void:
 func _check_triangle() -> bool:
 	var web := _make_web(true)
 	root.add_child(web)
-	var inside := Vector3(0.5, 0.1, 0.5)
-	var curved_corner := Vector3(1.5, 0.1, 0.005)
+	var inside := web.to_global(Vector3(0.5, 0.1, 0.5))
+	var curved_corner := web.to_global(Vector3(1.5, 0.1, 0.005))
 	var face := web.find_catch_face(inside)
 	if face.is_empty():
 		web.free()
@@ -35,7 +35,7 @@ func _check_triangle() -> bool:
 	if not web.find_catch_face(curved_corner).is_empty():
 		web.free()
 		return _fail("A point inside the straight triangle but outside its curved web must miss")
-	if not web.find_catch_face(Vector3(0.5, 2.0, 0.5)).is_empty():
+	if not web.find_catch_face(web.to_global(Vector3(0.5, 2.0, 0.5))).is_empty():
 		web.free()
 		return _fail("A contact on another depth plane must miss")
 	web.remove_edge(0, 1)
@@ -53,7 +53,7 @@ func _check_triangle() -> bool:
 func _check_standalone_edge() -> bool:
 	var web := _make_web(false)
 	root.add_child(web)
-	var missed := web.find_catch_face(Vector3(1.5, 0.1, 0.0)).is_empty()
+	var missed := web.find_catch_face(web.to_global(Vector3(1.5, 0.1, 0.0))).is_empty()
 	web.free()
 	if not missed:
 		return _fail("An isolated strand must not catch in the first version")
@@ -69,7 +69,8 @@ func _check_geometry_api() -> bool:
 	web.edges = [
 		Vector2i(0, 1), Vector2i(1, 2), Vector2i(2, 0), Vector2i(2, 3),
 	]
-	web.position = Vector3(10, 0, 20)
+	web.position = Vector3(10, 20, 0)
+	web.rotation.x = PI / 2.0
 	root.add_child(web)
 	web.rebuild()
 
@@ -80,7 +81,7 @@ func _check_geometry_api() -> bool:
 	var triangle: Array = triangles[0]
 	if not _contains_point(triangle, Vector2(10, 20)) \
 			or not _contains_point(triangle, Vector2(13, 20)) \
-			or not _contains_point(triangle, Vector2(10, 23)):
+			or not _contains_point(triangle, Vector2(10, 17)):
 		web.free()
 		return _fail("get_triangles must return triangle vertex positions")
 
@@ -89,7 +90,7 @@ func _check_geometry_api() -> bool:
 		web.free()
 		return _fail("get_stand_alone_edges must exclude triangle edges")
 	var edge: Array = standalone[0]
-	if not _contains_point(edge, Vector2(10, 23)) or not _contains_point(edge, Vector2(13, 23)):
+	if not _contains_point(edge, Vector2(10, 17)) or not _contains_point(edge, Vector2(13, 17)):
 		web.free()
 		return _fail("get_stand_alone_edges must return standalone endpoint positions")
 	web.free()
@@ -168,6 +169,7 @@ func _stop_audio(node: Node) -> void:
 
 func _make_web(triangle: bool) -> Web3D:
 	var web := Web3D.new()
+	web.rotation.x = PI / 2.0
 	var nodes: Array[Node3D] = []
 	for point in [Vector3.ZERO, Vector3(3, 0, 0), Vector3(0, 0, 3)]:
 		nodes.append(_add_web_node(web, point))

@@ -42,8 +42,8 @@ func _check_map(match_scene: Node3D) -> bool:
 			or map.get_node_or_null("ParallaxCamera") == null):
 		return _fail("Map start markers or music slot are missing")
 	var camera: Camera3D = map.get_node("ParallaxCamera")
-	if not camera.current or camera.projection != Camera3D.PROJECTION_PERSPECTIVE:
-		return _fail("The arena needs an active perspective camera")
+	if not camera.current or camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
+		return _fail("The arena needs an active orthographic camera")
 	var cameras := map.find_children("*", "Camera3D", true, false)
 	if cameras.size() != 1:
 		return _fail("The gameplay map must use one active camera")

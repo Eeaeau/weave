@@ -8,6 +8,7 @@ class_name Projectile3D extends Node3D
 @export var explosion_sprite: SpriteBase3D
 @export var hide_on_hit: Array[Node3D]
 @export_range(0.0, 3.0, 0.1) var launch_ally_grace_distance: float = 1.5
+@export var despawn_below_y: float = -20.0
 
 var velocity: Vector3 = Vector3.ZERO
 var freeze: bool = false
@@ -34,7 +35,7 @@ func _process(delta: float) -> void:
 		return
 	global_position += velocity * delta
 	velocity.y -= 9.81 * delta
-	if position.y <= 0:
+	if global_position.y <= despawn_below_y:
 		hit(null)
 
 
@@ -54,7 +55,7 @@ func hit(hurtbox: Hurtbox3D) -> void:
 
 func launch(direction: float, power: float) -> void:
 	_launch_position = global_position
-	velocity = (Vector3(4, 2, 0).rotated(Vector3(0, 1, 0), direction)
+	velocity = (Vector3(4.0 * cos(direction), 4.0 * sin(direction) + 2.0, 0.0)
 		* power * launch_speed_multiplier)
 	rotate_y(direction)
 
@@ -92,7 +93,7 @@ func explode() -> void:
 				blast_radius = child.shape.radius
 				break
 
-	var point2d: Vector2 = Vector2(position.x, position.z)
+	var point2d: Vector2 = Vector2(global_position.x, global_position.y)
 	var webs: Array[Web3D] = get_all_webs()
 	for web in webs:
 		web.deal_damage(point2d, blast_radius, explosion_damage)

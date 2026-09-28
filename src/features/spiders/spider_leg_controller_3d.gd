@@ -69,7 +69,7 @@ func _initialize_foot(targets: Node, foot_name: String) -> void:
 	var foot_state := FootState.new(
 		foot,
 		_rig.to_local(planted_position),
-		planted_position.y
+		planted_position.dot(_depth_normal())
 	)
 	_visual_pose.anchors.append(foot_state.rest_offset)
 	foot.top_level = true
@@ -173,7 +173,7 @@ func advance(delta: float) -> void:
 	if targeting_mode == TargetingMode.WEB and not is_instance_valid(support_web):
 		_refresh_web_binding()
 	var travel := _rig.global_position - _cycle.last_rig_position
-	travel.y = 0.0
+	travel -= _depth_normal() * travel.dot(_depth_normal())
 	_cycle.rig_moved = not travel.is_zero_approx()
 	if _cycle.rig_moved:
 		_cycle.travel_direction = travel.normalized()
@@ -202,9 +202,9 @@ func _start_group(group_index: int, only_dangling: bool = false) -> bool:
 			continue
 		var old_anchor := _rig.to_global(_visual_pose.anchors[foot_index])
 		var walking_gap := old_anchor - _feet[foot_index].marker.global_position
-		walking_gap.y = 0.0
+		walking_gap -= _depth_normal() * walking_gap.dot(_depth_normal())
 		var pose_gap := _pose_rest_position(foot_index) - old_anchor
-		pose_gap.y = 0.0
+		pose_gap -= _depth_normal() * pose_gap.dot(_depth_normal())
 		var exceeds_threshold := (
 			walking_gap.length() > step_distance
 			or pose_gap.length() > idle_pose_step_distance
@@ -293,7 +293,10 @@ func _release_crossed_feet() -> void:
 
 func _dangling_position(foot_index: int) -> Vector3:
 	var foot_position := _lift_position(foot_index)
-	foot_position.y = maxf(_feet[foot_index].ground_height + step_height * 0.5, foot_position.y)
+	var normal := _depth_normal()
+	var depth := foot_position.dot(normal)
+	foot_position += normal * (maxf(_feet[foot_index].ground_height
+		+ step_height * 0.5, depth) - depth)
 	return foot_position
 
 
@@ -397,7 +400,7 @@ func _best_web_target_on_segment(
 		if _lift_position(foot_index).distance_to(candidate) > maximum_reach:
 			continue
 		var score := _planar(candidate).distance_to(_planar(desired))
-		score += absf(candidate.y - desired.y) * 0.5
+		score += absf((candidate - desired).dot(_depth_normal())) * 0.5
 		var local_candidate := _rig.to_local(candidate)
 		if local_candidate.x * _feet[foot_index].rest_offset.x <= 0.0:
 			score += 0.35
@@ -497,7 +500,17 @@ func _lift_position(foot_index: int) -> Vector3:
 
 
 func _planar(world_point: Vector3) -> Vector2:
-	return Vector2(world_point.x, world_point.z)
+	var spider_basis := _plane_node().global_basis.orthonormalized()
+	return Vector2(world_point.dot(spider_basis.x), world_point.dot(spider_basis.z))
+
+
+func _depth_normal() -> Vector3:
+	return _plane_node().global_basis.y.normalized()
+
+
+func _plane_node() -> Node3D:
+	var spider := _rig.get_parent_node_3d()
+	return spider if spider != null else _rig
 
 
 func _paths_cross(a: Vector2, b: Vector2, c: Vector2, d: Vector2) -> bool:
@@ -515,7 +528,8 @@ func _rest_destination(foot_index: int) -> Vector3:
 	var destination := _pose_rest_position(foot_index)
 	if _cycle.rig_moved:
 		destination += _cycle.travel_direction * step_lead
-	destination.y = _feet[foot_index].ground_height
+	var normal := _depth_normal()
+	destination += normal * (_feet[foot_index].ground_height - destination.dot(normal))
 	return destination
 
 
@@ -536,7 +550,7 @@ func _animate_step(delta: float) -> void:
 		var start: Vector3 = active_step["start"]
 		var destination: Vector3 = active_step["end"]
 		var foot_position := start.lerp(destination, eased)
-		foot_position.y += 4.0 * step_height * progress * (1.0 - progress)
+		foot_position += _depth_normal() * 4.0 * step_height * progress * (1.0 - progress)
 		var foot_index: int = active_step["index"]
 		_feet[foot_index].marker.global_position = foot_position
 	if progress >= 1.0:

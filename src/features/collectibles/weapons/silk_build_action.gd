@@ -153,7 +153,7 @@ func update_preview() -> void:
 		var target := silk_source_web.valid_nodes[silk_target_indices[index]]
 		var marker := target_markers[index]
 		marker.visible = true
-		marker.global_position = target.global_position + Vector3.UP * 0.04
+		marker.global_position = target.global_position + Vector3.BACK * 0.04
 		if index == selected_silk_target_index:
 			marker.pixel_size = 0.016
 			marker.modulate = Color(1.0, 0.82, 0.35, 0.95)
@@ -166,9 +166,10 @@ func update_preview() -> void:
 	var direction := selected_target.global_position - source.global_position
 	_preview_root.global_position = (
 		(source.global_position + selected_target.global_position) * 0.5
-		+ Vector3.UP * 0.05
+		+ Vector3.BACK * 0.05
 	)
-	_preview_root.global_rotation = Vector3(0.0, atan2(-direction.z, direction.x), 0.0)
+	var local_direction: Vector3 = (spider as Node3D).global_basis.inverse() * direction
+	_preview_root.rotation.y = atan2(-local_direction.z, local_direction.x)
 	_preview_line.scale.x = direction.length() / (256.0 * _preview_line.pixel_size)
 	_preview_line.visible = true
 

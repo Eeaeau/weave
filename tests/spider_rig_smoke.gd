@@ -277,7 +277,7 @@ func _check_weapon_aim(player: PlayerSpider3D, target: Marker3D) -> bool:
 	player.aim_angle = 0.75
 	player.is_active = true
 	player._process(0.0)
-	var expected_aim := Vector3.RIGHT.rotated(Vector3.UP, player.aim_angle)
+	var expected_aim := Vector3.RIGHT.rotated(Vector3.BACK, player.aim_angle)
 	if target.global_basis.x.normalized().dot(expected_aim) < 0.999:
 		return _fail("Weapon equipment target must face the player's world-space aim")
 	return true

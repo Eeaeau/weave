@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c7qoxha3sjtqr" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
 [ext_resource type="Script" uid="uid://0t3i56jevefa" path="res://src/features/world/maps/branch_canopy/action_camera.gd" id="2"]
+[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/background_parallax.gd" id="19_parallax"]
 [ext_resource type="Texture2D" uid="uid://dnk41n0ol086l" path="res://src/features/world/maps/branch_canopy/assets/sprites/1bc58e8a-8138-47c5-9ac7-b4d4de4c6777.png" id="4_jlj4k"]
 [ext_resource type="PackedScene" uid="uid://cbs1sven7fvks" path="res://src/features/wind/wind_event.tscn" id="5"]
 [ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
@@ -27,6 +28,8 @@ script = ExtResource("1")
 
 [node name="BackgroundLayers" type="Node3D" parent="." unique_id=1053543929]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
+process_priority = 110
+script = ExtResource("19_parallax")
 
 [node name="SunsetSky" type="Sprite3D" parent="BackgroundLayers" unique_id=975018279]
 transform = Transform3D(3.2, 0, 0, 0, 2.6, 0, 0, 0, 2.6, 0, 1.7041816e-07, -21.898712)
@@ -182,7 +185,8 @@ texture = ExtResource("16_1t75y")
 process_priority = 100
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
 current = true
-fov = 65.0
+projection = 1
+size = 19.0
 script = ExtResource("2")
 waypoint_path = NodePath("../WindEvent/WebPlane/CameraWaypoint")
 

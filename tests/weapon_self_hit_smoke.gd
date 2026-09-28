@@ -48,7 +48,7 @@ func _check_weapon(weapon_scene: PackedScene) -> bool:
 	spider.aim_angle = PI / 4.0
 	spider._update_weapon_pose()
 	var forward := (weapon.get_node("Sprite3D") as Sprite3D).global_basis.y.normalized()
-	var expected_forward := Vector3.RIGHT.rotated(Vector3.UP, spider.aim_angle)
+	var expected_forward := Vector3.RIGHT.rotated(Vector3.BACK, spider.aim_angle)
 	var aims_forward := forward.dot(expected_forward) > 0.98
 	Input.action_press("action")
 	await process_frame

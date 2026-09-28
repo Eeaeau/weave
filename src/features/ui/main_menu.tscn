@@ -37,7 +37,7 @@ theme_override_constants/separation = 16
 [node name="Title" type="Label" parent="Center/Menu" unique_id=110383275]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
-text = "WEAVE"
+text = "SPIDERS"
 horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="Center/Menu" unique_id=1497126997]

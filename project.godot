@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Weave"
+config/name="Spiders"
 run/main_scene="res://src/features/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

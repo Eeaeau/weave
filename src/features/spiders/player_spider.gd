@@ -48,7 +48,7 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 
-	if not webs.is_empty() and not is_on_web(Vector2(global_position.x, global_position.z)) \
+	if not webs.is_empty() and not is_on_web(Vector2(global_position.x, global_position.y)) \
 			and health > 0:
 		take_damage(1)
 
@@ -76,7 +76,7 @@ func _process(delta: float) -> void:
 
 	var movement_direction := get_movement_direction()
 	if not movement_direction.is_zero_approx():
-		spider_rig.rotation.y = atan2(movement_direction.x, movement_direction.z)
+		spider_rig.rotation.y = atan2(movement_direction.x, -movement_direction.y)
 	var velocity = movement_direction * MOVE_SPEED
 	if velocity.length() > 0:
 		if remaining_movement > 0:
@@ -86,12 +86,12 @@ func _process(delta: float) -> void:
 
 			var new_position := Vector2(
 				global_position.x + to_move.x,
-				global_position.z + to_move.z,
+				global_position.y + to_move.y,
 			)
 
 			if is_on_web(new_position):
 				remaining_movement -= to_move.length()
-				position += to_move
+				global_position += to_move
 
 	if Input.is_action_pressed("aim_left"):
 		aim_angle += AIM_SPEED * delta
@@ -203,9 +203,9 @@ func get_movement_direction() -> Vector3:
 	if Input.is_action_pressed("move_right"):
 		direction.x += 1
 	if Input.is_action_pressed("move_up"):
-		direction.z -= 1
+		direction.y += 1
 	if Input.is_action_pressed("move_down"):
-		direction.z += 1
+		direction.y -= 1
 	return direction.normalized()
 
 
@@ -251,7 +251,7 @@ func _sync_equipped_weapon_visuals() -> void:
 
 
 func _update_weapon_pose() -> void:
-	_get_weapon_equip_target().global_rotation = Vector3(PI / 2.0, aim_angle, 0.0)
+	_get_weapon_equip_target().global_basis = Basis(Vector3.BACK, aim_angle)
 
 
 func _get_weapon_equip_target() -> Marker3D:
