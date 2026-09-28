@@ -23,12 +23,20 @@ func _run() -> void:
 	var standalone_complete := (authored_visual != null and authored_anchors != null
 		and authored_web != null and _all_visible_markers(authored_anchors, 12)
 		and authored_web.edges.size() >= 3)
+	var standalone_xy := absf(authored_anchors.get_child(0).position.y) > 0.01
+	for anchor in authored_anchors.get_children():
+		standalone_xy = standalone_xy and absf(anchor.position.z) < 0.001
+	standalone_xy = standalone_xy and absf(authored_visual.basis.y.normalized().dot(
+		Vector3.UP)) > 0.99
+	standalone_xy = standalone_xy and absf(authored_web.basis.y.normalized().dot(
+		Vector3.BACK)) > 0.99
 	root.add_child(branch_web)
 	await process_frame
 	standalone_complete = (standalone_complete and authored_web.valid_nodes.size() == 12
 		and not authored_web.find_faces().is_empty())
 	branch_web.free()
 	var map := MAP_SCENE.instantiate() as Node3D
+	root.add_child(map)
 	var left_branch := map.get_node_or_null("Branches/LeftBranch") as Node3D
 	var right_branch := map.get_node_or_null("Branches/RightBranch") as Node3D
 	var left_anchors := left_branch.get_node_or_null("WebAnchors") as Node3D
@@ -54,6 +62,9 @@ func _run() -> void:
 		shared_branch = left_branch.scene_file_path == right_branch.scene_file_path
 		shared_branch = shared_branch and not left_branch.scene_file_path.is_empty()
 		shared_branch = shared_branch and left_branch.scale.x * right_branch.scale.x < 0.0
+	var map_xy := (absf((left_anchors.get_child(0) as Marker3D).global_position.z) < 0.001
+		and absf((right_anchors.get_child(0) as Marker3D).global_position.z) < 0.001)
+	_stop_audio(map)
 	map.free()
 
 	var match_scene := MATCH_SCENE.instantiate() as WebMatch3D
@@ -100,11 +111,13 @@ func _run() -> void:
 	_stop_audio(match_scene)
 	match_scene.free()
 	current_scene = null
-	if not (standalone_complete and shared_anchor_scene and visible_markers and previews
+	if not (standalone_complete and standalone_xy and shared_anchor_scene
+			and visible_markers and previews and map_xy
 			and shared_branch
 			and discovered and starting_web_support):
 		push_error("WEB ANCHOR AUTHORING FAIL: %s"
-			% [[standalone_complete, shared_anchor_scene, visible_markers, previews, shared_branch,
+			% [[standalone_complete, standalone_xy, shared_anchor_scene,
+				visible_markers, previews, map_xy, shared_branch,
 				discovered, starting_web_support]])
 		quit(1)
 		return

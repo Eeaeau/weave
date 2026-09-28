@@ -86,11 +86,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
 
 [node name="Branches" type="Node3D" parent="." unique_id=1951663678]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 
 [node name="LeftBranch" parent="Branches" unique_id=802554750 instance=ExtResource("21_branch_web")]
 
 [node name="RightBranch" parent="Branches" unique_id=466133322 instance=ExtResource("21_branch_web")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27777, 0, 10.08568)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27777, -10.08568, 0)
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 process_priority = 100
