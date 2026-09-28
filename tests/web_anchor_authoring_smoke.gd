@@ -11,30 +11,41 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var map := MAP_SCENE.instantiate() as Node3D
-	var team_a := map.get_node("WebAnchors/TeamA") as Node3D
-	var team_b := map.get_node("WebAnchors/TeamB") as Node3D
-	var visible_markers := _all_visible_markers(team_a, 12)
-	visible_markers = visible_markers and _all_visible_markers(team_b, 15)
+	var anchors := map.get_node_or_null("WebAnchors") as Node3D
+	var visible_markers := anchors != null and _all_visible_markers(anchors, 27)
+	var previews := anchors != null and anchors.has_method("refresh_editor_previews")
+	if previews:
+		anchors.call("refresh_editor_previews")
+		previews = _all_previews(anchors)
+	var left_branch := map.get_node_or_null("Branches/LeftBranch") as Node3D
+	var right_branch := map.get_node_or_null("Branches/RightBranch") as Node3D
+	var shared_branch := left_branch != null and right_branch != null
+	if shared_branch:
+		shared_branch = left_branch.scene_file_path == right_branch.scene_file_path
+		shared_branch = shared_branch and not left_branch.scene_file_path.is_empty()
+		shared_branch = shared_branch and left_branch.scale.x * right_branch.scale.x < 0.0
 	map.free()
 
 	var match_scene := MATCH_SCENE.instantiate() as WebMatch3D
 	var extra_anchor := Marker3D.new()
 	extra_anchor.name = "ExtraAnchor"
-	(match_scene.get_node("BranchCanopy/WebAnchors/TeamA") as Node3D).add_child(extra_anchor)
+	(match_scene.get_node("BranchCanopy/WebAnchors") as Node3D).add_child(extra_anchor)
 	root.add_child(match_scene)
 	current_scene = match_scene
 	await process_frame
 	var web_a := match_scene.get_node("WebA") as Web3D
 	var web_b := match_scene.get_node("WebB") as Web3D
-	var discovered := web_a.valid_nodes.size() == 13 and web_b.valid_nodes.size() == 15
-	discovered = discovered and web_a.valid_nodes[0].name == "1"
-	discovered = discovered and web_a.valid_nodes[12] == extra_anchor
+	var discovered := web_a.valid_nodes.size() == 28 and web_b.valid_nodes.size() == 28
+	discovered = discovered and web_a.valid_nodes[0].name == "Anchor01"
+	discovered = discovered and web_a.valid_nodes[27] == extra_anchor
+	discovered = discovered and web_b.valid_nodes[27] == extra_anchor
+	discovered = discovered and extra_anchor.get_node_or_null("EditorPreview") == null
 	_stop_audio(match_scene)
 	match_scene.free()
 	current_scene = null
-	if not (visible_markers and discovered):
-		push_error("WEB ANCHOR AUTHORING FAIL: markers=%s discovery=%s"
-			% [visible_markers, discovered])
+	if not (visible_markers and previews and shared_branch and discovered):
+		push_error("WEB ANCHOR AUTHORING FAIL: markers=%s previews=%s branch=%s discovery=%s"
+			% [visible_markers, previews, shared_branch, discovered])
 		quit(1)
 		return
 	await create_timer(0.5).timeout
@@ -47,6 +58,16 @@ func _all_visible_markers(container: Node3D, expected_count: int) -> bool:
 		return false
 	for child in container.get_children():
 		if not child is Marker3D or child.gizmo_extents < 0.5:
+			return false
+	return true
+
+
+func _all_previews(container: Node3D) -> bool:
+	for anchor in container.get_children():
+		var preview := anchor.get_node_or_null("EditorPreview") as Sprite3D
+		if preview == null or preview.texture == null:
+			return false
+		if not preview.no_depth_test or not preview.fixed_size or preview.owner != null:
 			return false
 	return true
 

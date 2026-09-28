@@ -9,7 +9,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	if not (_stable_plane_path_is_camera_independent() and _staggered_group_and_contact()
+	if not (_stable_plane_path_is_camera_independent() and _editable_drop_area_bounds()
+			and _staggered_group_and_contact()
 			and _empty_group_finishes()
 			and _removed_item_does_not_stall()
 			and _debug_contact_markers_toggle() and _debug_contact_marker_crossing()
@@ -37,16 +38,12 @@ func _stable_plane_path_is_camera_independent() -> bool:
 	var plane: Node3D = event.get_node("WebPlane")
 	plane.rotation = Vector3(0.3, 0.5, -0.2)
 	event.reset_match(42)
-	var path := event._sample_path(
-		event.get_node("Lanes/PlayerLane") as WindLane3D
-	)
+	var path := event._sample_path(0)
 	var stable_basis: Basis = event._plane_camera_basis()
 	camera.position = Vector3(20.0, -4.0, 9.0)
 	camera.rotation = Vector3(0.6, -1.1, 0.4)
 	event.reset_match(42)
-	var path_after_camera_move := event._sample_path(
-		event.get_node("Lanes/PlayerLane") as WindLane3D
-	)
+	var path_after_camera_move := event._sample_path(0)
 	event.group_size = 1
 	event.start_round(1)
 	var camera_independent := _paths_are_equal(path, path_after_camera_move)
@@ -63,6 +60,31 @@ func _stable_plane_path_is_camera_independent() -> bool:
 		return _fail("Moving the camera must not change the wind path")
 	if not flight_uses_plane_axes:
 		return _fail("Wind turbulence must use the stable web-plane frame")
+	return true
+
+
+func _editable_drop_area_bounds() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	var area := event.get_node_or_null("WebPlane/DropArea") as WindDropArea3D
+	if area == null:
+		return _fail("Wind needs a transformable drop area in its scene")
+	area.position = Vector3(2.0, 0.0, -1.0)
+	area.rotation.y = 0.25
+	area.scale = Vector3(8.0, 1.0, 4.0)
+	for side in 2:
+		for index in 50:
+			var path := event._sample_path(side)
+			var contact := area.to_local(path[1])
+			var entry := area.to_local(path[0] + event._plane_camera_basis().z * 8.0)
+			for point in [contact, entry]:
+				if absf(point.y) > 0.001 or absf(point.z) > 0.501:
+					return _fail("Wind entry and contact must stay in the drop area")
+				if side == 0 and (point.x < -0.501 or point.x > 0.001):
+					return _fail("Left-side drops must stay in the left half")
+				if side == 1 and (point.x < -0.001 or point.x > 0.501):
+					return _fail("Right-side drops must stay in the right half")
+	_free_scene(event)
 	return true
 
 

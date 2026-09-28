@@ -130,9 +130,8 @@ func _spawn_next() -> WindFlight3D:
 		_spawned = group_size
 		return null
 	var side := _selection.next_side()
-	var lane := _choose_lane(side)
-	if lane == null:
-		push_warning("No wind lane for player side %d" % side)
+	if $WebPlane.get_node_or_null("DropArea") is not WindDropArea3D:
+		push_warning("Wind drop area is missing")
 		item.free()
 		_spawned = group_size
 		return null
@@ -148,7 +147,7 @@ func _spawn_next() -> WindFlight3D:
 			world_point: Vector3) -> void: _on_plane_crossed(crossing_item, side, world_point))
 	flight.finished.connect(func() -> void: _on_flight_finished(flight))
 	_active_flights.append(flight)
-	flight.configure(item, _sample_path(lane), duration, sway)
+	flight.configure(item, _sample_path(side), duration, sway)
 	flight.set_process(false)
 	_spawned += 1
 	if _spawned == 1:
@@ -156,17 +155,12 @@ func _spawn_next() -> WindFlight3D:
 	return flight
 
 
-func _sample_path(lane: WindLane3D) -> PackedVector3Array:
-	var local_x := _path_random.randf_range(lane.contact_rect.position.x,
-			lane.contact_rect.end.x)
-	var local_z := _path_random.randf_range(lane.contact_rect.position.y,
-			lane.contact_rect.end.y)
-	var plane: Node3D = $WebPlane
-	var contact_world := plane.to_global(Vector3(local_x, 0.0, local_z))
+func _sample_path(side: int) -> PackedVector3Array:
+	var area := $WebPlane/DropArea as WindDropArea3D
+	var contact_world := area.sample_world_point(_path_random, side)
 	var camera_basis := _plane_camera_basis()
-	var start_world := contact_world - camera_basis.z * 8.0
-	start_world += camera_basis.x * _path_random.randf_range(-0.5, 0.5)
-	start_world += camera_basis.y * _path_random.randf_range(2.5, 3.1)
+	var start_world := area.sample_world_point(_path_random, side, true)
+	start_world -= camera_basis.z * 8.0
 	var exit_world := contact_world + camera_basis.z * 6.0
 	exit_world += camera_basis.x * _path_random.randf_range(-0.7, 0.7)
 	exit_world -= camera_basis.y * 2.0
@@ -176,16 +170,6 @@ func _sample_path(lane: WindLane3D) -> PackedVector3Array:
 func _plane_camera_basis() -> Basis:
 	var plane_basis := ($WebPlane as Node3D).global_basis.orthonormalized()
 	return Basis(plane_basis.x, -plane_basis.z, plane_basis.y).orthonormalized()
-
-
-func _choose_lane(side: int) -> WindLane3D:
-	var choices: Array[WindLane3D] = []
-	for node in $Lanes.get_children():
-		if node is WindLane3D and node.side == side:
-			choices.append(node)
-	if choices.is_empty():
-		return null
-	return choices[_path_random.randi_range(0, choices.size() - 1)]
 
 
 func _on_plane_crossed(item: Collectible3D, side: int, world_point: Vector3) -> void:
