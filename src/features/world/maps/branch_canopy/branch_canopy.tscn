@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://c7qoxha3sjtqr" path="res://src/features/world/maps/branch_canopy/branch_canopy.gd" id="1"]
 [ext_resource type="Script" uid="uid://0t3i56jevefa" path="res://src/features/world/maps/branch_canopy/action_camera.gd" id="2"]
-[ext_resource type="Script" path="res://src/features/world/maps/branch_canopy/background_parallax.gd" id="19_parallax"]
 [ext_resource type="Texture2D" uid="uid://dnk41n0ol086l" path="res://src/features/world/maps/branch_canopy/assets/sprites/1bc58e8a-8138-47c5-9ac7-b4d4de4c6777.png" id="4_jlj4k"]
 [ext_resource type="PackedScene" uid="uid://cbs1sven7fvks" path="res://src/features/wind/wind_event.tscn" id="5"]
 [ext_resource type="Script" uid="uid://i6y8yn6v7wu0" path="res://src/features/world/maps/branch_canopy/canopy_ambience.gd" id="6"]
@@ -13,16 +12,17 @@
 [ext_resource type="Script" uid="uid://drmrmaw5eynfc" path="res://src/features/world/maps/branch_canopy/soft_wind_layer.gd" id="9"]
 [ext_resource type="Texture2D" uid="uid://d1ep2utqq105v" path="res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png" id="17_sun"]
 [ext_resource type="Texture2D" uid="uid://c0niwu8qctjnx" path="res://src/features/world/maps/branch_canopy/assets/background/sunset_sky.svg" id="18_sky"]
-[ext_resource type="Script" path="res://src/features/web/web_anchor_preview_3d.gd" id="20_anchor_preview"]
+[ext_resource type="Script" uid="uid://bd0177jssn1kg" path="res://src/features/world/maps/branch_canopy/background_parallax.gd" id="19_parallax"]
 [ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/branch_visual.tscn" id="21_branch_visual"]
+[ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/web_anchor_set.tscn" id="22_anchor_set"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 script = ExtResource("1")
 
 [node name="BackgroundLayers" type="Node3D" parent="." unique_id=1053543929]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 process_priority = 110
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 script = ExtResource("19_parallax")
 
 [node name="SunsetSky" type="Sprite3D" parent="BackgroundLayers" unique_id=975018279]
@@ -89,16 +89,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
 [node name="Branches" type="Node3D" parent="." unique_id=1951663678]
 transform = Transform3D(2, 0, 0, 0, -8.742278e-08, 2, 0, -2, -8.742278e-08, -9.09235, 0, 0)
 
-[node name="LeftBranch" parent="Branches" instance=ExtResource("21_branch_visual")]
+[node name="LeftBranch" parent="Branches" unique_id=802554750 instance=ExtResource("21_branch_visual")]
 
-[node name="RightBranch" parent="Branches" instance=ExtResource("21_branch_visual")]
+[node name="RightBranch" parent="Branches" unique_id=466133322 instance=ExtResource("21_branch_visual")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 8.95314, -5.04284, 0)
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 process_priority = 100
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.181141, 1.0822151)
-current = true
 projection = 1
+current = true
 size = 19.0
 script = ExtResource("2")
 waypoint_path = NodePath("../WindEvent/WebPlane/CameraWaypoint")
@@ -125,115 +125,20 @@ bus = &"SFX"
 script = ExtResource("9")
 
 [node name="WindEvent" parent="." unique_id=1552486683 instance=ExtResource("5")]
-[editable path="WindEvent"]
+
+[node name="LeftDropArea" parent="WindEvent/WebPlane" parent_id_path=PackedInt32Array(1552486683, 1256300003) index="1"]
+transform = Transform3D(17.378399, 0, 0, 0, 1.0000001, 0, 0, 0, 16.870134, -8.6891995, 0, 0)
+
+[node name="RightDropArea" parent="WindEvent/WebPlane" parent_id_path=PackedInt32Array(1552486683, 1256300003) index="2"]
+transform = Transform3D(17.378399, 0, 0, 0, 1.0000001, 0, 0, 0, 16.870134, 8.6891995, 0, 0)
 
 [node name="WebAnchors" type="Node3D" parent="." unique_id=161599004]
-script = ExtResource("20_anchor_preview")
 
-[node name="Anchor01" type="Marker3D" parent="WebAnchors" unique_id=2105407740]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.818811, 0, -0.36334944)
-gizmo_extents = 0.6
+[node name="LeftAnchors" parent="WebAnchors" instance=ExtResource("22_anchor_set")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="Anchor02" type="Marker3D" parent="WebAnchors" unique_id=1589837226]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.209795, 0, 0)
-gizmo_extents = 0.6
+[node name="RightAnchors" parent="WebAnchors" instance=ExtResource("22_anchor_set")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27777, 0, 10.08568)
 
-[node name="Anchor03" type="Marker3D" parent="WebAnchors" unique_id=678463416]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.818811, 0, -4.6419444)
-gizmo_extents = 0.6
 
-[node name="Anchor04" type="Marker3D" parent="WebAnchors" unique_id=1554381991]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.36697, 0, -4.6419444)
-gizmo_extents = 0.6
-
-[node name="Anchor05" type="Marker3D" parent="WebAnchors" unique_id=1028950845]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.229384, 0, -12.701744)
-gizmo_extents = 0.6
-
-[node name="Anchor06" type="Marker3D" parent="WebAnchors" unique_id=258465562]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.814587, 0, -9.818827)
-gizmo_extents = 0.6
-
-[node name="Anchor07" type="Marker3D" parent="WebAnchors" unique_id=1925440564]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.221205, 0, -5.9402056)
-gizmo_extents = 0.6
-
-[node name="Anchor08" type="Marker3D" parent="WebAnchors" unique_id=1073728408]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.059196, 0, -4.983211)
-gizmo_extents = 0.6
-
-[node name="Anchor09" type="Marker3D" parent="WebAnchors" unique_id=1491521260]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36318207, 0, -2.6387553)
-gizmo_extents = 0.6
-
-[node name="Anchor10" type="Marker3D" parent="WebAnchors" unique_id=1861679099]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49902058, 0, -8.302755)
-gizmo_extents = 0.6
-
-[node name="Anchor11" type="Marker3D" parent="WebAnchors" unique_id=1474682084]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9977694, 0, -9.616983)
-gizmo_extents = 0.6
-
-[node name="Anchor12" type="Marker3D" parent="WebAnchors" unique_id=1329660830]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.007719, 0, -15.325539)
-gizmo_extents = 0.6
-
-[node name="Anchor13" type="Marker3D" parent="WebAnchors" unique_id=271734506]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7378082, 0, -0.14957666)
-gizmo_extents = 0.6
-
-[node name="Anchor14" type="Marker3D" parent="WebAnchors" unique_id=1251641519]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.269903, 0, 4.803831)
-gizmo_extents = 0.6
-
-[node name="Anchor15" type="Marker3D" parent="WebAnchors" unique_id=2028732677]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.489931, 0, 2.730412)
-gizmo_extents = 0.6
-
-[node name="Anchor16" type="Marker3D" parent="WebAnchors" unique_id=2041218258]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.589817, 0, -2.4455104)
-gizmo_extents = 0.6
-
-[node name="Anchor17" type="Marker3D" parent="WebAnchors" unique_id=1619114511]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.275583, 0, 7.3189344)
-gizmo_extents = 0.6
-
-[node name="Anchor18" type="Marker3D" parent="WebAnchors" unique_id=574852747]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.275583, 4.900503, 9.173921)
-gizmo_extents = 0.6
-
-[node name="Anchor19" type="Marker3D" parent="WebAnchors" unique_id=607329450]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.3440304, 4.900505, 8.674352)
-gizmo_extents = 0.6
-
-[node name="Anchor20" type="Marker3D" parent="WebAnchors" unique_id=147291354]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.3440304, 4.900505, 8.674352)
-gizmo_extents = 0.6
-
-[node name="Anchor21" type="Marker3D" parent="WebAnchors" unique_id=419526338]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.929232, 4.900505, 8.495178)
-gizmo_extents = 0.6
-
-[node name="Anchor22" type="Marker3D" parent="WebAnchors" unique_id=1819294369]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.929232, -23.271002, -6.705755)
-gizmo_extents = 0.6
-
-[node name="Anchor23" type="Marker3D" parent="WebAnchors" unique_id=949962733]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.773382, -23.271002, -1.3588285)
-gizmo_extents = 0.6
-
-[node name="Anchor24" type="Marker3D" parent="WebAnchors" unique_id=1726658278]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.426134, -23.271006, 2.4151025)
-gizmo_extents = 0.6
-
-[node name="Anchor25" type="Marker3D" parent="WebAnchors" unique_id=1739396563]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.996233, -23.271002, 9.820702)
-gizmo_extents = 0.6
-
-[node name="Anchor26" type="Marker3D" parent="WebAnchors" unique_id=372737971]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.826775, -23.270998, 9.887111)
-gizmo_extents = 0.6
-
-[node name="Anchor27" type="Marker3D" parent="WebAnchors" unique_id=324754168]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.826775, -3.1135426, 8.40499)
-gizmo_extents = 0.6
+[editable path="WindEvent"]

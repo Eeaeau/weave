@@ -9,13 +9,11 @@ func _ready() -> void:
 		_create_editor_preview()
 
 
-func sample_world_point(random: RandomNumberGenerator, side: int,
+func sample_world_point(random: RandomNumberGenerator,
 		upper_half: bool = false) -> Vector3:
-	var min_x := -0.5 if side == 0 else 0.0
-	var max_x := 0.0 if side == 0 else 0.5
 	var max_z := 0.0 if upper_half else 0.5
 	return to_global(Vector3(
-		random.randf_range(min_x, max_x),
+		random.randf_range(-0.5, 0.5),
 		0.0,
 		random.randf_range(-0.5, max_z),
 	))

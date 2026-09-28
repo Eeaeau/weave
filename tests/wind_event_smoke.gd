@@ -66,24 +66,26 @@ func _stable_plane_path_is_camera_independent() -> bool:
 func _editable_drop_area_bounds() -> bool:
 	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
 	root.add_child(event)
-	var area := event.get_node_or_null("WebPlane/DropArea") as WindDropArea3D
-	if area == null:
-		return _fail("Wind needs a transformable drop area in its scene")
-	area.position = Vector3(2.0, 0.0, -1.0)
-	area.rotation.y = 0.25
-	area.scale = Vector3(8.0, 1.0, 4.0)
+	var left_area := event.get_node_or_null("WebPlane/LeftDropArea") as WindDropArea3D
+	var right_area := event.get_node_or_null("WebPlane/RightDropArea") as WindDropArea3D
+	if left_area == null or right_area == null or left_area == right_area:
+		return _fail("Wind needs independently editable left and right drop areas")
+	left_area.position = Vector3(-8.0, 0.0, -1.0)
+	left_area.rotation.y = 0.25
+	left_area.scale = Vector3(8.0, 1.0, 4.0)
+	right_area.position = Vector3(9.0, 0.0, 2.0)
+	right_area.scale = Vector3(3.0, 1.0, 2.0)
 	for side in 2:
+		var area := left_area if side == 0 else right_area
 		for index in 50:
 			var path := event._sample_path(side)
 			var contact := area.to_local(path[1])
 			var entry := area.to_local(path[0] + event._plane_camera_basis().z * 8.0)
 			for point in [contact, entry]:
 				if absf(point.y) > 0.001 or absf(point.z) > 0.501:
-					return _fail("Wind entry and contact must stay in the drop area")
-				if side == 0 and (point.x < -0.501 or point.x > 0.001):
-					return _fail("Left-side drops must stay in the left half")
-				if side == 1 and (point.x < -0.001 or point.x > 0.501):
-					return _fail("Right-side drops must stay in the right half")
+					return _fail("Wind entry and contact must stay in the selected area")
+				if absf(point.x) > 0.501:
+					return _fail("Wind positions must use the full selected area width")
 	_free_scene(event)
 	return true
 

@@ -130,8 +130,8 @@ func _spawn_next() -> WindFlight3D:
 		_spawned = group_size
 		return null
 	var side := _selection.next_side()
-	if $WebPlane.get_node_or_null("DropArea") is not WindDropArea3D:
-		push_warning("Wind drop area is missing")
+	if _get_drop_area(side) == null:
+		push_warning("Wind drop area is missing for side %d" % side)
 		item.free()
 		_spawned = group_size
 		return null
@@ -156,15 +156,20 @@ func _spawn_next() -> WindFlight3D:
 
 
 func _sample_path(side: int) -> PackedVector3Array:
-	var area := $WebPlane/DropArea as WindDropArea3D
-	var contact_world := area.sample_world_point(_path_random, side)
+	var area := _get_drop_area(side)
+	var contact_world := area.sample_world_point(_path_random)
 	var camera_basis := _plane_camera_basis()
-	var start_world := area.sample_world_point(_path_random, side, true)
+	var start_world := area.sample_world_point(_path_random, true)
 	start_world -= camera_basis.z * 8.0
 	var exit_world := contact_world + camera_basis.z * 6.0
 	exit_world += camera_basis.x * _path_random.randf_range(-0.7, 0.7)
 	exit_world -= camera_basis.y * 2.0
 	return PackedVector3Array([start_world, contact_world, exit_world])
+
+
+func _get_drop_area(side: int) -> WindDropArea3D:
+	var area_name := "LeftDropArea" if side == 0 else "RightDropArea"
+	return $WebPlane.get_node_or_null(area_name) as WindDropArea3D
 
 
 func _plane_camera_basis() -> Basis:

@@ -14,8 +14,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
 [node name="CameraWaypoint" type="Marker3D" parent="WebPlane" unique_id=2045513754]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 12.081141, 0)
 
-[node name="DropArea" type="Node3D" parent="WebPlane"]
-transform = Transform3D(12, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0)
+[node name="LeftDropArea" type="Node3D" parent="WebPlane"]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 3, -3, 0, 0)
+script = ExtResource("5_drop_area")
+
+[node name="RightDropArea" type="Node3D" parent="WebPlane"]
+transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 3, 3, 0, 0)
 script = ExtResource("5_drop_area")
 
 [node name="Flights" type="Node3D" parent="." unique_id=351661750]

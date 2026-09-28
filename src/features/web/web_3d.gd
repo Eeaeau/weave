@@ -128,10 +128,7 @@ func _discover_anchor_nodes() -> bool:
 	var container := get_node_or_null(anchor_container_path) as Node3D
 	if container == null:
 		return false
-	var discovered: Array[Node3D] = []
-	for child in container.get_children():
-		if child is Marker3D:
-			discovered.append(child)
+	var discovered := _gather_anchor_markers(container)
 	if discovered.size() == valid_nodes.size():
 		var same := true
 		for index in range(discovered.size()):
@@ -145,6 +142,27 @@ func _discover_anchor_nodes() -> bool:
 	for anchor in discovered:
 		_last_node_positions.append(anchor.global_position)
 	return true
+
+
+func _gather_anchor_markers(container: Node3D) -> Array[Node3D]:
+	var discovered: Array[Node3D] = []
+	var groups: Array[Array] = []
+	var longest_group := 0
+	for child in container.get_children():
+		if child is Marker3D:
+			discovered.append(child)
+		elif child is Node3D:
+			var group: Array[Node3D] = []
+			for marker in child.get_children():
+				if marker is Marker3D:
+					group.append(marker)
+			groups.append(group)
+			longest_group = maxi(longest_group, group.size())
+	for index in range(longest_group):
+		for group in groups:
+			if index < group.size():
+				discovered.append(group[index])
+	return discovered
 
 
 func _nodes_moved() -> bool:
