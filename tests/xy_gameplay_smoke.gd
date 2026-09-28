@@ -2,6 +2,7 @@ extends SceneTree
 ## The match is played in world X/Y, with Z reserved for depth and camera framing.
 
 const MATCH_SCENE := preload("res://src/game/web_match.tscn")
+const BRANCH_SCENE := preload("res://src/features/world/maps/branch_canopy/branch_canopy.tscn")
 const PEBBLE_SCENE := preload("res://src/features/collectibles/weapons/pebble_projectile.tscn")
 
 
@@ -10,6 +11,9 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	var standalone_map := BRANCH_SCENE.instantiate() as Node3D
+	var standalone_upright := standalone_map.transform.basis.y.dot(Vector3.BACK) > 0.99
+	standalone_map.free()
 	var match_scene := MATCH_SCENE.instantiate() as WebMatch3D
 	root.add_child(match_scene)
 	current_scene = match_scene
@@ -57,9 +61,17 @@ func _run() -> void:
 	_stop_audio(match_scene)
 	match_scene.free()
 	current_scene = null
-	if not (upright and moves_up and aims_up and falls and zooms and parallax):
-		push_error("XY GAMEPLAY FAIL: upright=%s move=%s aim=%s gravity=%s zoom=%s parallax=%s"
-			% [upright, moves_up, aims_up, falls, zooms, parallax])
+	var checks := {
+		"standalone": standalone_upright,
+		"upright": upright,
+		"move": moves_up,
+		"aim": aims_up,
+		"gravity": falls,
+		"zoom": zooms,
+		"parallax": parallax,
+	}
+	if checks.values().has(false):
+		push_error("XY GAMEPLAY FAIL: %s" % checks)
 		quit(1)
 		return
 	await create_timer(0.5).timeout

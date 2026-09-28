@@ -20,6 +20,7 @@ script = ExtResource("1")
 sound_tracks = Array[AudioStream]([ExtResource("4_xyjxb"), ExtResource("5_p1esv"), ExtResource("6_0rucu"), ExtResource("13_gmg8k"), ExtResource("3_ggfpk")])
 
 [node name="BranchCanopy" parent="." unique_id=2083914664 instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="Nodes" type="Node3D" parent="BranchCanopy" unique_id=161599004]
 
