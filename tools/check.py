@@ -179,8 +179,8 @@ def main() -> int:
     if GDSTYLE_VERSION not in run([str(gdstyle), "--version"]):
         raise RuntimeError(f"This template expects gdstyle {GDSTYLE_VERSION}.")
 
-    run([str(gdstyle), "fmt", "--check", "src", "tests"])
-    run([str(gdstyle), "check", "--max-warnings", "0", "src", "tests"])
+    run([str(gdstyle), "fmt", "--check", "src", "tests", "addons/web_edge_authoring"])
+    run([str(gdstyle), "check", "--max-warnings", "0", "src", "tests", "addons/web_edge_authoring"])
 
     check_dir = ROOT / "build" / "check"
     check_dir.mkdir(parents=True, exist_ok=True)
@@ -204,6 +204,7 @@ def main() -> int:
         ("wind_event_smoke", "WIND EVENT PASS:"),
         ("web_catch_smoke", "WEB CATCH PASS:"),
         ("web_anchor_authoring_smoke", "WEB ANCHOR AUTHORING PASS:"),
+        ("web_edge_authoring_smoke", "WEB EDGE AUTHORING PASS:"),
         ("web_support_performance_smoke", "WEB SUPPORT PERFORMANCE PASS:"),
         ("silk_build_smoke", "SILK BUILD PASS:"),
     ):

@@ -13,8 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://d1ep2utqq105v" path="res://src/features/world/maps/branch_canopy/assets/sprites/sun/sun.png" id="17_sun"]
 [ext_resource type="Texture2D" uid="uid://c0niwu8qctjnx" path="res://src/features/world/maps/branch_canopy/assets/background/sunset_sky.svg" id="18_sky"]
 [ext_resource type="Script" uid="uid://bd0177jssn1kg" path="res://src/features/world/maps/branch_canopy/background_parallax.gd" id="19_parallax"]
-[ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/branch_visual.tscn" id="21_branch_visual"]
-[ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/web_anchor_set.tscn" id="22_anchor_set"]
+[ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/branch_web.tscn" id="21_branch_web"]
 
 [node name="BranchCanopy" type="Node3D" unique_id=1959439837]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
@@ -87,12 +86,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
 
 [node name="Branches" type="Node3D" parent="." unique_id=1951663678]
-transform = Transform3D(2, 0, 0, 0, -8.742278e-08, 2, 0, -2, -8.742278e-08, -9.09235, 0, 0)
 
-[node name="LeftBranch" parent="Branches" unique_id=802554750 instance=ExtResource("21_branch_visual")]
+[node name="LeftBranch" parent="Branches" unique_id=802554750 instance=ExtResource("21_branch_web")]
 
-[node name="RightBranch" parent="Branches" unique_id=466133322 instance=ExtResource("21_branch_visual")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 8.95314, -5.04284, 0)
+[node name="RightBranch" parent="Branches" unique_id=466133322 instance=ExtResource("21_branch_web")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27777, 0, 10.08568)
 
 [node name="ParallaxCamera" type="Camera3D" parent="." unique_id=2032489736]
 process_priority = 100
@@ -131,14 +129,5 @@ transform = Transform3D(17.378399, 0, 0, 0, 1.0000001, 0, 0, 0, 16.870134, -8.68
 
 [node name="RightDropArea" parent="WindEvent/WebPlane" parent_id_path=PackedInt32Array(1552486683, 1256300003) index="2"]
 transform = Transform3D(17.378399, 0, 0, 0, 1.0000001, 0, 0, 0, 16.870134, 8.6891995, 0, 0)
-
-[node name="WebAnchors" type="Node3D" parent="." unique_id=161599004]
-
-[node name="LeftAnchors" parent="WebAnchors" instance=ExtResource("22_anchor_set")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-
-[node name="RightAnchors" parent="WebAnchors" instance=ExtResource("22_anchor_set")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27777, 0, 10.08568)
-
 
 [editable path="WindEvent"]

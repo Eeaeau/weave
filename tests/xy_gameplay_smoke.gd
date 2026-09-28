@@ -20,7 +20,7 @@ func _run() -> void:
 	await process_frame
 	var camera := match_scene.get_node("BranchCanopy/ParallaxCamera") as ActionCamera3D
 	var spider := (match_scene.get_node("TeamA") as Team).get_active_spider()
-	var web := match_scene.get_node("WebA") as Web3D
+	var web := match_scene.get_node("BranchCanopy/Branches/LeftBranch/StartingWeb") as Web3D
 	var face: Array = web.find_faces()[0]
 	var center := Vector3.ZERO
 	for node_index in face:

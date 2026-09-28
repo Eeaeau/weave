@@ -10,7 +10,10 @@ var _current_track_index := -1
 @onready var hud: MatchHud = $MatchHud
 @onready var pause_settings: SettingsMenu = $PauseMenu/SettingsMenu
 @onready var wind_event: WindEvent3D = $BranchCanopy/WindEvent
-@onready var catch_webs: Array[Web3D] = [$WebA, $WebB]
+@onready var catch_webs: Array[Web3D] = [
+	$BranchCanopy/Branches/LeftBranch/StartingWeb,
+	$BranchCanopy/Branches/RightBranch/StartingWeb,
+]
 @onready var audio_stream_player: AudioStreamPlayer = $AudioStreamPlayer
 
 

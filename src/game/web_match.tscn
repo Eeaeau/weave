@@ -11,7 +11,6 @@
 [ext_resource type="PackedScene" path="res://src/features/ui/pause_menu.tscn" id="9"]
 [ext_resource type="Script" uid="uid://vjxl4iy367xq" path="res://src/features/systems/match_manager.gd" id="11_m5no2"]
 [ext_resource type="PackedScene" uid="uid://ca8cqbxxkmgnw" path="res://src/features/systems/team.tscn" id="11_pd16p"]
-[ext_resource type="PackedScene" uid="uid://bu81h1e2g7ldm" path="res://src/features/web/web_3d.tscn" id="12_web"]
 [ext_resource type="AudioStream" uid="uid://fpg0qjm58l6g" path="res://assets/music/Menu.wav" id="13_gmg8k"]
 
 [node name="WebMatch" type="Node3D" unique_id=1817038654]
@@ -21,24 +20,6 @@ sound_tracks = Array[AudioStream]([ExtResource("4_xyjxb"), ExtResource("5_p1esv"
 
 [node name="BranchCanopy" parent="." unique_id=2083914664 instance=ExtResource("2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-
-[node name="WebA" parent="." unique_id=219804916 instance=ExtResource("12_web")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3, 0.1, 0)
-max_strand_length = 8.0
-anchor_container_path = NodePath("../BranchCanopy/WebAnchors")
-edges = Array[Vector2i]([Vector2i(0, 2), Vector2i(4, 0), Vector2i(6, 0), Vector2i(4, 6), Vector2i(2, 6)])
-web_width = 0.00999999999999999
-
-[node name="CaughtItems" type="Node3D" parent="WebA" unique_id=199677267]
-
-[node name="WebB" parent="." unique_id=1110966528 instance=ExtResource("12_web")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0.1, 0)
-max_strand_length = 8.0
-anchor_container_path = NodePath("../BranchCanopy/WebAnchors")
-edges = Array[Vector2i]([Vector2i(1, 3), Vector2i(3, 5), Vector2i(7, 1), Vector2i(7, 3), Vector2i(5, 7)])
-web_width = 0.00999999999999999
-
-[node name="CaughtItems" type="Node3D" parent="WebB" unique_id=1027188632]
 
 [node name="MatchHud" parent="." unique_id=1199369611 instance=ExtResource("8")]
 
@@ -54,15 +35,15 @@ metadata/_custom_type_script = "uid://vjxl4iy367xq"
 
 [node name="TeamA" parent="." unique_id=1437638294 node_paths=PackedStringArray("webs", "home_web") instance=ExtResource("11_pd16p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.4602585, -4.7683716e-07, -2.8110838)
-webs = [NodePath("../WebA"), NodePath("../WebB")]
+webs = [NodePath("../BranchCanopy/Branches/LeftBranch/StartingWeb"), NodePath("../BranchCanopy/Branches/RightBranch/StartingWeb")]
 spider_scene = ExtResource("3")
-home_web = NodePath("../WebA")
+home_web = NodePath("../BranchCanopy/Branches/LeftBranch/StartingWeb")
 
 [node name="TeamB" parent="." unique_id=1203086720 node_paths=PackedStringArray("webs", "home_web") instance=ExtResource("11_pd16p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -4.7683716e-07, 7.5)
-webs = [NodePath("../WebA"), NodePath("../WebB")]
+webs = [NodePath("../BranchCanopy/Branches/LeftBranch/StartingWeb"), NodePath("../BranchCanopy/Branches/RightBranch/StartingWeb")]
 spider_scene = ExtResource("3")
-home_web = NodePath("../WebB")
+home_web = NodePath("../BranchCanopy/Branches/RightBranch/StartingWeb")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1184262214]
 volume_db = -25.0

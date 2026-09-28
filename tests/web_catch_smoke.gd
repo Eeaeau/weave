@@ -109,7 +109,8 @@ func _check_match_claim() -> bool:
 	var event: WindEvent3D = match_scene.get_node("BranchCanopy/WindEvent")
 	event.group_size = 1
 	root.add_child(match_scene)
-	var web := match_scene.get_node_or_null("WebA") as Web3D
+	var web := match_scene.get_node_or_null(
+		"BranchCanopy/Branches/LeftBranch/StartingWeb") as Web3D
 	if web == null or web.get_node_or_null("CaughtItems") == null:
 		_free_scene(match_scene)
 		return _fail("The match needs a player web with a persistent caught-item container")
