@@ -203,6 +203,7 @@ def main() -> int:
         ("wind_match_smoke", "WIND MATCH PASS:"),
         ("wind_event_smoke", "WIND EVENT PASS:"),
         ("web_catch_smoke", "WEB CATCH PASS:"),
+        ("web_anchor_authoring_smoke", "WEB ANCHOR AUTHORING PASS:"),
         ("web_support_performance_smoke", "WEB SUPPORT PERFORMANCE PASS:"),
         ("silk_build_smoke", "SILK BUILD PASS:"),
     ):

@@ -213,3 +213,117 @@ bus = &"SFX"
 script = ExtResource("9")
 
 [node name="WindEvent" parent="." unique_id=1552486683 instance=ExtResource("5")]
+
+[node name="WebAnchors" type="Node3D" parent="." unique_id=161599004]
+
+[node name="TeamA" type="Node3D" parent="WebAnchors" unique_id=778902284]
+
+[node name="1" type="Marker3D" parent="WebAnchors/TeamA" unique_id=2105407740]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.818811, 0, -0.36334944)
+gizmo_extents = 0.6
+
+[node name="2" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1589837226]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.209795, 0, 0)
+gizmo_extents = 0.6
+
+[node name="3" type="Marker3D" parent="WebAnchors/TeamA" unique_id=678463416]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.818811, 0, -4.6419444)
+gizmo_extents = 0.6
+
+[node name="4" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1554381991]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.36697, 0, -4.6419444)
+gizmo_extents = 0.6
+
+[node name="5" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1028950845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.229384, 0, -12.701744)
+gizmo_extents = 0.6
+
+[node name="6" type="Marker3D" parent="WebAnchors/TeamA" unique_id=258465562]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.814587, 0, -9.818827)
+gizmo_extents = 0.6
+
+[node name="7" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1925440564]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.221205, 0, -5.9402056)
+gizmo_extents = 0.6
+
+[node name="8" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1073728408]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.059196, 0, -4.983211)
+gizmo_extents = 0.6
+
+[node name="9" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1491521260]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36318207, 0, -2.6387553)
+gizmo_extents = 0.6
+
+[node name="10" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1861679099]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49902058, 0, -8.302755)
+gizmo_extents = 0.6
+
+[node name="11" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1474682084]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9977694, 0, -9.616983)
+gizmo_extents = 0.6
+
+[node name="12" type="Marker3D" parent="WebAnchors/TeamA" unique_id=1329660830]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.007719, 0, -15.325539)
+gizmo_extents = 0.6
+
+[node name="TeamB" type="Node3D" parent="WebAnchors" unique_id=1756664409]
+
+[node name="9" type="Marker3D" parent="WebAnchors/TeamB" unique_id=271734506]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7378082, 0, -0.14957666)
+gizmo_extents = 0.6
+
+[node name="10" type="Marker3D" parent="WebAnchors/TeamB" unique_id=1251641519]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.269903, 0, 4.803831)
+gizmo_extents = 0.6
+
+[node name="11" type="Marker3D" parent="WebAnchors/TeamB" unique_id=2028732677]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.489931, 0, 2.730412)
+gizmo_extents = 0.6
+
+[node name="12" type="Marker3D" parent="WebAnchors/TeamB" unique_id=2041218258]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.589817, 0, -2.4455104)
+gizmo_extents = 0.6
+
+[node name="13" type="Marker3D" parent="WebAnchors/TeamB" unique_id=1619114511]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.275583, 0, 7.3189344)
+gizmo_extents = 0.6
+
+[node name="14" type="Marker3D" parent="WebAnchors/TeamB" unique_id=574852747]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.275583, 4.900503, 9.173921)
+gizmo_extents = 0.6
+
+[node name="15" type="Marker3D" parent="WebAnchors/TeamB" unique_id=607329450]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.3440304, 4.900505, 8.674352)
+gizmo_extents = 0.6
+
+[node name="16" type="Marker3D" parent="WebAnchors/TeamB" unique_id=147291354]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.3440304, 4.900505, 8.674352)
+gizmo_extents = 0.6
+
+[node name="17" type="Marker3D" parent="WebAnchors/TeamB" unique_id=419526338]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.929232, 4.900505, 8.495178)
+gizmo_extents = 0.6
+
+[node name="18" type="Marker3D" parent="WebAnchors/TeamB" unique_id=1819294369]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.929232, -23.271002, -6.705755)
+gizmo_extents = 0.6
+
+[node name="19" type="Marker3D" parent="WebAnchors/TeamB" unique_id=949962733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.773382, -23.271002, -1.3588285)
+gizmo_extents = 0.6
+
+[node name="20" type="Marker3D" parent="WebAnchors/TeamB" unique_id=1726658278]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.426134, -23.271006, 2.4151025)
+gizmo_extents = 0.6
+
+[node name="21" type="Marker3D" parent="WebAnchors/TeamB" unique_id=1739396563]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.996233, -23.271002, 9.820702)
+gizmo_extents = 0.6
+
+[node name="22" type="Marker3D" parent="WebAnchors/TeamB" unique_id=372737971]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.826775, -23.270998, 9.887111)
+gizmo_extents = 0.6
+
+[node name="23" type="Marker3D" parent="WebAnchors/TeamB" unique_id=324754168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.826775, -3.1135426, 8.40499)
+gizmo_extents = 0.6

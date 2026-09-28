@@ -14,12 +14,8 @@ const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn"
 # ============================================================
 @export_category("Nodes")
 
-## The nodes that can be connected by the web.
-@export var valid_nodes: Array[Node3D] = []:
-	set(value):
-		valid_nodes = value
-		if is_inside_tree():
-			rebuild()
+## Direct Marker3D children of this container become available web vertices.
+@export_node_path("Node3D") var anchor_container_path: NodePath
 # ============================================================
 # Edges
 # ============================================================
@@ -80,6 +76,12 @@ var line_color: Color = Color.WHITE:
 		if is_inside_tree():
 			rebuild()
 
+## Runtime list of vertices, discovered from the anchor container when configured.
+var valid_nodes: Array[Node3D] = []:
+	set(value):
+		valid_nodes = value
+		if is_inside_tree():
+			rebuild()
 var edges_health: Array[float] = []
 var _last_node_positions: Array[Vector3] = []
 var _catch_regions: Dictionary = {}
@@ -97,13 +99,16 @@ var stand_alone_edges: Array = []
 
 func _ready() -> void:
 	add_to_group("web_support")
+	var anchors_changed := _discover_anchor_nodes()
 
 	if Engine.is_editor_hint():
 		set_process(true)
-		call_deferred("rebuild")
+		if not anchors_changed:
+			call_deferred("rebuild")
 	else:
 		set_process(false)
-		rebuild()
+		if not anchors_changed:
+			rebuild()
 
 
 func _process(_delta: float) -> void:
@@ -111,8 +116,35 @@ func _process(_delta: float) -> void:
 	if not Engine.is_editor_hint():
 		return
 
+	if _discover_anchor_nodes():
+		return
 	if _nodes_moved():
 		rebuild()
+
+
+func _discover_anchor_nodes() -> bool:
+	if anchor_container_path.is_empty():
+		return false
+	var container := get_node_or_null(anchor_container_path) as Node3D
+	if container == null:
+		return false
+	var discovered: Array[Node3D] = []
+	for child in container.get_children():
+		if child is Marker3D:
+			discovered.append(child)
+	if discovered.size() == valid_nodes.size():
+		var same := true
+		for index in range(discovered.size()):
+			if discovered[index] != valid_nodes[index]:
+				same = false
+				break
+		if same:
+			return false
+	valid_nodes = discovered
+	_last_node_positions.clear()
+	for anchor in discovered:
+		_last_node_positions.append(anchor.global_position)
+	return true
 
 
 func _nodes_moved() -> bool:

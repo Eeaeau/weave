@@ -27,6 +27,8 @@ Keep a scene, its script, and assets used only by that scene in one feature fold
 
 The match plays in world X/Y: X is horizontal, Y is vertical, and Z provides depth for the 2.5D presentation. Its visible objects are flat `Sprite3D` nodes. The camera uses orthographic zoom at a fixed depth; background layers move by different amounts during pans to retain parallax. Spiders can traverse and build webs, and wind events carry collectible weapons and insects toward them. `BaseSpider3D` is the shared spider scene, while weapons and insects share `CollectibleData` and `Collectible3D` parents.
 
+To place web vertices, open the Branch Canopy scene and add `Marker3D` children under `WebAnchors/TeamA` or `WebAnchors/TeamB`. Their crosses are visible in the 3D editor, and the matching web discovers them automatically. Add new markers at the end of a team's list: the existing initial strands still refer to marker positions by index.
+
 Planned work is tracked in [GitHub Issues](https://github.com/Eeaeau/weave/issues) and the [project board](https://github.com/users/Eeaeau/projects/3/views/2).
 
 ## Local checks and export
