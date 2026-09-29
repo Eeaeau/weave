@@ -11,6 +11,7 @@ func _initialize() -> void:
 func _run() -> void:
 	if not (_stable_plane_path_is_camera_independent() and _editable_drop_area_bounds()
 			and _staggered_group_and_contact()
+			and _skip_completes_whole_group()
 			and _empty_group_finishes()
 			and _removed_item_does_not_stall()
 			and _debug_contact_markers_toggle() and _debug_contact_marker_crossing()
@@ -23,6 +24,31 @@ func _run() -> void:
 	await create_timer(0.5).timeout
 	print("WIND EVENT PASS: staggered group, contact handoff, and lifecycle")
 	quit(0)
+
+
+func _skip_completes_whole_group() -> bool:
+	var event: WindEvent3D = WIND_EVENT_SCENE.instantiate()
+	root.add_child(event)
+	event.group_size = 3
+	event.random_seed = 42
+	var contacts: Array[int] = []
+	var finished: Array[int] = []
+	event.item_contact.connect(func(_item: Collectible3D, side: int,
+			_local_point: Vector2, _world_point: Vector3) -> void:
+		contacts.append(side))
+	event.event_finished.connect(func(round_number: int) -> void:
+		finished.append(round_number))
+	event.start_round(1)
+	event.call("skip_to_end")
+	var completed: bool = (contacts.size() == 3 and finished == [1]
+		and not event.is_active and event._active_flights.is_empty()
+		and not event.get_node("Gust").playing)
+	event.call("skip_to_end")
+	completed = completed and contacts.size() == 3 and finished == [1]
+	_free_scene(event)
+	if not completed:
+		return _fail("Skipping wind must resolve every item once and stop the gust")
+	return true
 
 
 func _stable_plane_path_is_camera_independent() -> bool:

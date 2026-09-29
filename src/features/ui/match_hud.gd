@@ -3,6 +3,7 @@ extends CanvasLayer
 ## Shows match resources and optional control hints.
 
 var show_hints := true
+var wind_waiting := false
 
 @onready var status: Label = $Margin/Panel/Status
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
@@ -24,11 +25,19 @@ func set_show_hints(enabled: bool) -> void:
 	_update_status()
 
 
+func set_wind_waiting(waiting: bool) -> void:
+	wind_waiting = waiting
+	_update_status()
+
+
 func _update_status() -> void:
 	if not is_node_ready():
 		return
 	$Margin.visible = show_hints
 	if show_hints:
+		if wind_waiting:
+			status.text = "Wind incoming · Enter: Skip wind"
+			return
 		status.text = "WASD move · Arrows aim · Space action"
 		status.text += "\n1–5 select · 2 Silk · reach node · Tab cycle · Space build · X cancel"
 

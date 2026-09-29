@@ -6,9 +6,9 @@
 [ext_resource type="Texture2D" uid="uid://p482fx31sjtm" path="res://src/features/spiders/assets/arrow.svg" id="3_uju3x"]
 [ext_resource type="Script" uid="uid://dmwaqsvei8rvr" path="res://src/features/systems/hurtbox.gd" id="5_vlacf"]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_6q6db"]
-height = 0.29162598
-radius = 0.36621094
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6q6db"]
+radius = 0.38
+height = 0.85
 
 [node name="PlayerSpider" unique_id=257841478 node_paths=PackedStringArray("webs") instance=ExtResource("1")]
 script = ExtResource("2")
@@ -33,7 +33,7 @@ script = ExtResource("5_vlacf")
 metadata/_custom_type_script = "uid://dmwaqsvei8rvr"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox3D" index="0" unique_id=1335947700]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3119725, 0)
-shape = SubResource("CylinderShape3D_6q6db")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0)
+shape = SubResource("CapsuleShape3D_6q6db")
 
 [connection signal="hurt" from="Hurtbox3D" to="." method="_on_hurtbox_3d_hurt"]

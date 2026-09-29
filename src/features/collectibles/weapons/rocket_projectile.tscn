@@ -113,6 +113,7 @@ animations = [{
 
 [node name="RocketProjectile" type="Node3D" unique_id=387750299 node_paths=PackedStringArray("hitbox", "explosion_hitbox", "explosion_sprite", "hide_on_hit")]
 script = ExtResource("1_vkrc5")
+damage = 10.0
 launch_speed_multiplier = 1.5
 explosion_damage = 20.0
 hitbox = NodePath("Hitbox")
@@ -131,6 +132,7 @@ autoplay = "default"
 frame_progress = 0.40056482
 
 [node name="Hitbox" type="Area3D" parent="." unique_id=164628878]
+collision_mask = 17
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox" unique_id=247253188]
 shape = SubResource("SphereShape3D_6q6db")

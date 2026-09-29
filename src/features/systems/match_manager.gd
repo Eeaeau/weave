@@ -24,6 +24,13 @@ func _ready() -> void:
 	give_turn_to(0)
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if (waiting_for_wind and wind_event != null
+			and event.is_action_pressed("skip_wind") and not event.is_echo()):
+		wind_event.skip_to_end()
+		get_viewport().set_input_as_handled()
+
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	if waiting_for_wind:
@@ -55,6 +62,7 @@ func give_turn_to(team_idx: int) -> Team:
 	team_changed.emit(previous_team_idx, active_team_idx)
 	if active_team_idx == 0 and wind_event:
 		waiting_for_wind = true
+		match_hud.set_wind_waiting(true)
 		_round_number += 1
 		wind_event.start_round(_round_number)
 	else:
@@ -66,4 +74,5 @@ func _on_wind_event_finished(round_number: int) -> void:
 	if not waiting_for_wind or round_number != _round_number:
 		return
 	waiting_for_wind = false
+	match_hud.set_wind_waiting(false)
 	teams[active_team_idx].start_turn(movement_per_turn)

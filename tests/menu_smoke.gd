@@ -61,6 +61,7 @@ func _has_player_actions(controls: ControlsMenu) -> bool:
 		"aim_left", "aim_right", "action",
 		"select_1", "select_2", "select_3", "select_4", "select_5",
 		"cycle_silk_target_previous", "cycle_silk_target_next", "cancel_silk_build",
+		"skip_wind",
 	]
 	if not controls.visible or controls.rows.get_child_count() != player_actions.size():
 		return false

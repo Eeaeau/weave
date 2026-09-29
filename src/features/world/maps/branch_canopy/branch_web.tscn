@@ -1,31 +1,40 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dhe735a4x6yo1"]
 
 [ext_resource type="PackedScene" path="res://src/features/world/maps/branch_canopy/branch_visual.tscn" id="1_visual"]
-[ext_resource type="Script" path="res://src/features/web/web_anchor_preview_3d.gd" id="2_preview"]
-[ext_resource type="Script" path="res://src/features/web/web_3d.gd" id="3_web"]
+[ext_resource type="Script" uid="uid://bxipxh5q65ina" path="res://src/features/web/web_anchor_preview_3d.gd" id="2_preview"]
+[ext_resource type="Script" uid="uid://c1ila5j2187bu" path="res://src/features/web/web_3d.gd" id="3_web"]
 
-[node name="BranchWeb" type="Node3D"]
+[node name="BranchWeb" type="Node3D" unique_id=645545693]
 
-[node name="BranchVisual" parent="." instance=ExtResource("1_visual")]
+[node name="BranchVisual" parent="." unique_id=1877940173 instance=ExtResource("1_visual")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -9.09235, 0, 0)
+metadata/_edit_lock_ = true
 
-[node name="WebAnchors" type="Node3D" parent="."]
+[node name="WebAnchors" type="Node3D" parent="." unique_id=378967160]
 script = ExtResource("2_preview")
 
 [node name="Anchor01" type="Marker3D" parent="WebAnchors" unique_id=2105407740]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.818811, 0.36334944, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.0126915, -0.7445376, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor02" type="Marker3D" parent="WebAnchors" unique_id=1589837226]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.209795, 0, 0)
+transform = Transform3D(1, 0, 0, 0, -0.4757199, 0.8795968, 0, -0.8795968, -0.4757199, -20.002066, -0.36006337, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor03" type="Marker3D" parent="WebAnchors" unique_id=678463416]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.818811, 4.6419444, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.161004, 5.1266456, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor04" type="Marker3D" parent="WebAnchors" unique_id=1554381991]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.36697, 4.6419444, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor13" type="Marker3D" parent="WebAnchors" unique_id=1835925285]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.53434, 9.459703, -4.7683716e-07)
+gizmo_extents = 0.6
+
+[node name="Anchor14" type="Marker3D" parent="WebAnchors" unique_id=1254755164]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.744306, 8.64956, -4.7683716e-07)
 gizmo_extents = 0.6
 
 [node name="Anchor05" type="Marker3D" parent="WebAnchors" unique_id=1028950845]
@@ -33,11 +42,31 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.229384, 12.701744, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor06" type="Marker3D" parent="WebAnchors" unique_id=258465562]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.814587, 9.818827, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.971706, 10.017098, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor07" type="Marker3D" parent="WebAnchors" unique_id=1925440564]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.221205, 5.9402056, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor15" type="Marker3D" parent="WebAnchors" unique_id=645818243]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.341696, -1.4986539, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor16" type="Marker3D" parent="WebAnchors" unique_id=760108183]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.836155, 6.6104712, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor17" type="Marker3D" parent="WebAnchors" unique_id=886882416]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.275955, 9.357466, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor18" type="Marker3D" parent="WebAnchors" unique_id=1664120160]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.660347, 11.895688, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor19" type="Marker3D" parent="WebAnchors" unique_id=1020798080]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.879824, 10.170576, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor08" type="Marker3D" parent="WebAnchors" unique_id=1073728408]
@@ -48,24 +77,40 @@ gizmo_extents = 0.6
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36318207, 2.6387553, 0)
 gizmo_extents = 0.6
 
+[node name="Anchor20" type="Marker3D" parent="WebAnchors" unique_id=1348508067]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.002145, 6.501925, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor22" type="Marker3D" parent="WebAnchors" unique_id=1028157050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8192115, 3.7183576, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor21" type="Marker3D" parent="WebAnchors" unique_id=519593432]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.294682, -1.404819, 0)
+gizmo_extents = 0.6
+
 [node name="Anchor10" type="Marker3D" parent="WebAnchors" unique_id=1861679099]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49902058, 8.302755, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor11" type="Marker3D" parent="WebAnchors" unique_id=1474682084]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9977694, 9.616983, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.3330374, 9.319239, 0)
+gizmo_extents = 0.6
+
+[node name="Anchor23" type="Marker3D" parent="WebAnchors" unique_id=677488104]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.358491, 11.500393, 0)
 gizmo_extents = 0.6
 
 [node name="Anchor12" type="Marker3D" parent="WebAnchors" unique_id=1329660830]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.007719, 15.325539, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.776896, 13.86987, 0)
 gizmo_extents = 0.6
 
-[node name="StartingWeb" type="Node3D" parent="."]
+[node name="StartingWeb" type="Node3D" parent="." unique_id=1766749013]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.1)
 script = ExtResource("3_web")
+max_strand_length = 8.0
 anchor_container_path = NodePath("../WebAnchors")
 edges = Array[Vector2i]([Vector2i(0, 1), Vector2i(2, 0), Vector2i(3, 0), Vector2i(2, 3), Vector2i(1, 3)])
 web_width = 0.00999999999999999
-max_strand_length = 8.0
 
-[node name="CaughtItems" type="Node3D" parent="StartingWeb"]
+[node name="CaughtItems" type="Node3D" parent="StartingWeb" unique_id=93165757]

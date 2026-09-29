@@ -30,7 +30,7 @@ script = ExtResource("11_m5no2")
 teams = [NodePath("../TeamA"), NodePath("../TeamB")]
 match_hud = NodePath("../MatchHud")
 wind_event = NodePath("../BranchCanopy/WindEvent")
-n_spiders_per_team = 2
+n_spiders_per_team = 3
 metadata/_custom_type_script = "uid://vjxl4iy367xq"
 
 [node name="TeamA" parent="." unique_id=1437638294 node_paths=PackedStringArray("webs", "home_web") instance=ExtResource("11_pd16p")]

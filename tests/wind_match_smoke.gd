@@ -36,11 +36,16 @@ func _check_initial_round(event: WindEvent3D, manager: MatchManager,
 		return "The initial team change must start wind round 1"
 	if manager.teams[0].get_active_spider().is_active:
 		return "Team A must wait for the initial wind drop"
-	_finish_wind(event)
-	if event.is_active:
-		return "The first wind round must finish before the next team change"
-	if not manager.teams[0].get_active_spider().is_active:
-		return "Team A must start only after the initial wind drop"
+	if not manager.match_hud.status.text.contains("Skip wind"):
+		return "The wind skip control must be shown during the event"
+	var skip_input := InputEventAction.new()
+	skip_input.action = "skip_wind"
+	skip_input.pressed = true
+	manager._unhandled_input(skip_input)
+	if event.is_active or not manager.teams[0].get_active_spider().is_active:
+		return "Skip Wind must finish the event and start Team A"
+	if manager.match_hud.status.text.contains("Skip wind"):
+		return "The wind skip hint must disappear after the event"
 	return ""
 
 
@@ -59,15 +64,10 @@ func _check_next_round(event: WindEvent3D, manager: MatchManager,
 	manager._process(0.0)
 	if manager.active_team_idx != 0 or manager.teams[1].spiders[0].is_active:
 		return "The waiting round must not advance to team B"
-	_finish_wind(event)
+	event.skip_to_end()
 	if not manager.teams[0].get_active_spider().is_active:
 		return "Team A must resume when the second wind drop finishes"
 	return ""
-
-
-func _finish_wind(event: WindEvent3D) -> void:
-	event.get_node("Flights").get_child(0).free()
-	event.advance(0.0)
 
 
 func _stop_audio(node: Node) -> void:

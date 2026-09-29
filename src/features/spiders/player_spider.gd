@@ -141,15 +141,23 @@ func _process(delta: float) -> void:
 func is_on_web(pos: Vector2) -> bool:
 	for web in webs:
 		var triangles = web.get_triangles()
-		var stand_alone_edges = web.get_stand_alone_edges()
 
 		for triangle in triangles:
 			if Geometry2D.is_point_in_polygon(pos, PackedVector2Array(triangle)):
 				return true
 
-		for stand_alone_edge in stand_alone_edges:
-			if is_point_on_line_segment(pos, stand_alone_edge[0],
-			stand_alone_edge[1], 0.15):
+		# Face boundaries remain walkable strands after a triangle is filled.
+		for edge in web.edges:
+			if (edge.x < 0 or edge.x >= web.valid_nodes.size()
+					or edge.y < 0 or edge.y >= web.valid_nodes.size()):
+				continue
+			var start := web.valid_nodes[edge.x]
+			var end := web.valid_nodes[edge.y]
+			if not is_instance_valid(start) or not is_instance_valid(end):
+				continue
+			if is_point_on_line_segment(pos,
+					Vector2(start.global_position.x, start.global_position.y),
+					Vector2(end.global_position.x, end.global_position.y), 0.15):
 				return true
 
 	return false

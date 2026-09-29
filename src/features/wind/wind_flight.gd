@@ -68,6 +68,10 @@ func advance(delta: float) -> void:
 		_complete()
 
 
+func complete_now() -> void:
+	advance(_duration - _elapsed)
+
+
 func claim_item(target_parent: Node3D) -> bool:
 	if _done or not is_instance_valid(item) or item.get_parent() != self:
 		return false

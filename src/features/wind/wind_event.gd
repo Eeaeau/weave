@@ -115,6 +115,20 @@ func advance(delta: float) -> void:
 		_finish_event()
 
 
+## Finish the planned group immediately, preserving every web-plane contact.
+func skip_to_end() -> void:
+	if not is_active:
+		return
+	while _spawned < group_size:
+		if _spawn_next() == null:
+			break
+	for flight in _active_flights.duplicate():
+		if is_instance_valid(flight) and not flight.is_queued_for_deletion():
+			flight.complete_now()
+	_finish_event()
+	$Gust.stop()
+
+
 func _spawn_next() -> WindFlight3D:
 	var entry := _selection.choose_entry(_round_number, spawn_entries)
 	if entry == null:

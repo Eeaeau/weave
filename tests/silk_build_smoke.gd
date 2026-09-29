@@ -26,7 +26,7 @@ func _run() -> void:
 	if not _check_target_range_and_crossing():
 		quit(1)
 		return
-	if not _check_triangle_fill_lifecycle():
+	if not _check_triangle_fill_lifecycle() or not _check_builder_survives_triangle_completion():
 		quit(1)
 		return
 	if not await _check_match_spawns():
@@ -213,6 +213,37 @@ func _check_triangle_fill_lifecycle() -> bool:
 		return _fail("Closing a triangle with silk must create the filled face automatically")
 	if not removed or not fill_removed:
 		return _fail("Removing a triangle edge must remove its fill and catch contact")
+	return true
+
+
+func _check_builder_survives_triangle_completion() -> bool:
+	var web := Web3D.new()
+	web.rotation.x = -PI / 2.0
+	var anchors: Array[Node3D] = [Node3D.new(), Node3D.new(), Node3D.new()]
+	var positions := [Vector3.ZERO, Vector3(2, 0, 0), Vector3(0, 0, 2)]
+	for index in anchors.size():
+		anchors[index].position = positions[index]
+		web.add_child(anchors[index])
+	root.add_child(web)
+	web.valid_nodes = anchors
+	web.add_edge(0, 1)
+	web.add_edge(1, 2)
+	var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
+	spider.webs = [web]
+	root.add_child(spider)
+	spider.global_position = anchors[0].global_position + Vector3(0.5, -0.05, 0.0)
+	spider.set_build_web(web)
+	spider.activate()
+	spider.n_remaining_actions = 1
+	var position := Vector2(spider.global_position.x, spider.global_position.y)
+	var supported_before := spider.is_on_web(position)
+	var built := spider.build_silk_strand(web, 0, 2)
+	var supported_after := spider.is_on_web(position)
+	spider._process(0.0)
+	var survived := not spider.is_dead()
+	_free_nodes([spider, web])
+	if not supported_before or not built or not supported_after or not survived:
+		return _fail("Closing a triangle must keep its former standalone edge walkable")
 	return true
 
 

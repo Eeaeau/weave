@@ -103,6 +103,12 @@ func explode() -> void:
 
 
 func _hitbox_entered(area: Area3D) -> void:
+	if area.is_in_group("web_anchor_hitboxes"):
+		if (is_instance_valid(source_hurtbox)
+				and global_position.distance_to(_launch_position) < launch_ally_grace_distance):
+			return
+		hit(null)
+		return
 	var target := area as Hurtbox3D
 	if target == null or target == source_hurtbox:
 		return

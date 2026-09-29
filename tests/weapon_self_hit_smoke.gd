@@ -2,6 +2,10 @@ extends SceneTree
 ## A carried projectile must leave its firing spider unharmed.
 
 const MATCH_SCENE := preload("res://src/game/web_match.tscn")
+const PLAYER_SCENE := preload("res://src/features/spiders/player_spider.tscn")
+const PEBBLE_PROJECTILE := preload("res://src/features/collectibles/weapons/pebble_projectile.tscn")
+const ROCKET_PROJECTILE := preload("res://src/features/collectibles/weapons/rocket_projectile.tscn")
+const BRANCH_WEB_SCENE := preload("res://src/features/world/maps/branch_canopy/branch_web.tscn")
 const WEAPON_SCENES := [
 	preload("res://src/features/collectibles/weapons/weapon_throw_pebble.tscn"),
 	preload("res://src/features/collectibles/weapons/weapon_rocket_launcher.tscn"),
@@ -20,6 +24,15 @@ func _run() -> void:
 		quit(1)
 		return
 	if not _check_rocket_range():
+		quit(1)
+		return
+	if not await _check_direct_hit(PEBBLE_PROJECTILE):
+		quit(1)
+		return
+	if not await _check_direct_hit(ROCKET_PROJECTILE):
+		quit(1)
+		return
+	if not await _check_rocket_hits_web_anchor():
 		quit(1)
 		return
 	await create_timer(0.5).timeout
@@ -103,6 +116,88 @@ func _check_rocket_range() -> bool:
 	rocket.free()
 	if not has_longer_range:
 		return _fail("Rocket must launch faster than the pebble at equal charge")
+	return true
+
+
+func _check_direct_hit(projectile_scene: PackedScene) -> bool:
+	var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
+	root.add_child(spider)
+	spider.set_process(false)
+	var projectile := projectile_scene.instantiate() as Projectile3D
+	projectile.explosion_damage = 0.0
+	var direct_damage := projectile.damage
+	root.add_child(projectile)
+	projectile.set_process(false)
+	projectile.global_position = spider.global_position
+	await physics_frame
+	await physics_frame
+	var collided := projectile.freeze if is_instance_valid(projectile) else true
+	var hit_directly := direct_damage > 0.0 and collided and spider.health < 1.0
+	if is_instance_valid(projectile):
+		projectile.free()
+	spider.free()
+	if not hit_directly:
+		return _fail("%s must damage a spider through physics contact without splash damage"
+			% projectile_scene.resource_path)
+	return true
+
+
+func _check_rocket_hits_web_anchor() -> bool:
+	var branch := BRANCH_WEB_SCENE.instantiate() as Node3D
+	root.add_child(branch)
+	var anchors := branch.get_node("WebAnchors") as Node3D
+	var all_targets := true
+	for child in anchors.get_children():
+		if child is Marker3D and child.get_node_or_null("ProjectileHitbox") == null:
+			all_targets = false
+	var anchor := anchors.get_node("Anchor01") as Marker3D
+	var target := anchor.get_node_or_null("ProjectileHitbox") as Area3D
+	var web := branch.get_node("StartingWeb") as Web3D
+	var health_before := 0.0
+	for health in web.edges_health:
+		health_before += health
+	var rocket := ROCKET_PROJECTILE.instantiate() as Projectile3D
+	root.add_child(rocket)
+	rocket.set_process(false)
+	rocket.global_position = anchor.global_position
+	await physics_frame
+	await physics_frame
+	var health_after := 0.0
+	for health in web.edges_health:
+		health_after += health
+	var has_target := target != null
+	var exploded := is_instance_valid(rocket) and rocket.freeze
+	if is_instance_valid(rocket):
+		rocket.free()
+	branch.free()
+	if not all_targets or not has_target or not exploded or health_after >= health_before:
+		return _fail("A rocket must hit a web anchor, explode, and damage its strands")
+	return await _check_anchor_launch_grace()
+
+
+func _check_anchor_launch_grace() -> bool:
+	var branch := BRANCH_WEB_SCENE.instantiate() as Node3D
+	root.add_child(branch)
+	var anchor := branch.get_node("WebAnchors/Anchor01") as Marker3D
+	var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
+	root.add_child(spider)
+	spider.set_process(false)
+	spider.global_position = anchor.global_position
+	var rocket := ROCKET_PROJECTILE.instantiate() as Projectile3D
+	rocket.source_hurtbox = spider.hurtbox
+	root.add_child(rocket)
+	rocket.global_position = anchor.global_position
+	rocket.launch(0.0, 1.0)
+	rocket.set_process(false)
+	await physics_frame
+	await physics_frame
+	var safe_launch := is_instance_valid(rocket) and not rocket.freeze
+	if is_instance_valid(rocket):
+		rocket.free()
+	spider.free()
+	branch.free()
+	if not safe_launch:
+		return _fail("A rocket must clear its nearby starting anchor before it can collide")
 	return true
 
 

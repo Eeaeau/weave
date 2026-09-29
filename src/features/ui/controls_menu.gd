@@ -21,6 +21,7 @@ const ACTIONS := [
 	{ "name": "Cycle Silk Target Back", "action": "cycle_silk_target_previous" },
 	{ "name": "Cycle Silk Target Next", "action": "cycle_silk_target_next" },
 	{ "name": "Cancel Silk Build", "action": "cancel_silk_build" },
+	{ "name": "Skip Wind", "action": "skip_wind" },
 ]
 const BINDING_ROW: PackedScene = preload("res://src/features/ui/control_binding_row.tscn")
 

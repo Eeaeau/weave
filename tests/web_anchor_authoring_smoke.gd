@@ -20,8 +20,10 @@ func _run() -> void:
 	var authored_visual := branch_web.get_node_or_null("BranchVisual") as Node3D
 	var authored_anchors := branch_web.get_node_or_null("WebAnchors") as Node3D
 	var authored_web := branch_web.get_node_or_null("StartingWeb") as Web3D
+	var anchor_count := authored_anchors.get_child_count() if authored_anchors != null else 0
 	var standalone_complete := (authored_visual != null and authored_anchors != null
-		and authored_web != null and _all_visible_markers(authored_anchors, 12)
+		and authored_web != null and anchor_count >= 3
+		and _all_visible_markers(authored_anchors, anchor_count)
 		and authored_web.edges.size() >= 3)
 	var standalone_xy := absf(authored_anchors.get_child(0).position.y) > 0.01
 	for anchor in authored_anchors.get_children():
@@ -32,7 +34,7 @@ func _run() -> void:
 		Vector3.BACK)) > 0.99
 	root.add_child(branch_web)
 	await process_frame
-	standalone_complete = (standalone_complete and authored_web.valid_nodes.size() == 12
+	standalone_complete = (standalone_complete and authored_web.valid_nodes.size() == anchor_count
 		and not authored_web.find_faces().is_empty())
 	branch_web.free()
 	var map := MAP_SCENE.instantiate() as Node3D
@@ -50,8 +52,8 @@ func _run() -> void:
 			and left_branch.scale.x * right_branch.scale.x < 0.0)
 		shared_anchor_scene = shared_anchor_scene and (left_anchors.get_child(0) as Marker3D
 			).position.is_equal_approx((right_anchors.get_child(0) as Marker3D).position)
-	var visible_markers := shared_anchor_scene and _all_visible_markers(left_anchors, 12)
-	visible_markers = visible_markers and _all_visible_markers(right_anchors, 12)
+	var visible_markers := shared_anchor_scene and _all_visible_markers(left_anchors, anchor_count)
+	visible_markers = visible_markers and _all_visible_markers(right_anchors, anchor_count)
 	var previews := shared_anchor_scene and left_anchors.has_method("refresh_editor_previews")
 	if previews:
 		left_anchors.call("refresh_editor_previews")
@@ -81,16 +83,17 @@ func _run() -> void:
 	await process_frame
 	var web_a := match_scene.get_node("BranchCanopy/Branches/LeftBranch/StartingWeb") as Web3D
 	var web_b := match_scene.get_node("BranchCanopy/Branches/RightBranch/StartingWeb") as Web3D
-	var discovered := web_a.valid_nodes.size() == 26 and web_b.valid_nodes.size() == 26
+	var discovered := (web_a.valid_nodes.size() == anchor_count * 2 + 2
+		and web_b.valid_nodes.size() == anchor_count * 2 + 2)
 	discovered = discovered and web_a.valid_nodes[0].name == "Anchor01"
 	discovered = discovered and web_b.valid_nodes[0].name == "Anchor01"
 	discovered = discovered and web_a.valid_nodes[0] != web_b.valid_nodes[0]
-	discovered = discovered and web_a.valid_nodes[12] == extra_anchor
-	discovered = discovered and web_a.valid_nodes[13] == web_b.valid_nodes[0]
-	discovered = discovered and web_a.valid_nodes[25] == extra_right_anchor
-	discovered = discovered and web_b.valid_nodes[12] == extra_right_anchor
-	discovered = discovered and web_b.valid_nodes[13] == web_a.valid_nodes[0]
-	discovered = discovered and web_b.valid_nodes[25] == extra_anchor
+	discovered = discovered and web_a.valid_nodes[anchor_count] == extra_anchor
+	discovered = discovered and web_a.valid_nodes[anchor_count + 1] == web_b.valid_nodes[0]
+	discovered = discovered and web_a.valid_nodes[anchor_count * 2 + 1] == extra_right_anchor
+	discovered = discovered and web_b.valid_nodes[anchor_count] == extra_right_anchor
+	discovered = discovered and web_b.valid_nodes[anchor_count + 1] == web_a.valid_nodes[0]
+	discovered = discovered and web_b.valid_nodes[anchor_count * 2 + 1] == extra_anchor
 	discovered = discovered and web_a.edges == web_b.edges
 	var starting_web_support := true
 	for team_name in ["TeamA", "TeamB"]:

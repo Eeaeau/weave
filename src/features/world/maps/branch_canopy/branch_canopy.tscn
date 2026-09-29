@@ -126,9 +126,9 @@ script = ExtResource("9")
 [node name="WindEvent" parent="." unique_id=1552486683 instance=ExtResource("5")]
 
 [node name="LeftDropArea" parent="WindEvent/WebPlane" parent_id_path=PackedInt32Array(1552486683, 1256300003) index="1"]
-transform = Transform3D(17.378399, 0, 0, 0, 1.0000001, 0, 0, 0, 16.870134, -8.6891995, 0, 0)
+transform = Transform3D(36.77027, 0, 0, 0, 1.0000001, 0, 0, 0, 16.870134, -15.999644, -2.3841858e-07, -5.427319)
 
 [node name="RightDropArea" parent="WindEvent/WebPlane" parent_id_path=PackedInt32Array(1552486683, 1256300003) index="2"]
-transform = Transform3D(17.378399, 0, 0, 0, 1.0000001, 0, 0, 0, 16.870134, 8.6891995, 0, 0)
+transform = Transform3D(34.25153, 0, 0, 0, 1.0000001, 0, 0, 0, 21.196293, 14.993, 1.6391277e-07, 3.6778135)
 
 [editable path="WindEvent"]
