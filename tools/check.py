@@ -129,41 +129,53 @@ def run(
 ) -> str:
     display = " ".join(command)
     print(f"\n$ {display}", flush=True)
-    try:
-        result = subprocess.run(
-            command,
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        partial = exc.stdout or b""
-        if isinstance(partial, bytes):
-            partial = partial.decode("utf-8", errors="replace")
-        print(partial, flush=True)
-        raise RuntimeError(f"Command timed out after {timeout}s: {display}") from exc
-    output = result.stdout
-    print(output, end="" if output.endswith("\n") else "\n", flush=True)
-    if result.returncode != 0:
+    for attempt in range(3):
+        try:
+            result = subprocess.run(
+                command,
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired as exc:
+            partial = exc.stdout or b""
+            if isinstance(partial, bytes):
+                partial = partial.decode("utf-8", errors="replace")
+            print(partial, flush=True)
+            raise RuntimeError(f"Command timed out after {timeout}s: {display}") from exc
+        output = result.stdout
+        print(output, end="" if output.endswith("\n") else "\n", flush=True)
+        if godot and any(
+            error in output
+            for error in ("SCRIPT ERROR:", "Parse Error:", "Failed loading resource", "Failed to load script")
+        ):
+            raise RuntimeError(f"Godot reported a script or resource error: {display}")
+        if godot and any(
+            warning in output
+            for warning in ("ObjectDB instances were leaked at exit", "resources still in use at exit")
+        ):
+            raise RuntimeError(f"Godot reported leaked resources at exit: {display}")
+        if result.returncode == 0:
+            if marker and marker not in output:
+                raise RuntimeError(f"Missing test result marker: {marker}")
+            return output.strip()
+        # Godot 4.7.2 on Windows intermittently access-violates during shutdown.
+        # A reported PASS never substitutes for a process that exits cleanly.
+        if (
+            godot
+            and platform.system() == "Windows"
+            and result.returncode == 0xC0000005
+            and attempt < 2
+        ):
+            print(f"Godot exited with a Windows access violation; retrying ({attempt + 1}/2).")
+            continue
         raise RuntimeError(f"Command exited with status {result.returncode}: {display}")
-    if marker and marker not in output:
-        raise RuntimeError(f"Missing test result marker: {marker}")
-    if godot and any(
-        error in output
-        for error in ("SCRIPT ERROR:", "Parse Error:", "Failed loading resource", "Failed to load script")
-    ):
-        raise RuntimeError(f"Godot reported a script or resource error: {display}")
-    if godot and any(
-        warning in output
-        for warning in ("ObjectDB instances were leaked at exit", "resources still in use at exit")
-    ):
-        raise RuntimeError(f"Godot reported leaked resources at exit: {display}")
-    return output.strip()
+    raise RuntimeError(f"Godot did not exit cleanly after retries: {display}")
 
 
 def main() -> int:

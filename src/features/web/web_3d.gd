@@ -85,6 +85,7 @@ var valid_nodes: Array[Node3D] = []:
 var edges_health: Array[float] = []
 var _last_node_positions: Array[Vector3] = []
 var _catch_regions: Dictionary = {}
+var _topology_model := WebTopology.new()
 # ============================================================
 # Generated geometry
 # ============================================================
@@ -448,26 +449,14 @@ func _create_edge_health_bars() -> void:
 # ============================================================
 
 
-## Checks if we can add an edge between two valid nodes.
-##
-## Returns true if the edge would be valid.
+func _topology() -> WebTopology:
+	_topology_model.configure(valid_nodes, edges, global_transform)
+	return _topology_model
+
+
+## Checks whether an edge can be added between two valid nodes.
 func can_add_edge(a: int, b: int) -> bool:
-
-	if a == b or a < 0 or a >= valid_nodes.size() or b < 0 or b >= valid_nodes.size():
-		return false
-
-	if has_edge(a, b):
-		return false
-
-	# Don't allow an edge to pass through another node.
-	if edge_passes_through_node(a, b):
-		return false
-
-	# Don't allow edges to cross or overlap.
-	if edge_intersects_existing(a, b):
-		return false
-
-	return true
+	return _topology().can_add_edge(a, b)
 
 
 ## Adds an edge between two valid nodes.
@@ -510,170 +499,28 @@ func remove_edge(a: int, b: int) -> bool:
 
 ## Returns true if an edge already exists.
 func has_edge(a: int, b: int) -> bool:
-
-	for edge in edges:
-
-		if (
-			(edge.x == a and edge.y == b)
-			or
-			(edge.x == b and edge.y == a)
-		):
-
-			return true
-
-	return false
+	return _topology().has_edge(a, b)
 
 
 # ============================================================
-# Edge intersection
+# Graph and planar geometry queries
 # ============================================================
 
 
 func edge_intersects_existing(a: int, b: int) -> bool:
-
-	var a_pos := _node_position_2d(a)
-	var b_pos := _node_position_2d(b)
-
-	for edge in edges:
-
-		var c := edge.x
-		var d := edge.y
-
-		# Edges sharing a vertex are allowed.
-		if a == c or a == d or b == c or b == d:
-			continue
-
-		var c_pos := _node_position_2d(c)
-		var d_pos := _node_position_2d(d)
-
-		if segments_intersect(
-			a_pos,
-			b_pos,
-			c_pos,
-			d_pos
-		):
-			return true
-
-	return false
-
-
-# ============================================================
-# Prevent edges passing through nodes
-# ============================================================
+	return _topology().edge_intersects_existing(a, b)
 
 
 func edge_passes_through_node(a: int, b: int) -> bool:
-
-	var start := _node_position_2d(a)
-	var end := _node_position_2d(b)
-
-	for i in range(valid_nodes.size()):
-
-		if i == a or i == b:
-			continue
-
-		var point := _node_position_2d(i)
-
-		if point_on_segment(
-			point,
-			start,
-			end
-		):
-			return true
-
-	return false
+	return _topology().edge_passes_through_node(a, b)
 
 
-# ============================================================
-# 2D geometry
-# ============================================================
+func segments_intersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2) -> bool:
+	return WebTopology.segments_intersect(a, b, c, d)
 
 
-## Returns true when two segments have a proper intersection
-## or overlap along a non-zero-length interval.
-##
-## Touching at an endpoint is not considered an intersection.
-func segments_intersect(
-	a: Vector2,
-	b: Vector2,
-	c: Vector2,
-	d: Vector2
-) -> bool:
-
-	var r := b - a
-	var s := d - c
-
-	var denominator := r.cross(s)
-	var q := c - a
-
-	# --------------------------------------------------------
-	# Non-parallel segments.
-	# --------------------------------------------------------
-
-	if not is_zero_approx(denominator):
-
-		var t := q.cross(s) / denominator
-		var u := q.cross(r) / denominator
-
-		return (
-			t > 0.0
-			and t < 1.0
-			and u > 0.0
-			and u < 1.0
-		)
-
-	# --------------------------------------------------------
-	# Parallel but not collinear.
-	# --------------------------------------------------------
-
-	if not is_zero_approx(q.cross(r)):
-		return false
-
-	# --------------------------------------------------------
-	# Collinear.
-	#
-	# Check whether the segments overlap.
-	# --------------------------------------------------------
-
-	var rr := r.length_squared()
-
-	if is_zero_approx(rr):
-		return false
-
-	var t0 := q.dot(r) / rr
-	var t1 := (d - a).dot(r) / rr
-
-	# A non-zero overlap exists when the intervals
-	# overlap inside the first segment.
-	#
-	# Endpoint touching is allowed.
-	return max(t0, t1) > 0.0 and min(t0, t1) < 1.0
-
-
-## Returns true when point lies anywhere on the segment.
-func point_on_segment(
-	point: Vector2,
-	a: Vector2,
-	b: Vector2
-) -> bool:
-
-	var ab := b - a
-	var ap := point - a
-
-	# Cross product tells us whether the point
-	# lies on the line.
-	if abs(ab.cross(ap)) > 0.00001:
-		return false
-
-	var dot := ap.dot(ab)
-
-	if dot < 0.0:
-		return false
-
-	if dot > ab.length_squared():
-		return false
-
-	return true
+func point_on_segment(point: Vector2, a: Vector2, b: Vector2) -> bool:
+	return WebTopology.point_on_segment(point, a, b)
 
 
 # ============================================================
@@ -682,21 +529,7 @@ func point_on_segment(
 
 
 func _node_position_2d(index: int) -> Vector2:
-
-	var node := valid_nodes[index]
-
-	if node == null:
-		return Vector2.ZERO
-
-	var local_position := (
-		global_transform.affine_inverse()
-		* node.global_position
-	)
-
-	return Vector2(
-		local_position.x,
-		local_position.z
-	)
+	return _topology().node_position_2d(index)
 
 
 func _node_global_position_2d(index: int) -> Vector2:
@@ -707,84 +540,12 @@ func _node_global_position_2d(index: int) -> Vector2:
 
 
 # ============================================================
-# Find triangular faces
+# Face queries
 # ============================================================
 
 
-## Finds every triangle in the graph.
-##
-## A triangle exists when three different nodes are connected
-## by all three edges:
-##
-##     A ----- B
-##      \     /
-##       \   /
-##         C
-##
-## Required edges:
-##
-##     A <-> B
-##     B <-> C
-##     C <-> A
-##
-## Every returned face contains exactly three node indices.
 func find_faces() -> Array:
-
-	var faces: Array = []
-
-	# --------------------------------------------------------
-	# Check every unique combination of three nodes.
-	#
-	# Using:
-	#
-	#     a < b < c
-	#
-	# ensures that each combination is tested exactly once.
-	# --------------------------------------------------------
-
-	for a in range(valid_nodes.size()):
-
-		if valid_nodes[a] == null:
-			continue
-
-		for b in range(a + 1, valid_nodes.size()):
-
-			if valid_nodes[b] == null:
-				continue
-
-			# A-B must exist.
-			if not has_edge(a, b):
-				continue
-
-			for c in range(b + 1, valid_nodes.size()):
-
-				if valid_nodes[c] == null:
-					continue
-
-				# A-C must exist.
-				if not has_edge(a, c):
-					continue
-
-				# B-C must exist.
-				if not has_edge(b, c):
-					continue
-
-				# All three edges exist, so this is a triangle.
-				var face: Array[int] = [a, b, c]
-
-				# Ignore degenerate triangles.
-				var area := polygon_area(face)
-
-				if abs(area) <= 0.00001:
-					continue
-
-				# Keep a consistent winding direction.
-				if area < 0.0:
-					face.reverse()
-
-				faces.append(face)
-
-	return faces
+	return _topology().find_faces()
 
 
 func get_triangles() -> Array:
@@ -826,23 +587,7 @@ func _edge_key(a: int, b: int) -> String:
 
 
 func polygon_area(face: Array[int]) -> float:
-
-	var area := 0.0
-
-	for i in range(face.size()):
-
-		var a := _node_position_2d(
-			face[i]
-		)
-
-		var b := _node_position_2d(
-			face[(i + 1) % face.size()]
-		)
-
-		area += a.x * b.y
-		area -= b.x * a.y
-
-	return area * 0.5
+	return _topology().polygon_area(face)
 
 
 # ============================================================
