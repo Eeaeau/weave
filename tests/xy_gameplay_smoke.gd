@@ -39,6 +39,7 @@ func _run() -> void:
 	var projectile := PEBBLE_SCENE.instantiate() as Projectile3D
 	match_scene.add_child(projectile)
 	projectile.global_position = spider.global_position + Vector3.BACK
+	projectile.source_hurtbox = spider.hurtbox
 	projectile.launch(PI / 2.0, 1.0)
 	var aims_up := projectile.velocity.y > 0.0 and absf(projectile.velocity.z) < 0.001
 	var initial_velocity_y := projectile.velocity.y

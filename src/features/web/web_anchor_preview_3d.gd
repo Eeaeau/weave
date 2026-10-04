@@ -48,6 +48,8 @@ func _ensure_projectile_hitbox(anchor: Marker3D) -> void:
 	var hitbox := Area3D.new()
 	hitbox.name = "ProjectileHitbox"
 	hitbox.add_to_group("web_anchor_hitboxes")
+	hitbox.add_to_group("projectile_plane_targets")
+	hitbox.set_meta("plane_hit_radius", projectile_hit_radius)
 	hitbox.collision_layer = WEB_ANCHOR_LAYER
 	hitbox.collision_mask = 0
 	hitbox.monitoring = false

@@ -32,7 +32,9 @@ func _run() -> void:
 	if not await _check_direct_hit(ROCKET_PROJECTILE):
 		quit(1)
 		return
-	if not await _check_rocket_hits_web_anchor():
+	var anchor_hit_ok := await _check_rocket_hits_web_anchor()
+	if not anchor_hit_ok or not _check_projected_spider_hits() \
+			or not _check_projected_anchor_hits():
 		quit(1)
 		return
 	await create_timer(0.5).timeout
@@ -198,6 +200,54 @@ func _check_anchor_launch_grace() -> bool:
 	branch.free()
 	if not safe_launch:
 		return _fail("A rocket must clear its nearby starting anchor before it can collide")
+	return true
+
+
+func _check_projected_spider_hits() -> bool:
+	for projectile_scene in [PEBBLE_PROJECTILE, ROCKET_PROJECTILE]:
+		for depth_offset in [-15.0, 15.0]:
+			var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
+			root.add_child(spider)
+			spider.set_process(false)
+			var projectile := projectile_scene.instantiate() as Projectile3D
+			root.add_child(projectile)
+			projectile.set_process(false)
+			projectile.global_position = spider.global_position + Vector3(
+				-2.0, 0.65, depth_offset)
+			projectile.velocity = Vector3(8.0, 0.0, 0.0)
+			projectile._process(0.5)
+			var hit_spider := projectile.freeze and spider.health < 1.0
+			projectile.free()
+			spider.free()
+			if not hit_spider:
+				return _fail("A fast %s at depth %s passed a spider" % [
+					projectile_scene.resource_path, depth_offset])
+	return true
+
+
+func _check_projected_anchor_hits() -> bool:
+	for depth_offset in [-15.0, 15.0]:
+		var branch := BRANCH_WEB_SCENE.instantiate() as Node3D
+		root.add_child(branch)
+		var anchor := branch.get_node("WebAnchors/Anchor01") as Marker3D
+		var web := branch.get_node("StartingWeb") as Web3D
+		var health_before := 0.0
+		for health in web.edges_health:
+			health_before += health
+		var rocket := ROCKET_PROJECTILE.instantiate() as Projectile3D
+		root.add_child(rocket)
+		rocket.set_process(false)
+		rocket.global_position = anchor.global_position + Vector3(-2.0, 0.0, depth_offset)
+		rocket.velocity = Vector3(8.0, 0.0, 0.0)
+		rocket._process(0.5)
+		var health_after := 0.0
+		for health in web.edges_health:
+			health_after += health
+		var hit_anchor := rocket.freeze and health_after < health_before
+		rocket.free()
+		branch.free()
+		if not hit_anchor:
+			return _fail("A fast projectile at depth %s passed a web anchor" % depth_offset)
 	return true
 
 

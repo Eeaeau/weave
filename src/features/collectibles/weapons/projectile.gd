@@ -33,10 +33,87 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if freeze:
 		return
-	global_position += velocity * delta
+	var start := global_position
+	var destination := start + velocity * delta
+	var contact := _first_plane_hit(start, destination)
+	if not contact.is_empty():
+		global_position = start.lerp(destination, contact["fraction"])
+		_hitbox_entered(contact["area"])
+		if freeze:
+			return
+	global_position = destination
 	velocity.y -= 9.81 * delta
 	if global_position.y <= despawn_below_y:
 		hit(null)
+
+
+## Sweeps across the gameplay plane so display depth and frame rate cannot skip targets.
+func _first_plane_hit(start: Vector3, destination: Vector3) -> Dictionary:
+	var from := Vector2(start.x, start.y)
+	var to := Vector2(destination.x, destination.y)
+	var projectile_radius := _projectile_plane_radius()
+	var earliest := 2.0
+	var result: Dictionary = {}
+	for node in get_tree().get_nodes_in_group("projectile_plane_targets"):
+		var area := node as Area3D
+		if area == null or not is_instance_valid(area) or not area.monitorable \
+				or area.is_queued_for_deletion():
+			continue
+		if (area.collision_layer & hitbox.collision_mask) == 0:
+			continue
+		var center := _target_plane_center(area)
+		var target_radius := _target_plane_radius(area)
+		var fraction := _segment_circle_contact(from, to, center,
+			target_radius + projectile_radius)
+		if fraction < 0.0 or fraction >= earliest:
+			continue
+		var contact_position := start.lerp(destination, fraction)
+		if not _can_hit_area(area, contact_position):
+			continue
+		earliest = fraction
+		result = { "area": area, "fraction": fraction }
+	return result
+
+
+func _projectile_plane_radius() -> float:
+	for child in hitbox.get_children():
+		var collider := child as CollisionShape3D
+		if collider != null and collider.shape is SphereShape3D:
+			var scale_factor := maxf(collider.global_basis.x.length(),
+				collider.global_basis.y.length())
+			return (collider.shape as SphereShape3D).radius * scale_factor
+	return 0.0
+
+
+func _target_plane_radius(area: Area3D) -> float:
+	if area is Hurtbox3D:
+		return (area as Hurtbox3D).plane_hit_radius
+	return float(area.get_meta("plane_hit_radius", 0.0))
+
+
+func _target_plane_center(area: Area3D) -> Vector2:
+	for child in area.get_children():
+		if child is CollisionShape3D:
+			return Vector2(child.global_position.x, child.global_position.y)
+	return Vector2(area.global_position.x, area.global_position.y)
+
+
+func _segment_circle_contact(start: Vector2, end: Vector2, center: Vector2,
+		radius: float) -> float:
+	var offset := start - center
+	if offset.length_squared() <= radius * radius:
+		return 0.0
+	var motion := end - start
+	var motion_squared := motion.length_squared()
+	if is_zero_approx(motion_squared):
+		return -1.0
+	var along := offset.dot(motion)
+	var discriminant := along * along - motion_squared * (
+		offset.length_squared() - radius * radius)
+	if discriminant < 0.0:
+		return -1.0
+	var fraction := (-along - sqrt(discriminant)) / motion_squared
+	return fraction if fraction >= 0.0 and fraction <= 1.0 else -1.0
 
 
 func hit(hurtbox: Hurtbox3D) -> void:
@@ -103,19 +180,25 @@ func explode() -> void:
 
 
 func _hitbox_entered(area: Area3D) -> void:
+	if not _can_hit_area(area, global_position):
+		return
 	if area.is_in_group("web_anchor_hitboxes"):
-		if (is_instance_valid(source_hurtbox)
-				and global_position.distance_to(_launch_position) < launch_ally_grace_distance):
-			return
 		hit(null)
 		return
 	var target := area as Hurtbox3D
-	if target == null or target == source_hurtbox:
-		return
-	if (global_position.distance_to(_launch_position) < launch_ally_grace_distance
-			and _is_shooter_teammate(target)):
-		return
 	hit(target)
+
+
+func _can_hit_area(area: Area3D, contact_position: Vector3) -> bool:
+	var contact_2d := Vector2(contact_position.x, contact_position.y)
+	var launch_2d := Vector2(_launch_position.x, _launch_position.y)
+	var within_grace := contact_2d.distance_to(launch_2d) < launch_ally_grace_distance
+	if area.is_in_group("web_anchor_hitboxes"):
+		return not is_instance_valid(source_hurtbox) or not within_grace
+	var target := area as Hurtbox3D
+	if target == null or target == source_hurtbox:
+		return false
+	return not (within_grace and _is_shooter_teammate(target))
 
 
 func _is_shooter_teammate(target: Hurtbox3D) -> bool:
