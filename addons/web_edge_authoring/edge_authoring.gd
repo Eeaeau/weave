@@ -3,7 +3,8 @@ extends RefCounted
 ## Converts selected branch markers to starting-web edges without manual indices.
 
 
-static func edge_for_selection(anchors: Node3D, selected: Array[Node]) -> Vector2i:
+static func edge_for_selection(anchors: Node3D, selected: Array[Node],
+		ordered_anchors: Array[Node3D] = []) -> Vector2i:
 	if selected.size() != 2:
 		return Vector2i(-1, -1)
 	var first := selected[0] as Marker3D
@@ -12,8 +13,15 @@ static func edge_for_selection(anchors: Node3D, selected: Array[Node]) -> Vector
 		return Vector2i(-1, -1)
 	if first.get_parent() != anchors or second.get_parent() != anchors:
 		return Vector2i(-1, -1)
-	var a := anchors.get_children().find(first)
-	var b := anchors.get_children().find(second)
+	var candidates: Array[Node3D] = ordered_anchors
+	if candidates.is_empty():
+		for child in anchors.get_children():
+			if child is Marker3D:
+				candidates.append(child)
+	var a := candidates.find(first)
+	var b := candidates.find(second)
+	if a < 0 or b < 0:
+		return Vector2i(-1, -1)
 	return Vector2i(mini(a, b), maxi(a, b))
 
 

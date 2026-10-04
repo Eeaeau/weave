@@ -31,8 +31,14 @@ func _change_selected_edge(add: bool) -> void:
 	if anchors == null or web == null:
 		push_warning("Open a branch scene with WebAnchors and StartingWeb")
 		return
+	var anchor_warnings := web.get_anchor_order_warnings()
+	if not anchor_warnings.is_empty():
+		push_warning("Resolve StartingWeb anchor warnings before editing edges: %s"
+			% "; ".join(anchor_warnings))
+		return
 	var edge := EdgeAuthoring.edge_for_selection(
-		anchors, EditorInterface.get_selection().get_selected_nodes())
+		anchors, EditorInterface.get_selection().get_selected_nodes(),
+		web.ordered_anchors(anchors))
 	if edge.x < 0:
 		push_warning("Select two WebAnchors markers in the viewport or Scene tree")
 		return

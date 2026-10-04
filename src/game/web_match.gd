@@ -9,15 +9,15 @@ var _current_track_index := -1
 
 @onready var hud: MatchHud = $MatchHud
 @onready var pause_settings: SettingsMenu = $PauseMenu/SettingsMenu
-@onready var wind_event: WindEvent3D = $BranchCanopy/WindEvent
-@onready var catch_webs: Array[Web3D] = [
-	$BranchCanopy/Branches/LeftBranch/StartingWeb,
-	$BranchCanopy/Branches/RightBranch/StartingWeb,
-]
+@onready var canopy: BranchCanopy3D = $BranchCanopy
+@onready var match_manager: MatchManager = $MatchManager
+@onready var wind_event: WindEvent3D = canopy.wind_event
+@onready var catch_webs: Array[Web3D] = canopy.catch_webs
 @onready var audio_stream_player: AudioStreamPlayer = $AudioStreamPlayer
 
 
 func _ready() -> void:
+	canopy.action_camera.set_match_manager(match_manager)
 	hud.set_show_hints(pause_settings.hints_check.button_pressed)
 	pause_settings.hints_changed.connect(hud.set_show_hints)
 	wind_event.item_contact.connect(_on_item_contact)

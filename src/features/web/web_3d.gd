@@ -16,6 +16,13 @@ const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn"
 
 ## Direct Marker3D children of this container become available web vertices.
 @export_node_path("Node3D") var anchor_container_path: NodePath
+## Keeps authored edge indices tied to anchor names when markers are reordered.
+@export var anchor_ids: PackedStringArray = PackedStringArray():
+	set(value):
+		anchor_ids = value
+		if is_inside_tree():
+			_discover_anchor_nodes()
+			update_configuration_warnings()
 # ============================================================
 # Edges
 # ============================================================
@@ -101,6 +108,9 @@ var stand_alone_edges: Array = []
 func _ready() -> void:
 	add_to_group("web_support")
 	var anchors_changed := _discover_anchor_nodes()
+	if not Engine.is_editor_hint():
+		for warning in get_anchor_order_warnings():
+			push_warning(warning)
 
 	if Engine.is_editor_hint():
 		set_process(true)
@@ -123,13 +133,17 @@ func _process(_delta: float) -> void:
 		rebuild()
 
 
+func _get_configuration_warnings() -> PackedStringArray:
+	return get_anchor_order_warnings()
+
+
 func _discover_anchor_nodes() -> bool:
 	if anchor_container_path.is_empty():
 		return false
 	var container := get_node_or_null(anchor_container_path) as Node3D
 	if container == null:
 		return false
-	var discovered := _gather_anchor_markers(container)
+	var discovered := ordered_anchors(container)
 	if discovered.size() == valid_nodes.size():
 		var same := true
 		for index in range(discovered.size()):
@@ -141,8 +155,52 @@ func _discover_anchor_nodes() -> bool:
 	valid_nodes = discovered
 	_last_node_positions.clear()
 	for anchor in discovered:
-		_last_node_positions.append(anchor.global_position)
+		_last_node_positions.append(anchor.global_position if anchor != null else Vector3.ZERO)
+	if Engine.is_editor_hint():
+		update_configuration_warnings()
 	return true
+
+
+func ordered_anchors(container: Node3D) -> Array[Node3D]:
+	var discovered := _gather_anchor_markers(container)
+	if anchor_ids.is_empty():
+		return discovered
+	var remaining := discovered.duplicate()
+	var ordered: Array[Node3D] = []
+	for anchor_id in anchor_ids:
+		var match_index := -1
+		for index in range(remaining.size()):
+			if String(remaining[index].name) == anchor_id:
+				match_index = index
+				break
+		ordered.append(remaining.pop_at(match_index) if match_index >= 0 else null)
+	ordered.append_array(remaining)
+	return ordered
+
+
+func get_anchor_order_warnings() -> PackedStringArray:
+	var warnings := PackedStringArray()
+	if anchor_container_path.is_empty():
+		return warnings
+	var container := get_node_or_null(anchor_container_path) as Node3D
+	if container == null:
+		return warnings
+	if anchor_ids.is_empty():
+		warnings.append("Set Anchor IDs before connecting web edges.")
+		return warnings
+	var seen := PackedStringArray()
+	for anchor in _gather_anchor_markers(container):
+		var anchor_name := String(anchor.name)
+		if seen.has(anchor_name):
+			warnings.append("Duplicate web anchor name: %s" % anchor_name)
+		seen.append(anchor_name)
+	for anchor_id in anchor_ids:
+		if not seen.has(anchor_id):
+			warnings.append("Missing web anchor: %s. Its edge index is reserved." % anchor_id)
+	for anchor_name in seen:
+		if not anchor_ids.has(anchor_name):
+			warnings.append("Add %s to Anchor IDs before connecting new edges." % anchor_name)
+	return warnings
 
 
 func _gather_anchor_markers(container: Node3D) -> Array[Node3D]:
@@ -269,6 +327,10 @@ func rebuild() -> void:
 
 		var a: int = edge.x
 		var b: int = edge.y
+		if a < 0 or b < 0 or a >= valid_nodes.size() or b >= valid_nodes.size():
+			continue
+		if valid_nodes[a] == null or valid_nodes[b] == null:
+			continue
 
 		if face_edges.has(_edge_key(a, b)):
 			continue

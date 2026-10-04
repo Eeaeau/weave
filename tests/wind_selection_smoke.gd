@@ -35,7 +35,7 @@ func _round_unlocks() -> bool:
 	var cutter: WindSpawnEntry = load("res://src/features/wind/entries/twig_cutter.tres")
 	var beetle: WindSpawnEntry = load("res://src/features/wind/entries/health_beetle.tres")
 	if pebble == null or moth == null or cutter == null or beetle == null:
-		return _fail("The four initial wind entries must load")
+		return _fail("The initial wind entries must load")
 	if pebble.weight_at(1) != 10.0 or moth.weight_at(1) != 10.0:
 		return _fail("The two common entries must be available in round one")
 	if cutter.weight_at(2) != 0.0 or cutter.weight_at(3) != 1.0:
@@ -44,6 +44,14 @@ func _round_unlocks() -> bool:
 		return _fail("Health Beetle must unlock in round five")
 	if cutter.weight_at(4) <= cutter.weight_at(3) or beetle.weight_at(6) <= beetle.weight_at(5):
 		return _fail("Later entries must gain selection weight")
+	return _rocket_entry_data(pebble)
+
+
+func _rocket_entry_data(pebble: WindSpawnEntry) -> bool:
+	var rocket: WindSpawnEntry = load("res://src/features/wind/entries/rocket_launcher.tres")
+	if rocket == null or rocket.data == null or rocket.data == pebble.data \
+			or rocket.data.display_name != "Rocket Launcher":
+		return _fail("Rocket wind entry must use its own collectible data")
 	return true
 
 

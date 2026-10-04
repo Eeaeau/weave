@@ -30,8 +30,6 @@ func _ready() -> void:
 		_waypoint = get_node_or_null(waypoint_path) as Node3D
 	if _waypoint != null:
 		_gameplay_plane = _waypoint.get_parent_node_3d()
-		_wind_event = _gameplay_plane.get_parent_node_3d() as WindEvent3D
-	_match_manager = get_node_or_null("../../MatchManager") as MatchManager
 
 
 func _process(delta: float) -> void:
@@ -61,6 +59,14 @@ func _process(delta: float) -> void:
 		global_position.lerp(target_transform.origin, weight),
 	)
 	size = lerpf(size, focus_request["zoom"], weight)
+
+
+func set_wind_event(event: WindEvent3D) -> void:
+	_wind_event = event
+
+
+func set_match_manager(manager: MatchManager) -> void:
+	_match_manager = manager
 
 
 func _resolve_focus_request() -> Dictionary:
