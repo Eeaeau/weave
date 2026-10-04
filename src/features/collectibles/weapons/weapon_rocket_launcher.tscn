@@ -11,12 +11,22 @@ height = 0.5093994
 script = ExtResource("1_wox85")
 projectile_scene = ExtResource("2_ylcqh")
 icon = ExtResource("3_ylcqh")
+carry_style = 2
+recoil_distance = 0.22
 pickup_area = NodePath("PickupArea")
 metadata/_custom_type_script = "uid://br605w6pc4cgw"
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=772267363]
-transform = Transform3D(0, 0.3, 0, -0.3, 0, 0, 0, 0, 0.671, 0, 0, 0)
+transform = Transform3D(0, 0.2, 0, -0.2, 0, 0, 0, 0, 0.671, 0, 0, 0)
 texture = ExtResource("3_ylcqh")
+
+[node name="GripLeft" type="Marker3D" parent="."]
+position = Vector3(-0.4, 0.18, 0.08)
+gizmo_extents = 0.08
+
+[node name="GripRight" type="Marker3D" parent="."]
+position = Vector3(0.1, -0.18, 0.08)
+gizmo_extents = 0.08
 
 [node name="PickupArea" type="Area3D" parent="." unique_id=802743741]
 

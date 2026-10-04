@@ -46,6 +46,7 @@ var _visual_pose: VisualPose
 var _cycle: StepCycle
 var _feet: Array[FootState] = []
 var _steps: Array[Dictionary] = []
+var _carry_grips: Dictionary = {}
 
 
 func _ready() -> void:
@@ -137,6 +138,8 @@ func _on_web_geometry_changed() -> void:
 	var unsupported_feet: Array[int] = []
 	for step in _steps:
 		var foot_index: int = step["index"]
+		if is_carrying_foot(foot_index):
+			continue
 		if has_web_support(step["end"]):
 			active_steps.append(step)
 		else:
@@ -146,6 +149,8 @@ func _on_web_geometry_changed() -> void:
 			unsupported_feet.append(foot_index)
 	_steps = active_steps
 	for foot_index in range(_feet.size()):
+		if is_carrying_foot(foot_index):
+			continue
 		if _is_stepping(foot_index):
 			continue
 		var support := _find_support(_feet[foot_index].marker.global_position)
@@ -167,9 +172,44 @@ func _on_web_geometry_changed() -> void:
 		_start_urgent_replacements(priority_feet)
 
 
+## Hand off selected IK targets to weapon grips while the other legs keep walking.
+func set_carry_grips(grips: Dictionary) -> void:
+	for foot_index in _carry_grips:
+		if not grips.has(foot_index) and foot_index < _feet.size():
+			_feet[foot_index].dangling = true
+			_feet[foot_index].strand_id = ""
+			if not _cycle.urgent_replacements.has(foot_index):
+				_cycle.urgent_replacements.append(foot_index)
+	_carry_grips.clear()
+	for foot_index in grips:
+		var grip: Marker3D = grips[foot_index]
+		if grip == null or foot_index < 0 or foot_index >= _feet.size():
+			continue
+		_carry_grips[foot_index] = grip
+		_feet[foot_index].dangling = false
+		_feet[foot_index].strand_id = ""
+		_cycle.urgent_replacements.erase(foot_index)
+	for index in range(_steps.size() - 1, -1, -1):
+		if is_carrying_foot(_steps[index]["index"]):
+			_steps.remove_at(index)
+	_update_carry_grips()
+
+
+func is_carrying_foot(foot_index: int) -> bool:
+	return _carry_grips.has(foot_index)
+
+
+func _update_carry_grips() -> void:
+	for foot_index in _carry_grips:
+		var grip: Marker3D = _carry_grips[foot_index]
+		if is_instance_valid(grip):
+			_feet[foot_index].marker.global_position = grip.global_position
+
+
 func advance(delta: float) -> void:
 	if _feet.size() != FOOT_NAMES.size():
 		return
+	_update_carry_grips()
 	if targeting_mode == TargetingMode.WEB and not is_instance_valid(support_web):
 		_refresh_web_binding()
 	var travel := _rig.global_position - _cycle.last_rig_position
@@ -178,6 +218,10 @@ func advance(delta: float) -> void:
 	if _cycle.rig_moved:
 		_cycle.travel_direction = travel.normalized()
 	_cycle.last_rig_position = _rig.global_position
+	if _steps.is_empty() and not _cycle.urgent_replacements.is_empty():
+		var released_feet := _cycle.urgent_replacements.duplicate()
+		_cycle.urgent_replacements.clear()
+		_start_urgent_replacements(released_feet)
 	_update_dangling()
 	_release_crossed_feet()
 	if not _steps.is_empty():
@@ -198,6 +242,8 @@ func advance(delta: float) -> void:
 
 func _start_group(group_index: int, only_dangling: bool = false) -> bool:
 	for foot_index in STEP_GROUPS[group_index]:
+		if is_carrying_foot(foot_index):
+			continue
 		if only_dangling and not _feet[foot_index].dangling:
 			continue
 		var old_anchor := _rig.to_global(_visual_pose.anchors[foot_index])
@@ -263,12 +309,16 @@ func is_dangling(foot_index: int) -> bool:
 
 func _update_dangling() -> void:
 	for foot_index in range(_feet.size()):
+		if is_carrying_foot(foot_index):
+			continue
 		if _feet[foot_index].dangling and not _is_stepping(foot_index):
 			_feet[foot_index].marker.global_position = _dangling_position(foot_index)
 
 
 func _release_crossed_feet() -> void:
 	for foot_index in range(_feet.size()):
+		if is_carrying_foot(foot_index):
+			continue
 		if _feet[foot_index].dangling or _is_stepping(foot_index):
 			continue
 		var foot := _feet[foot_index]
@@ -448,7 +498,7 @@ func _has_shared_strand_clearance(
 	strand_id: String
 ) -> bool:
 	for other_index in range(_feet.size()):
-		if other_index == foot_index:
+		if other_index == foot_index or is_carrying_foot(other_index):
 			continue
 		var other_position := _feet[other_index].marker.global_position
 		var other_strand: String = _feet[other_index].strand_id
@@ -473,7 +523,7 @@ func can_land(foot_index: int, candidate: Vector3) -> bool:
 	var from_point := _planar(_lift_position(foot_index))
 	var to_point := _planar(candidate)
 	for other_index in range(_feet.size()):
-		if other_index == foot_index:
+		if other_index == foot_index or is_carrying_foot(other_index):
 			continue
 		if _feet[other_index].dangling and not _is_stepping(other_index):
 			continue

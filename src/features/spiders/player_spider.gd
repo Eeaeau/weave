@@ -5,6 +5,7 @@ const AIM_SPEED: float = 3.0
 const MOVE_SPEED: float = 2.0
 const SILK_CAPACITY: int = 5
 const STARTING_SILK: int = 3
+const WEAPON_RECOIL_DURATION: float = 0.24
 
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
@@ -19,6 +20,10 @@ var weapons: Array[Weapon3D]
 var selected_weapon_idx: int = 0
 var health: float = 1.0
 var silk_builder: SilkBuildAction3D
+var _weapon_motion_time := 0.0
+var _weapon_recoil_time := 0.0
+var _weapon_recoil_distance := 0.0
+var _pending_used_weapon: Weapon3D
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -53,6 +58,7 @@ func _process(delta: float) -> void:
 		take_damage(1)
 
 	if not is_active:
+		_update_weapon_pose(delta)
 		selected_indicator.visible = false
 		aim_arrow.visible = false
 		if silk_builder:
@@ -97,7 +103,7 @@ func _process(delta: float) -> void:
 		aim_angle += AIM_SPEED * delta
 	if Input.is_action_pressed("aim_right"):
 		aim_angle -= AIM_SPEED * delta
-	_update_weapon_pose()
+	_update_weapon_pose(delta)
 	if Input.is_action_just_pressed("action"):
 		action_charged_time = 0.0
 	if Input.is_action_just_released("action"):
@@ -105,10 +111,14 @@ func _process(delta: float) -> void:
 			silk_builder.try_build_selected_silk()
 		elif selected_weapon:
 			selected_weapon.fire(aim_angle, aim_magnitude)
-			if selected_weapon.is_used_up():
-				weapons.remove_at(selected_weapon_idx)
-				selected_weapon.queue_free()
-				select_weapon(0)
+			if selected_weapon is ProjectileWeapon3D:
+				_weapon_recoil_time = WEAPON_RECOIL_DURATION
+				_weapon_recoil_distance = selected_weapon.recoil_distance
+				if selected_weapon.is_used_up():
+					_pending_used_weapon = selected_weapon
+				_update_weapon_pose()
+			elif selected_weapon.is_used_up():
+				_finish_used_weapon(selected_weapon)
 				selected_weapon = weapons[selected_weapon_idx]
 			n_remaining_actions -= 1
 
@@ -237,8 +247,11 @@ func pick_up(collectible: Collectible3D) -> bool:
 func select_weapon(index: int) -> bool:
 	if index < 0 or index >= weapons.size():
 		return false
+	if is_instance_valid(_pending_used_weapon) and index != selected_weapon_idx:
+		return false
 	selected_weapon_idx = index
 	_sync_equipped_weapon_visuals()
+	_update_weapon_pose()
 	return true
 
 
@@ -256,14 +269,53 @@ func _sync_equipped_weapon_visuals() -> void:
 		var weapon := weapons[index]
 		if is_instance_valid(weapon) and weapon.get_parent() == equip_target:
 			weapon.visible = index == selected_weapon_idx and not weapon is WeaponNoAction
+	var selected: Weapon3D = null
+	if selected_weapon_idx < weapons.size():
+		selected = weapons[selected_weapon_idx]
+	var grips := selected.carry_grips() if is_instance_valid(selected) else {}
+	(spider_rig.get_node("LegController") as SpiderLegController3D).set_carry_grips(grips)
 
 
-func _update_weapon_pose() -> void:
-	_get_weapon_equip_target().global_basis = Basis(Vector3.BACK, aim_angle)
+func _update_weapon_pose(delta: float = 0.0) -> void:
+	var pivot := spider_rig.get_node(
+		"BoneAttachment3D/BodyOffset/WeaponAimPivot") as Node3D
+	var motion := pivot.get_node("WeaponMotion") as Node3D
+	pivot.global_basis = Basis(Vector3.BACK, aim_angle)
+	_weapon_motion_time += delta
+	_weapon_recoil_time = maxf(0.0, _weapon_recoil_time - delta)
+	var selected: Weapon3D = null
+	if selected_weapon_idx < weapons.size():
+		selected = weapons[selected_weapon_idx]
+	var bob := 0.0
+	if is_instance_valid(selected) and selected.carry_style != Weapon3D.CarryStyle.NONE:
+		bob = sin(_weapon_motion_time * 5.0) * selected.carry_bob_amplitude
+	var recoil := _weapon_recoil_distance * _weapon_recoil_time / WEAPON_RECOIL_DURATION
+	motion.global_position = (
+		pivot.global_position + Vector3.UP * bob - pivot.global_basis.x * recoil
+	)
+	if _weapon_recoil_time <= 0.0 and is_instance_valid(_pending_used_weapon):
+		var spent_weapon := _pending_used_weapon
+		_pending_used_weapon = null
+		_finish_used_weapon(spent_weapon)
+
+
+func _finish_used_weapon(weapon: Weapon3D) -> void:
+	var index := weapons.find(weapon)
+	if index < 0:
+		return
+	weapons.remove_at(index)
+	weapon.queue_free()
+	if selected_weapon_idx == index:
+		selected_weapon_idx = 0
+	elif selected_weapon_idx > index:
+		selected_weapon_idx -= 1
+	_sync_equipped_weapon_visuals()
 
 
 func _get_weapon_equip_target() -> Marker3D:
-	return get_node("SpiderRig/BoneAttachment3D/BodyOffset/WeaponEquipTarget") as Marker3D
+	return get_node(
+		"SpiderRig/BoneAttachment3D/BodyOffset/WeaponAimPivot/WeaponMotion/WeaponEquipTarget"
+	) as Marker3D
 
 
 func take_damage(damage: float) -> void:

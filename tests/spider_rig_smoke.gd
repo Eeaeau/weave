@@ -183,7 +183,7 @@ func _check_body_attachment(rig: Node, skeleton: Skeleton3D) -> bool:
 	if attachment.get_skeleton() != skeleton:
 		return _fail("Spider body attachment did not resolve its external skeleton")
 	var equip_target := rig.get_node_or_null(
-		"BoneAttachment3D/BodyOffset/WeaponEquipTarget"
+		"BoneAttachment3D/BodyOffset/WeaponAimPivot/WeaponMotion/WeaponEquipTarget"
 	) as Marker3D
 	if equip_target == null:
 		return _fail("Spider rig must expose a weapon equipment target on its body")
@@ -196,7 +196,7 @@ func _check_player_equipment() -> bool:
 	player.set_process(false)
 	await process_frame
 	var target := player.get_node_or_null(
-		"SpiderRig/BoneAttachment3D/BodyOffset/WeaponEquipTarget"
+		"SpiderRig/BoneAttachment3D/BodyOffset/WeaponAimPivot/WeaponMotion/WeaponEquipTarget"
 	) as Marker3D
 	if target == null:
 		player.free()
@@ -212,6 +212,8 @@ func _check_player_equipment() -> bool:
 		succeeded = _check_projectile_spawn(pebble)
 	if succeeded:
 		succeeded = _check_weapon_aim(player, target)
+	if succeeded:
+		succeeded = _check_weapon_carry(player, target, rocket)
 	if succeeded:
 		succeeded = await _check_used_weapon_cleanup(player, rocket)
 	player.free()
@@ -283,6 +285,50 @@ func _check_weapon_aim(player: PlayerSpider3D, target: Marker3D) -> bool:
 	return true
 
 
+func _check_weapon_carry(player: PlayerSpider3D, target: Marker3D,
+		rocket: Weapon3D) -> bool:
+	var pivot := player.get_node_or_null(
+		"SpiderRig/BoneAttachment3D/BodyOffset/WeaponAimPivot") as Node3D
+	if pivot == null:
+		return _fail("Carried weapons need a pivot above the spider body")
+	player.select_weapon(player.weapons.find(rocket))
+	player.aim_angle = 0.0
+	player._update_weapon_pose()
+	var start_offset := target.global_position - pivot.global_position
+	player.aim_angle = PI / 2.0
+	player._update_weapon_pose()
+	var turned_offset := target.global_position - pivot.global_position
+	if start_offset.length() < 0.2 or turned_offset.distance_to(start_offset) < 0.2:
+		return _fail("Weapon mount must orbit its body pivot when aiming")
+	var left_grip := rocket.get_node_or_null("GripLeft") as Marker3D
+	var right_grip := rocket.get_node_or_null("GripRight") as Marker3D
+	if left_grip == null or right_grip == null:
+		return _fail("Ranged weapon needs two editable hand grip markers")
+	var controller := player.get_node("SpiderRig/LegController") as SpiderLegController3D
+	controller.advance(0.016)
+	var feet := player.get_node("SpiderRig/FootTargets")
+	if ((feet.get_node("FootMidFrontLeft") as Marker3D).global_position.distance_to(
+			left_grip.global_position) > 0.03 or
+			(feet.get_node("FootMidFrontRight") as Marker3D).global_position.distance_to(
+			right_grip.global_position) > 0.03):
+		return _fail("Middle spider limbs must hold the equipped ranged weapon")
+	player.select_weapon(0)
+	if controller.is_carrying_foot(2) or controller.is_carrying_foot(3):
+		return _fail("Carrying feet must return to walking after unequipping")
+	player.select_weapon(player.weapons.find(rocket))
+	return _check_weapon_bob(player)
+
+
+func _check_weapon_bob(player: PlayerSpider3D) -> bool:
+	var motion := player.get_node(
+		"SpiderRig/BoneAttachment3D/BodyOffset/WeaponAimPivot/WeaponMotion") as Node3D
+	var initial_bob := motion.global_position.y
+	player._update_weapon_pose(0.3)
+	if absf(motion.global_position.y - initial_bob) < 0.005:
+		return _fail("Carried weapon must bob slightly while equipped")
+	return true
+
+
 func _check_used_weapon_cleanup(player: PlayerSpider3D, rocket: Weapon3D) -> bool:
 	var projectile_container := Node3D.new()
 	root.add_child(projectile_container)
@@ -290,12 +336,21 @@ func _check_used_weapon_cleanup(player: PlayerSpider3D, rocket: Weapon3D) -> boo
 	current_scene = projectile_container
 	var weapon_count := player.weapons.size()
 	player.select_weapon(player.weapons.find(rocket))
+	player.aim_angle = 0.0
 	player.n_remaining_actions = 1
 	player.set_process(true)
 	Input.action_press("action")
 	await process_frame
 	Input.action_release("action")
 	await process_frame
+	if not is_instance_valid(rocket) or player._weapon_recoil_time <= 0.0:
+		return _fail("Spent rocket must stay visible briefly for recoil")
+	var pivot := player.get_node(
+		"SpiderRig/BoneAttachment3D/BodyOffset/WeaponAimPivot") as Node3D
+	var motion := pivot.get_node("WeaponMotion") as Node3D
+	if pivot.global_position.x - motion.global_position.x < rocket.recoil_distance * 0.5:
+		return _fail("Firing must kick the visible weapon back along its aim")
+	await create_timer(PlayerSpider3D.WEAPON_RECOIL_DURATION + 0.05).timeout
 	await process_frame
 	player.set_process(false)
 	current_scene = previous_scene
