@@ -1,6 +1,7 @@
 extends Node
 
 signal received(sender: int, kind: String, payload: Dictionary)
+signal packet_too_large(kind: String, byte_count: int)
 
 const MAX_PACKET_BYTES := 65_536
 const KINDS := ["prepare", "scene_ready", "snapshot", "snapshot_ack", "start", "command",
@@ -18,7 +19,12 @@ func _ready() -> void:
 
 func send_to(peer: int, kind: String, payload: Dictionary) -> void:
 	var byte_count := var_to_bytes([kind, payload]).size()
-	if kind not in KINDS or byte_count > MAX_PACKET_BYTES or not GDSync.is_active():
+	if kind not in KINDS:
+		return
+	if byte_count > MAX_PACKET_BYTES:
+		packet_too_large.emit(kind, byte_count)
+		return
+	if not GDSync.is_active():
 		return
 	sent_messages[kind] = sent_messages.get(kind, 0) + 1
 	sent_bytes[kind] = sent_bytes.get(kind, 0) + byte_count

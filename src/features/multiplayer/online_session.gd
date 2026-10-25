@@ -6,7 +6,7 @@ const CODE_ALPHABET := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 const LOBBY_PREFIX := "spiders-v1-"
 const PLAYER_LIMIT := 2
 const PROTOCOL_VERSION := 1
-const CONTENT_VERSION := "spiders-online-4"
+const CONTENT_VERSION := "spiders-online-5"
 const READY_COUNTDOWN_SECONDS := 3.0
 const KEY_STORE := preload("res://addons/GD-Sync/Scripts/KeyStore.gd")
 const OPTIONS := preload("res://src/game/match_options.gd")
@@ -34,6 +34,7 @@ func _ready() -> void:
 	transport.name = "Transport"
 	add_child(transport)
 	transport.received.connect(_on_message)
+	transport.packet_too_large.connect(_on_packet_too_large)
 	use_local_network = OS.get_cmdline_user_args().has("--local-network")
 	GDSync.connected.connect(_on_connected)
 	GDSync.connection_failed.connect(_on_connection_failed)
@@ -136,6 +137,11 @@ func _on_message(sender: int, kind: String, payload: Dictionary) -> void:
 			replication.receive(sender, kind, payload)
 		elif _pending_match_messages.size() < 64:
 			_pending_match_messages.append([sender, kind, payload])
+
+
+func _on_packet_too_large(kind: String, byte_count: int) -> void:
+	printerr("Online ", kind, " exceeded the message budget: ", byte_count, " bytes")
+	_fail("The online match state is too large to synchronize. Please start a new match.")
 
 
 func attach_replication(driver: Node, arena: Node3D) -> void:
@@ -336,6 +342,9 @@ func _on_lobby_joined(lobby_name: String) -> void:
 		_fail("This lobby uses a different game version. Update both copies and try again.")
 		return
 	players.assign(GDSync.lobby_get_all_clients())
+	if not _hosting:
+		GDSync.call_func_on(host_id, _receive_ready, PROTOCOL_VERSION, CONTENT_VERSION,
+			false, match_settings.revision)
 	_set_state("in_lobby", "Share the code with a friend." if _hosting else "Joined lobby.")
 
 

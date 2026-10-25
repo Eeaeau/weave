@@ -28,10 +28,18 @@ func _run() -> void:
 	if not released.action_released:
 		_fail("Release was not derived from the previous held state")
 		return
+	var precise_release: Dictionary = packet.duplicate()
+	precise_release.merge({ "held": 0, "aim": 6000, "charge": 10_000 }, true)
+	var precise = codec.from_packet(precise_release, 80)
+	if codec.validate_packet(precise_release, "match", 7, 1, 3) != "" \
+			or precise.get("final_aim") != 0.6 or precise.get("final_charge") != 1.0:
+		_fail("Final aim and charge did not survive command encoding")
+		return
 	var invalid_cases := [
 		{ "match": "other" }, { "turn": 6 }, { "actor": 0 }, { "seq": -1 },
 		{ "held": -1 }, { "held": 256 }, { "held": NAN }, { "held": true },
 		{ "select": 3 }, { "cycle": 2 }, { "cancel": "true" }, { "extra": 1 },
+		{ "aim": NAN }, { "aim": true }, { "charge": 1.5 }, { "charge": 6_000_001 },
 	]
 	for changes in invalid_cases:
 		var invalid := packet.duplicate()

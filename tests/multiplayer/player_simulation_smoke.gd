@@ -12,9 +12,6 @@ func _run() -> void:
 	await process_frame
 	arena.process_mode = Node.PROCESS_MODE_DISABLED
 	var spider: PlayerSpider3D = arena.get_node("TeamA").spiders[0]
-	if not spider.has_method("simulate"):
-		_fail("Spider has no shared command simulation")
-		return
 	var web: Web3D = arena.catch_webs[0]
 	var face: Array = web.find_faces()[0]
 	var center := Vector3.ZERO
@@ -59,11 +56,38 @@ func _run() -> void:
 	if spider.n_remaining_actions != 0:
 		_fail("Repeated releases must not spend actions below zero")
 		return
+	if not _check_release_timing(spider, command.get_script()):
+		return
 	arena.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout
 	print("PLAYER SIMULATION PASS: scripted movement, aiming, inactivity and action budget")
 	quit(0)
+
+
+func _check_release_timing(spider: PlayerSpider3D, command_script: GDScript) -> bool:
+	var expected := Vector3(4.0 * cos(0.6), 4.0 * sin(0.6) + 2.0, 0) \
+		* (0.2 + sin(2.0) + 1.0) * 1.5
+	var release = command_script.new()
+	release.final_aim = 0.6
+	release.final_charge = 1.0
+	for observed_charge in [0.9, 1.1]:
+		var weapon: Weapon3D = load(
+			"res://src/features/collectibles/weapons/weapon_rocket_launcher.tscn").instantiate()
+		spider.add_child(weapon)
+		spider.pick_up(weapon)
+		spider.select_weapon(spider.weapons.size() - 1)
+		spider.n_remaining_actions = 1
+		spider.aim_angle = observed_charge - 0.4
+		spider.action_charged_time = observed_charge
+		var received = command_script.from_packet(release.to_packet("match", 1, 2, 0), 64)
+		spider.simulate(0.0, received)
+		var shots := get_nodes_in_group("camera_focus_projectiles")
+		if shots.size() != 1 or shots[0].velocity.distance_to(expected) > 0.001:
+			_fail("Guest release power or aim changed with packet arrival jitter")
+			return false
+		shots[0].free()
+	return true
 
 
 func _fail(reason: String) -> void:

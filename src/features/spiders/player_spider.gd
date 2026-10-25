@@ -60,6 +60,13 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 	update_presentation()
 	if not is_active:
 		return
+	if not is_nan(command.final_aim):
+		var margin := AIM_SPEED * PlayerCommand.MAX_TIMING_CORRECTION
+		aim_angle = clampf(command.final_aim, aim_angle - margin, aim_angle + margin)
+	if command.action_released and command.final_charge >= 0:
+		var margin := PlayerCommand.MAX_TIMING_CORRECTION
+		action_charged_time = clampf(command.final_charge,
+			maxf(0.0, action_charged_time - margin), action_charged_time + margin)
 	var aim_magnitude: float = 0.2 + (sin(action_charged_time * 2) + 1)
 	var selected_weapon: Weapon3D = weapons[selected_weapon_idx]
 

@@ -5,7 +5,10 @@ const HELD_ACTIONS := [
 	"move_left", "move_right", "move_up", "move_down",
 	"aim_left", "aim_right", "action", "skip_wind",
 ]
-const PACKET_KEYS := ["match", "turn", "seq", "actor", "held", "select", "cycle", "cancel"]
+const PACKET_KEYS := ["match", "turn", "seq", "actor", "held", "select", "cycle", "cancel",
+	"aim", "charge"]
+const AIM_PRECISION := 10_000.0
+const MAX_TIMING_CORRECTION := 0.25
 
 var held: int = 0
 var selection: int = -1
@@ -13,6 +16,8 @@ var cycle: int = 0
 var cancel: bool = false
 var action_pressed: bool = false
 var action_released: bool = false
+var final_aim: float = NAN
+var final_charge: float = -1.0
 
 
 static func from_input() -> PlayerCommand:
@@ -46,7 +51,9 @@ func movement_direction() -> Vector3:
 
 func to_packet(match_id: String, turn_id: int, sequence: int, actor_id: int) -> Dictionary:
 	return {"match": match_id, "turn": turn_id, "seq": sequence, "actor": actor_id,
-		"held": held, "select": selection, "cycle": cycle, "cancel": cancel}
+		"held": held, "select": selection, "cycle": cycle, "cancel": cancel,
+		"aim": null if is_nan(final_aim) else int(round(final_aim * AIM_PRECISION)),
+		"charge": -1 if final_charge < 0 else int(round(final_charge * AIM_PRECISION))}
 
 
 static func from_packet(packet: Dictionary, previous_held: int) -> PlayerCommand:
@@ -57,6 +64,11 @@ static func from_packet(packet: Dictionary, previous_held: int) -> PlayerCommand
 	command.cancel = packet.cancel
 	command.action_pressed = (command.held & 64) != 0 and (previous_held & 64) == 0
 	command.action_released = (command.held & 64) == 0 and (previous_held & 64) != 0
+	if command.action_released or ((previous_held & 48) != 0 and (command.held & 48) == 0):
+		if packet.aim != null:
+			command.final_aim = float(packet.aim) / AIM_PRECISION
+	if command.action_released and packet.charge >= 0:
+		command.final_charge = float(packet.charge) / AIM_PRECISION
 	return command
 
 
@@ -76,4 +88,7 @@ static func validate_packet(packet: Variant, match_id: String, turn_id: int,
 		return "Invalid sequence, held actions or inventory selection"
 	if packet.cycle < -1 or packet.cycle > 1 or not packet.cancel is bool:
 		return "Invalid targeting action"
+	if (packet.aim != null and (not packet.aim is int or absi(packet.aim) > 100_000_000)) \
+			or not packet.charge is int or packet.charge < -1 or packet.charge > 6_000_000:
+		return "Invalid final aim or charge"
 	return ""

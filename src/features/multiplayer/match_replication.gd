@@ -17,6 +17,9 @@ var _authority := preload("res://src/features/multiplayer/command_authority.gd")
 var _turn_key := ""
 var _sequence := 0
 var _last_held := -1
+var _local_actor := -1
+var _local_aim := 0.0
+var _local_charge := 0.0
 var _blocked_held := 0
 var _input_cooldown := 0.0
 var _pause_menu: CanvasLayer
@@ -24,6 +27,8 @@ var _motions: Dictionary = {}
 var _motion_changes: Dictionary = {}
 var _needs_digest := true
 var _recovery_times: Dictionary = {}
+var _recovering := false
+var _last_recovery_request := -2000
 var _wind_description: Dictionary = {}
 var _wind_contacts: Dictionary = {}
 var _arena: WebMatch3D
@@ -43,6 +48,8 @@ func _process(delta: float) -> void:
 	if OnlineSession.state != "playing" or not is_instance_valid(_arena):
 		return
 	if not _host:
+		if _recovering:
+			_request_recovery()
 		_projectiles.present()
 		if _arena.wind_event.is_active and not _wind_description.is_empty():
 			var elapsed := maxf(0.0, GDSync.get_multiplayer_time() - float(_wind_description.time))
@@ -108,11 +115,50 @@ func _poll_input(delta: float) -> void:
 		command.selection = -1
 		command.cycle = 0
 		command.cancel = _last_held > 0
+	if not _host and not _predict_aim(command, delta):
+		return
 	var discrete := command.selection >= 0 or command.cycle != 0 or command.cancel
 	var action_edge := (command.held & 64) != (_last_held & 64)
 	if discrete or (command.held != _last_held and (_input_cooldown <= 0 or action_edge)):
 		submit_command(command)
 		_input_cooldown = 1.0 / 30.0
+
+
+func _predict_aim(command: PlayerCommand, delta: float) -> bool:
+	var spider := _active_spider()
+	if spider == null or not spider.is_active or spider.n_remaining_actions <= 0:
+		return false
+	if _local_actor != active_actor_id:
+		_local_actor = active_actor_id
+		_local_aim = spider.aim_angle
+		_local_charge = spider.action_charged_time
+	_local_aim += PlayerSpider3D.AIM_SPEED * delta * (int(command.is_pressed("aim_left"))
+		- int(command.is_pressed("aim_right")))
+	var released := _last_held >= 0 and (_last_held & 64) != 0 and (command.held & 64) == 0
+	var aim_stopped := _last_held >= 0 and (_last_held & 48) != 0 and (command.held & 48) == 0
+	if released or aim_stopped:
+		command.final_aim = _local_aim
+	if released and not command.cancel:
+		command.final_charge = minf(_local_charge, 600.0)
+	if command.is_pressed("action"):
+		if (_last_held & 64) == 0:
+			_local_charge = 0.0
+		_local_charge += delta
+	else:
+		_local_charge = 0.0
+	spider.aim_angle = _local_aim
+	spider.action_charged_time = _local_charge
+	spider.update_presentation()
+	return true
+
+
+func _reconcile_local_aim() -> void:
+	if (_last_held & 112) != 0:
+		return
+	var id := "%d:%d" % [floori(active_actor_id / 100.0), active_actor_id % 100]
+	var motion: Dictionary = _motions.get(id, {})
+	if motion.get("aim_speed", 0) == 0 and not motion.get("charging", false):
+		_local_actor = -1
 
 
 func submit_command(command: PlayerCommand) -> bool:
@@ -181,6 +227,7 @@ func _clear_local_input() -> void:
 	_sequence = 0
 	_last_held = -1
 	_blocked_held = COMMAND.from_input().held
+	_local_actor = -1
 
 
 func _input_state() -> Dictionary:
@@ -328,10 +375,7 @@ func _receive_as_host(sender: int, kind: String, payload: Dictionary) -> void:
 				if _snapshot_acks.size() == _slots.size():
 					_begin_match()
 		"recover":
-			var now := Time.get_ticks_msec()
-			if now - _recovery_times.get(sender, -2000) >= 1000:
-				_recovery_times[sender] = now
-				_send_snapshot(sender)
+			_recover_peer(sender)
 		"command":
 			_accept_command(sender, payload)
 		"state_ack":
@@ -339,7 +383,22 @@ func _receive_as_host(sender: int, kind: String, payload: Dictionary) -> void:
 				if _digests[payload.revision] == payload.get("digest"):
 					acknowledged_revision = maxi(acknowledged_revision, payload.revision)
 				else:
-					_send_snapshot(sender)
+					_recover_peer(sender)
+
+
+func _recover_peer(peer: int) -> void:
+	var now := Time.get_ticks_msec()
+	if now - _recovery_times.get(peer, -2000) >= 1000:
+		_recovery_times[peer] = now
+		_send_snapshot(peer)
+
+
+func _request_recovery() -> void:
+	_recovering = true
+	var now := Time.get_ticks_msec()
+	if now - _last_recovery_request >= 1000:
+		_last_recovery_request = now
+		_send_host("recover", {})
 
 
 func _receive_as_guest(kind: String, payload: Dictionary) -> void:
@@ -427,7 +486,7 @@ func _record_scene_ready(peer: int) -> void:
 
 
 func _send_snapshot(peer: int) -> void:
-	var state := _codec.capture(_arena)
+	var state := _state
 	OnlineSession.transport.send_to(peer, "snapshot", {"match": _match_id,
 		"revision": revision, "state": state, "digest": _codec.digest(state),
 		"input": _input_state(), "motions": _motions,
@@ -438,6 +497,8 @@ func _send_snapshot(peer: int) -> void:
 func _apply_snapshot(payload: Dictionary) -> void:
 	if not payload.get("state") is Dictionary or not payload.get("revision") is int:
 		return
+	if initial_state_confirmed and (not _recovering or payload.revision < revision):
+		return
 	if not _codec.apply(_arena, payload.state):
 		OnlineSession.end_match("The starting state is invalid. Update both game copies.")
 		return
@@ -446,6 +507,7 @@ func _apply_snapshot(payload: Dictionary) -> void:
 		OnlineSession.end_match("The game state could not be synchronized. Please try again.")
 		return
 	_state = actual
+	_recovering = false
 	revision = payload.revision
 	initial_state_confirmed = true
 	if not _projectiles.restore(payload.get("projectiles", [])):
@@ -454,6 +516,7 @@ func _apply_snapshot(payload: Dictionary) -> void:
 	_apply_input_state(payload.get("input"))
 	_motions.clear()
 	_apply_motions(payload.get("motions", {}))
+	_reconcile_local_aim()
 	if payload.get("wind") is Dictionary and not payload.wind.is_empty():
 		var excluded: Array = []
 		if payload.get("contacts") is Dictionary:
@@ -515,22 +578,26 @@ func _publish_changes() -> void:
 func _apply_events(payload: Dictionary) -> void:
 	if not payload.get("revision") is int or payload.revision <= revision:
 		return
+	if _recovering:
+		return
 	if payload.revision != revision + 1 or not payload.get("patch") is Dictionary:
-		_send_host("recover", {})
+		_request_recovery()
 		return
 	var merged := _codec.merge(_state, payload.patch)
 	if not _codec.apply(_arena, merged):
-		_send_host("recover", {})
+		_request_recovery()
 		return
 	_state = merged
 	revision = payload.revision
 	_apply_input_state(payload.get("input"))
 	_apply_motions(payload.get("motions", {}))
+	_reconcile_local_aim()
 	if payload.get("digest", "") != "":
 		var digest := _codec.digest(_codec.capture(_arena))
 		_send_host("state_ack", { "revision": revision, "digest": digest })
 		if digest != payload.digest:
-			_send_host("recover", {})
+			_recovering = true
+			_last_recovery_request = Time.get_ticks_msec()
 
 
 func _send_host(kind: String, payload: Dictionary) -> void:

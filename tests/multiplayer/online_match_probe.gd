@@ -102,7 +102,9 @@ func _check_loaded_match() -> void:
 	for team in arena.get_node("MatchManager").teams:
 		for spider in team.spiders:
 			if spider.is_active or not is_equal_approx(spider.health, 1.0):
-				_fail("Spiders acted or died before the initial wind finished")
+				_fail("Initial wind invariant: %s active=%s health=%s round=%s" % [
+					spider.name, spider.is_active, spider.health,
+					arena.get_node("MatchManager")._round_number])
 				return
 	if _scenario.begins_with("disconnect-"):
 		_testing_turns = true
@@ -308,11 +310,22 @@ func _play_turns(arena: WebMatch3D, driver: Node) -> void:
 func _take_team_turns(arena: WebMatch3D, driver: Node, manager: MatchManager,
 		command_script: GDScript) -> void:
 	var moved := false
+	var recovered_during_motion := false
+	var recovery_baseline: int = OnlineSession.transport.sent_messages.get("recover", 0)
 	var press = command_script.new()
 	press.held = 64
 	var release = command_script.new()
 	while manager._round_number < 2 and not _done:
 		if driver.active_owner_id != GDSync.get_client_id() or manager.waiting_for_wind:
+			if _role == "guest" and not recovered_during_motion \
+					and not driver.get("_motions").is_empty():
+				var snapshots: int = OnlineSession.transport.received_messages.get("snapshot", 0)
+				driver.receive(OnlineSession.host_id, "events", {
+					"match": OnlineSession.match_config.match,
+					"revision": driver.revision + 2, "patch": {}})
+				if not await _wait_until(_received_count.bind("snapshot", snapshots + 1)):
+					return
+				recovered_during_motion = true
 			await get_tree().process_frame
 			continue
 		var actor_id: int = driver.active_actor_id
@@ -333,6 +346,9 @@ func _take_team_turns(arena: WebMatch3D, driver: Node, manager: MatchManager,
 				return
 	if _role == "guest" and not _rejected_command:
 		_fail("Host did not reject another team's movement command")
+	if _role == "guest" and (not recovered_during_motion \
+			or OnlineSession.transport.sent_messages.get("recover", 0) != recovery_baseline + 1):
+		_fail("Mid-movement recovery was missed or triggered another recovery")
 
 
 func _turn_changed(driver: Node, manager: MatchManager, actor_id: int) -> bool:
@@ -546,15 +562,32 @@ func _verify_pickup_recovery(arena: WebMatch3D, driver: Node,
 	if _role == "guest":
 		for attempt in range(2):
 			var snapshots: int = transport.received_messages.get("snapshot", 0)
+			var requests: int = transport.sent_messages.get("recover", 0)
 			actor.silk_amount = 0
 			# A missing event revision must recover through the production receiver.
-			driver.receive(OnlineSession.host_id, "events", {
-				"match": OnlineSession.match_config.match,
-				"revision": driver.revision + 2, "patch": {}})
+			for missing in range(5):
+				driver.receive(OnlineSession.host_id, "events", {
+					"match": OnlineSession.match_config.match,
+					"revision": driver.revision + 2, "patch": {}})
+			if transport.sent_messages.get("recover", 0) != requests + 1:
+				_fail("One missing revision sent duplicate recovery requests")
+				return
 			if not await _wait_until(_received_count.bind("snapshot", snapshots + 1)):
 				return
 			if not _pickups_applied(arena, actor, other):
 				_fail("Recovery duplicated a consumed item or failed to restore silk")
+				return
+			await get_tree().create_timer(0.2).timeout
+			if transport.received_messages.get("snapshot", 0) != snapshots + 1:
+				_fail("One recovery request produced duplicate snapshots")
+				return
+			var recovered_revision: int = driver.revision
+			for stale_revision in [recovered_revision - 1, recovered_revision]:
+				driver.receive(OnlineSession.host_id, "snapshot", {
+					"match": OnlineSession.match_config.match,
+					"revision": stale_revision, "state": {}})
+			if OnlineSession.state != "playing" or driver.revision != recovered_revision:
+				_fail("An unsolicited or duplicate snapshot rewound recovered state")
 				return
 			if attempt == 0:
 				await get_tree().create_timer(1.2).timeout

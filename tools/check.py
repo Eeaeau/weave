@@ -207,6 +207,7 @@ def main() -> int:
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
         ("multiplayer/player_command_smoke", "PLAYER COMMAND PASS:"),
+        ("multiplayer/transport_smoke", "TRANSPORT PASS:"),
         ("multiplayer/player_simulation_smoke", "PLAYER SIMULATION PASS:"),
         ("multiplayer/command_authority_smoke", "COMMAND AUTHORITY PASS:"),
         ("multiplayer/match_state_smoke", "MATCH STATE PASS:"),
