@@ -228,6 +228,11 @@ def main() -> int:
         marker="GD-SYNC PASS:",
         timeout=60,
     )
+    run(
+        [sys.executable, "tools/check_gd_sync.py", "--godot", str(godot), "--lobby"],
+        marker="GD-SYNC PASS:",
+        timeout=60,
+    )
     print("\nLOCAL CHECKS PASS")
     return 0
 

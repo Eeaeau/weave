@@ -13,10 +13,11 @@ func _run() -> void:
 	root.add_child(menu)
 	current_scene = menu
 	await process_frame
+	var online_menu_ok := _check_online_menu(menu)
 	menu.get_node("Center/Menu/SettingsButton").pressed.emit()
 	var settings: SettingsMenu = menu.get_node("SettingsMenu")
-	if not settings.visible:
-		_fail("Title settings did not open")
+	if not settings.visible or not online_menu_ok:
+		_fail("Title settings or online lobby did not open and close")
 		return
 	settings.get_node("Hub/Center/Menu/InputButton").pressed.emit()
 	var controls: ControlsMenu = settings.get_node("ControlsMenu")
@@ -83,6 +84,18 @@ func _has_player_actions(controls: ControlsMenu) -> bool:
 	if not has_tab_binding:
 		return false
 	return true
+
+
+func _check_online_menu(menu: MainMenu) -> bool:
+	var online_button := menu.get_node_or_null("Center/Menu/OnlineButton") as Button
+	if online_button == null:
+		return false
+	online_button.pressed.emit()
+	var lobby := menu.get_node_or_null("OnlineLobby") as Control
+	var opened := lobby != null and lobby.visible
+	if opened:
+		lobby.get_node("Center/Menu/BackButton").pressed.emit()
+	return opened and menu.get_node("Center").visible
 
 
 func _fail(message: String) -> void:

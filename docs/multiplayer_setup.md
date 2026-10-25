@@ -1,5 +1,9 @@
 # Multiplayer dependency setup
 
+Choose **Online** in the main menu, then **Host Lobby** to get a six-character code or **Join Lobby** to enter a friend's code. The player count updates when someone joins or leaves. **Leave Lobby** returns to the menu.
+
+This connects the lobby; synchronized match gameplay is not implemented yet. **Play** opens the existing local game.
+
 GD-Sync 1.0.2 is pinned in `addons/GD-Sync`. The editor plugin and `GDSync` autoload are registered in `project.godot`. Dependency credits, revision and compatibility fixes are in `ATTRIBUTION.md`.
 
 ## Project credentials
@@ -31,3 +35,5 @@ python tools/check_gd_sync.py --online
 ```
 
 Both commands accept `--godot PATH`. The online probe uses a small amount of service data. It verifies native relay connectivity, not the browser export or multiplayer gameplay integration.
+
+Add `--lobby` to either probe command to exercise the actual menu controls, code normalization, player count, leaving, and hosting a fresh lobby in the same process.

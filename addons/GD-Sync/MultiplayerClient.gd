@@ -338,6 +338,9 @@ func start_local_multiplayer() -> void:
 
 ## Stops the GD-Sync plugin. This will break any existing connections and disable the multiplayer.
 func stop_multiplayer() -> void:
+	_session_controller.lobby_left()
+	_node_tracker.lobby_left()
+	_interest_manager.clear()
 	_connection_controller.stop_multiplayer()
 
 ## Returns true if the plugin is connected to a server. Returns false if there is no active connection.
