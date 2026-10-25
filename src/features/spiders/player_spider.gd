@@ -19,6 +19,7 @@ var weapons: Array[Weapon3D]
 var selected_weapon_idx: int = 0
 var health: float = 1.0
 var silk_builder: SilkBuildAction3D
+var network_controlled: bool = false
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -45,8 +46,12 @@ func _ready() -> void:
 	weapons.insert(1, silk_action)
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	if not network_controlled:
+		simulate(delta, PlayerCommand.from_input())
+
+
+func simulate(delta: float, command: PlayerCommand) -> void:
 
 	if not webs.is_empty() and not is_on_web(Vector2(global_position.x, global_position.y)) \
 			and health > 0:
@@ -74,7 +79,7 @@ func _process(delta: float) -> void:
 		aim_arrow.scale.x = aim_magnitude
 		aim_arrow.rotation.y = aim_angle
 
-	var movement_direction := get_movement_direction()
+	var movement_direction := command.movement_direction()
 	if not movement_direction.is_zero_approx():
 		spider_rig.rotation.y = atan2(movement_direction.x, -movement_direction.y)
 	var velocity = movement_direction * MOVE_SPEED
@@ -93,14 +98,14 @@ func _process(delta: float) -> void:
 				remaining_movement -= to_move.length()
 				global_position += to_move
 
-	if Input.is_action_pressed("aim_left"):
+	if command.is_pressed("aim_left"):
 		aim_angle += AIM_SPEED * delta
-	if Input.is_action_pressed("aim_right"):
+	if command.is_pressed("aim_right"):
 		aim_angle -= AIM_SPEED * delta
 	_update_weapon_pose()
-	if Input.is_action_just_pressed("action"):
+	if command.action_pressed:
 		action_charged_time = 0.0
-	if Input.is_action_just_released("action"):
+	if command.action_released and n_remaining_actions > 0:
 		if selected_weapon is SilkBuildAction3D:
 			silk_builder.try_build_selected_silk()
 		elif selected_weapon:
@@ -112,22 +117,22 @@ func _process(delta: float) -> void:
 				selected_weapon = weapons[selected_weapon_idx]
 			n_remaining_actions -= 1
 
-	if Input.is_action_pressed("action"):
+	if command.is_pressed("action"):
 		action_charged_time += delta
 	else:
 		action_charged_time = 0
 
-	var number_input = get_number_input()
-	if (number_input > 0 and not Input.is_action_pressed("action")
+	var number_input := command.selection + 1
+	if (number_input > 0 and not command.is_pressed("action")
 			and number_input <= len(weapons)):
 		select_weapon(number_input - 1)
 
 	if selected_weapon is SilkBuildAction3D:
-		if Input.is_action_just_pressed("cycle_silk_target_next"):
+		if command.cycle > 0:
 			silk_builder.cycle_silk_target(1)
-		if Input.is_action_just_pressed("cycle_silk_target_previous"):
+		if command.cycle < 0:
 			silk_builder.cycle_silk_target(-1)
-		if Input.is_action_just_pressed("cancel_silk_build"):
+		if command.cancel:
 			cancel_silk_build()
 		if selected_weapon_idx == 1:
 			silk_builder.update_preview()
@@ -190,31 +195,8 @@ func deactivate() -> void:
 	is_active = false
 
 
-func get_number_input() -> int:
-	if Input.is_action_just_pressed("select_1"):
-		return 1
-	if Input.is_action_just_pressed("select_2"):
-		return 2
-	if Input.is_action_just_pressed("select_3"):
-		return 3
-	if Input.is_action_just_pressed("select_4"):
-		return 4
-	if Input.is_action_just_pressed("select_5"):
-		return 5
-	return -1
-
-
 func get_movement_direction() -> Vector3:
-	var direction = Vector3.ZERO
-	if Input.is_action_pressed("move_left"):
-		direction.x -= 1
-	if Input.is_action_pressed("move_right"):
-		direction.x += 1
-	if Input.is_action_pressed("move_up"):
-		direction.y += 1
-	if Input.is_action_pressed("move_down"):
-		direction.y -= 1
-	return direction.normalized()
+	return PlayerCommand.from_input().movement_direction()
 
 
 func is_done() -> bool:

@@ -206,6 +206,8 @@ def main() -> int:
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
+        ("multiplayer/player_command_smoke", "PLAYER COMMAND PASS:"),
+        ("multiplayer/player_simulation_smoke", "PLAYER SIMULATION PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
         ("action_camera_smoke", "ACTION CAMERA PASS:"),
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),
@@ -218,7 +220,7 @@ def main() -> int:
         ("silk_build_smoke", "SILK BUILD PASS:"),
     ):
         run(
-            base + ["--script", f"res://tests/{script}.gd", "--log-file", str(check_dir / f"{script}.log")],
+            base + ["--script", f"res://tests/{script}.gd", "--log-file", str(check_dir / f"{script.replace('/', '_')}.log")],
             marker=marker,
             godot=True,
             timeout=40,
