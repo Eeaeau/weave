@@ -253,6 +253,12 @@ def main() -> int:
         marker="MULTIPLAYER PASS:",
         timeout=65,
     )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot),
+         "--scenario", "pickups", "--host-fps", "24", "--guest-fps", "144", "--latency-ms", "60"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
+    )
     print("\nLOCAL CHECKS PASS")
     return 0
 

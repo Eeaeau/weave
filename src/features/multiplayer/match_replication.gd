@@ -479,6 +479,8 @@ func _begin_match() -> void:
 func _publish_changes() -> void:
 	var current := _codec.capture(_arena)
 	var patch := _codec.diff(_state, current)
+	if patch.has("caught"):
+		_needs_digest = true
 	var barrier := _needs_digest and _motions.is_empty() and not _manager.waiting_for_wind \
 		and get_tree().get_nodes_in_group("camera_focus_projectiles").is_empty()
 	if not barrier and patch.has("actors"):

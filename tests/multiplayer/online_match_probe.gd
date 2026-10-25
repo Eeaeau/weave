@@ -26,6 +26,8 @@ func _ready() -> void:
 			_code = argument.trim_prefix("--code=")
 		elif argument.begins_with("--scenario="):
 			_scenario = argument.trim_prefix("--scenario=")
+		elif argument.begins_with("--latency-ms="):
+			GDSync.set_artificial_latency(int(argument.trim_prefix("--latency-ms=")))
 		elif argument == "--interactive":
 			_interactive = true
 	get_tree().create_timer(120.0 if _interactive else 35.0).timeout.connect(
@@ -41,12 +43,15 @@ func _process(_delta: float) -> void:
 
 
 func _configure_match() -> void:
-	if _role != "host" or _scenario not in ["combat", "silk"]:
+	if _role != "host" or _scenario not in ["combat", "silk", "pickups"]:
 		return
 	var arena := get_tree().current_scene as WebMatch3D
 	if arena == null:
 		return
 	var shooter: PlayerSpider3D = arena.get_node("TeamA").spiders[0]
+	if _scenario == "pickups":
+		_configure_pickups(arena)
+		return
 	if _scenario == "silk":
 		var web := arena.get_node("TeamA").home_web as Web3D
 		web.edges = [Vector2i(0, 1)]
@@ -89,9 +94,11 @@ func _check_loaded_match() -> void:
 			if spider.is_active or not is_equal_approx(spider.health, 1.0):
 				_fail("Spiders acted or died before the initial wind finished")
 				return
-	if _scenario in ["turns", "combat", "silk"]:
+	if _scenario in ["turns", "combat", "silk", "pickups"]:
 		_testing_turns = true
-		if _scenario == "combat":
+		if _scenario == "pickups":
+			_play_pickups.call_deferred(arena, driver)
+		elif _scenario == "combat":
 			_play_combat.call_deferred(arena, driver)
 		elif _scenario == "silk":
 			_play_silk.call_deferred(arena, driver)
@@ -408,3 +415,116 @@ func _fail(reason: String) -> void:
 	push_error("ONLINE_MATCH_FAIL: " + reason)
 	OnlineSession.leave_lobby()
 	get_tree().quit.call_deferred(1)
+
+
+func _configure_pickups(arena: WebMatch3D) -> void:
+	for team in [arena.get_node("TeamA"), arena.get_node("TeamB")]:
+		for spider in team.spiders:
+			spider.webs.clear()
+			spider.global_position += Vector3.UP * 50.0
+			spider.silk_amount = 0
+	arena.wind_event.group_planned.connect(func(_round: int, descriptions: Array) -> void:
+		for index in range(descriptions.size()):
+			var contact := Vector3(100, 100, 0)
+			if index < 2:
+				contact = _catch_center(arena.catch_webs[index])
+			descriptions[index].entry = 2 if index != 1 else 1
+			descriptions[index].side = index % 2
+			descriptions[index].duration = 1.0
+			descriptions[index].path = PackedVector3Array([
+				contact + Vector3.BACK * 8.0, contact, contact + Vector3.FORWARD * 6.0]))
+
+
+func _catch_center(web: Web3D) -> Vector3:
+	var center := Vector3.ZERO
+	for index in web.find_faces()[0]:
+		center += web.valid_nodes[index].global_position
+	return center / 3.0
+
+
+func _play_pickups(arena: WebMatch3D, driver: Node) -> void:
+	driver.scripted_input = true
+	if not await _wait_until(_wind_finished.bind(arena)):
+		return
+	if not await _wait_until(_two_caught.bind(arena)):
+		return
+	var actor: PlayerSpider3D = arena.get_node("TeamA").spiders[0]
+	var other: PlayerSpider3D = arena.get_node("TeamB").spiders[0]
+	var caught := arena.catch_webs[0].get_node("CaughtItems").get_child(0) as CaughtCollectible3D
+	if _role == "guest":
+		caught.item._area_entered(actor.hurtbox)
+		if actor.silk_amount != 0 or not caught.item.visible:
+			_fail("Guest pickup callback independently consumed an insect")
+			return
+	if _role == "host":
+		# Allow the guest to assert the pre-pickup authority boundary.
+		await get_tree().create_timer(1.0).timeout
+		actor.global_position = caught.global_position
+		var weapon_catch := arena.catch_webs[1].get_node("CaughtItems").get_child(0) as Node3D
+		other.global_position = weapon_catch.global_position
+	await _verify_pickups(arena, driver, actor, other)
+
+
+func _verify_pickups(arena: WebMatch3D, driver: Node,
+		actor: PlayerSpider3D, other: PlayerSpider3D) -> void:
+	if not await _wait_until(_pickups_applied.bind(arena, actor, other)):
+		return
+	await get_tree().create_timer(0.8).timeout
+	if _role == "host":
+		if driver.acknowledged_revision < driver.revision:
+			_fail("Pickup results were sent without a matching state digest acknowledgement")
+			return
+		var counts: Dictionary = OnlineSession.transport.sent_messages
+		if counts.get("wind", 0) != 1 or counts.get("wind_contact", 0) != 3:
+			_fail("Wind did not produce one group and exactly three contact outcomes")
+			return
+	await get_tree().create_timer(1.0).timeout
+	var idle_counts: Dictionary = OnlineSession.transport.sent_messages.duplicate()
+	await get_tree().create_timer(1.0).timeout
+	if OnlineSession.transport.sent_messages != idle_counts:
+		_fail("Idle presentation generated gameplay traffic")
+		return
+	print("IDLE_TRAFFIC_PASS: ", _role, " zero gameplay messages during one second")
+	await _verify_pickup_recovery(arena, driver, actor, other)
+
+
+func _two_caught(arena: WebMatch3D) -> bool:
+	return arena.catch_webs[0].get_node("CaughtItems").get_child_count() == 1 \
+		and arena.catch_webs[1].get_node("CaughtItems").get_child_count() == 1
+
+
+func _pickups_applied(arena: WebMatch3D, actor: PlayerSpider3D, other: PlayerSpider3D) -> bool:
+	return actor.silk_amount == 1 and other.weapons.size() == 3 \
+		and arena.catch_webs[0].get_node("CaughtItems").get_child_count() == 0 \
+		and arena.catch_webs[1].get_node("CaughtItems").get_child_count() == 0
+
+
+func _verify_pickup_recovery(arena: WebMatch3D, driver: Node,
+		actor: PlayerSpider3D, other: PlayerSpider3D) -> void:
+	var transport := OnlineSession.transport
+	if _role == "guest":
+		for attempt in range(2):
+			var snapshots: int = transport.received_messages.get("snapshot", 0)
+			actor.silk_amount = 0
+			# A missing event revision must recover through the production receiver.
+			driver.receive(OnlineSession.host_id, "events", {
+				"match": OnlineSession.match_config.match,
+				"revision": driver.revision + 2, "patch": {}})
+			if not await _wait_until(_received_count.bind("snapshot", snapshots + 1)):
+				return
+			if not _pickups_applied(arena, actor, other):
+				_fail("Recovery duplicated a consumed item or failed to restore silk")
+				return
+			if attempt == 0:
+				await get_tree().create_timer(1.2).timeout
+	else:
+		if not await _wait_until(_received_count.bind("recover", 2)):
+			return
+		await get_tree().create_timer(0.2).timeout
+	print("GAMEPLAY_TRAFFIC: ", _role, " messages=", JSON.stringify(transport.sent_messages),
+		" serialized_bytes=", JSON.stringify(transport.sent_bytes))
+	_pass()
+
+
+func _received_count(kind: String, minimum: int) -> bool:
+	return OnlineSession.transport.received_messages.get(kind, 0) >= minimum

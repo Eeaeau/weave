@@ -17,8 +17,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--godot")
     parser.add_argument("--online", action="store_true", help="Use configured keys and the managed relay")
-    parser.add_argument("--scenario", choices=("load", "turns", "combat", "silk"), default="turns")
+    parser.add_argument("--scenario", choices=("load", "turns", "combat", "silk", "pickups"), default="turns")
+    parser.add_argument("--host-fps", type=int, default=60)
+    parser.add_argument("--guest-fps", type=int, default=60)
+    parser.add_argument("--latency-ms", type=int, default=0)
     args = parser.parse_args()
+    if min(args.host_fps, args.guest_fps) < 1 or not 0 <= args.latency_ms <= 500:
+        parser.error("Frame rates must be positive; latency must be between 0 and 500 ms")
     godot = find_godot(args.godot)
     log_dir = ROOT / "build" / "check" / "multiplayer" / uuid.uuid4().hex[:12]
     log_dir.mkdir(parents=True)
@@ -31,10 +36,13 @@ def main() -> int:
             log_path = log_dir / f"{role}.log"
             handle = log_path.open("w", encoding="utf-8")
             handles.append(handle)
-            command = [str(godot), "--headless", "--disable-crash-handler", "--verbose", "--max-fps", "60", "--path", str(ROOT),
+            frame_rate = args.host_fps if role == "host" else args.guest_fps
+            command = [str(godot), "--headless", "--disable-crash-handler", "--verbose",
+                       "--max-fps", str(frame_rate), "--path", str(ROOT),
                        "--log-file", str(log_dir / f"{role}-engine.log"),
                        "res://tests/multiplayer/online_match_probe.tscn", "--",
-                       f"--role={role}", f"--code={code}", f"--scenario={args.scenario}"]
+                       f"--role={role}", f"--code={code}", f"--scenario={args.scenario}",
+                       f"--latency-ms={args.latency_ms}"]
             if not args.online:
                 command.append("--local-network")
             processes[role] = subprocess.Popen(command, cwd=ROOT, stdout=handle, stderr=subprocess.STDOUT)

@@ -51,3 +51,12 @@ python tools/check_multiplayer.py
 It loads the actual match, skips the wind, moves a spider, rejects another team's input, and plays both teams through a round. It checks state acknowledgements and clean shutdown. Logs are in `build/check/multiplayer/`. Use `--scenario load` for the loading handshake alone, or `--online` for the managed relay. These tests are included in the normal local checks; browser export verification is separate.
 
 Use `--scenario combat` to check a real projectile collision, one authoritative hit, guest presentation and three shot messages. Use `--scenario silk` to cycle the shared target hints and build a strand with the same resource cost on both clients. Both scenarios run in the normal local checks.
+
+
+For wind catches, misses, insect/weapon pickups and repeated recovery under different frame rates and latency:
+
+```text
+python tools/check_multiplayer.py --scenario pickups --host-fps 24 --guest-fps 144 --latency-ms 60
+```
+
+This case is included in the normal local checks. It verifies guest pickup authority and an idle interval without gameplay messages. Per-peer logs report serialized application bytes by message type; these exclude SDK/relay overhead and are not billed usage measurements.
