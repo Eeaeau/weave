@@ -7,6 +7,7 @@ const EXPECTED := {
 	"closed": "That lobby is closed.",
 	"missing": "Lobby not found. Check the code with your friend.",
 	"version": "This lobby uses a different game version. Update both copies and try again.",
+	"timeout": "Connection timed out. Please try again.",
 }
 
 var _role := ""
@@ -44,7 +45,7 @@ func _process(_delta: float) -> void:
 
 
 func _create_fixture() -> void:
-	if _case == "missing":
+	if _case in ["missing", "timeout"]:
 		print("ONLINE_LOBBY_READY: ", _code)
 		return
 	var content: String = OnlineSession.CONTENT_VERSION
@@ -70,6 +71,9 @@ func _run_guest() -> void:
 	var lobby := _menu.get_node("OnlineLobby") as OnlineLobby
 	lobby.get_node("%JoinButton").pressed.emit()
 	lobby.code_field.text = _code
+	if _case == "timeout":
+		# Simulate an SDK that starts but never reports a connection result.
+		GDSync.set_block_signals(true)
 	lobby.get_node("%ConfirmJoinButton").pressed.emit()
 	if _case == "cancel":
 		await _check_cancel(lobby)
@@ -106,7 +110,7 @@ func _check_cancel(lobby: OnlineLobby) -> void:
 
 
 func _wait_for_state(expected: String) -> bool:
-	var deadline := Time.get_ticks_msec() + 15_000
+	var deadline := Time.get_ticks_msec() + (28_000 if _case == "timeout" else 15_000)
 	while OnlineSession.state != expected and not _done:
 		if Time.get_ticks_msec() >= deadline:
 			_fail("Timed out waiting for " + expected + ": " + OnlineSession.message)
@@ -117,6 +121,7 @@ func _wait_for_state(expected: String) -> bool:
 
 func _finish() -> void:
 	_done = true
+	GDSync.set_block_signals(false)
 	OnlineSession.leave_lobby()
 	if _role == "host":
 		GDSync.stop_multiplayer()
@@ -132,6 +137,7 @@ func _fail(reason: String) -> void:
 	if _done:
 		return
 	_done = true
+	GDSync.set_block_signals(false)
 	push_error("LOBBY_FAILURE_FAIL: " + reason)
 	OnlineSession.leave_lobby()
 	get_tree().quit(1)

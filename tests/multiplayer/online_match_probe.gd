@@ -17,6 +17,8 @@ var _rejected_command := false
 var _damage_events := 0
 var _interactive := false
 var _disconnect_expected := false
+var _wire_connection: ENetConnection
+var _wire_totals: Dictionary = {}
 
 
 func _ready() -> void:
@@ -83,6 +85,12 @@ func _check_loaded_match() -> void:
 	if driver == null or not driver.get("initial_state_confirmed"):
 		_fail("Controls activated before the initial state acknowledgement")
 		return
+	if not OnlineSession.use_local_network and _wire_connection == null:
+		var controller: Node = GDSync.get("_connection_controller")
+		var peer := controller.get("client") as ENetMultiplayerPeer
+		if peer != null:
+			_wire_connection = peer.host
+			_wire_sample("load")
 	if arena.wind_event.group_size != OnlineSession.match_config.settings.drops:
 		_fail("The selected drop count did not reach the match")
 		return
@@ -366,8 +374,28 @@ func _wait_until(predicate: Callable) -> bool:
 
 func _pass() -> void:
 	_done = true
+	_wire_sample("finish")
+	var transport := OnlineSession.transport
+	print("GAMEPLAY_TRAFFIC: ", _role, " messages=", JSON.stringify(transport.sent_messages),
+		" serialized_bytes=", JSON.stringify(transport.sent_bytes))
 	print("ONLINE_MATCH_PASS: ", _role)
 	_finish.call_deferred()
+
+
+func _wire_sample(label: String) -> void:
+	if _wire_connection == null or not GDSync.is_active():
+		return
+	var sample := {
+		"sent_bytes": _wire_connection.pop_statistic(ENetConnection.HOST_TOTAL_SENT_DATA),
+		"received_bytes": _wire_connection.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_DATA),
+		"sent_packets": _wire_connection.pop_statistic(ENetConnection.HOST_TOTAL_SENT_PACKETS),
+		"received_packets": _wire_connection.pop_statistic(
+			ENetConnection.HOST_TOTAL_RECEIVED_PACKETS),
+	}
+	for key in sample:
+		_wire_totals[key] = _wire_totals.get(key, 0.0) + sample[key]
+	print("ENET_TRAFFIC: ", _role, " ", label, " interval=", JSON.stringify(sample),
+		" connection_total=", JSON.stringify(_wire_totals))
 
 
 func _open_menu() -> void:
@@ -491,7 +519,9 @@ func _verify_pickups(arena: WebMatch3D, driver: Node,
 			return
 	await get_tree().create_timer(1.0).timeout
 	var idle_counts: Dictionary = OnlineSession.transport.sent_messages.duplicate()
+	_wire_sample("before_idle")
 	await get_tree().create_timer(1.0).timeout
+	_wire_sample("idle_one_second")
 	if OnlineSession.transport.sent_messages != idle_counts:
 		_fail("Idle presentation generated gameplay traffic")
 		return
@@ -532,8 +562,6 @@ func _verify_pickup_recovery(arena: WebMatch3D, driver: Node,
 		if not await _wait_until(_received_count.bind("recover", 2)):
 			return
 		await get_tree().create_timer(0.2).timeout
-	print("GAMEPLAY_TRAFFIC: ", _role, " messages=", JSON.stringify(transport.sent_messages),
-		" serialized_bytes=", JSON.stringify(transport.sent_bytes))
 	_pass()
 
 
