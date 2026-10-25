@@ -45,7 +45,7 @@ func _process(_delta: float) -> void:
 
 
 func _create_fixture() -> void:
-	if _case in ["missing", "timeout"]:
+	if _case in ["missing", "timeout", "collision", "cancel-retry"]:
 		print("ONLINE_LOBBY_READY: ", _code)
 		return
 	var content: String = OnlineSession.CONTENT_VERSION
@@ -69,6 +69,9 @@ func _run_guest() -> void:
 	_menu.get_node("Center/Menu/PlayButton").pressed.emit()
 	_menu.get_node("PlayMenu/OnlineButton").pressed.emit()
 	var lobby := _menu.get_node("OnlineLobby") as OnlineLobby
+	if _case in ["collision", "cancel-retry"]:
+		await _check_collision(lobby)
+		return
 	lobby.get_node("%JoinButton").pressed.emit()
 	lobby.code_field.text = _code
 	if _case == "timeout":
@@ -105,6 +108,34 @@ func _check_cancel(lobby: OnlineLobby) -> void:
 		return
 	if OnlineSession.players.size() != 1 or OnlineSession.code == _code:
 		_fail("Hosting after cancellation retained the old connection")
+		return
+	await _finish()
+
+
+func _check_collision(lobby: OnlineLobby) -> void:
+	lobby.get_node("%HostButton").pressed.emit()
+	if not await _wait_for_state("creating"):
+		return
+	var first_code := OnlineSession.code
+	# Replace the SDK's first creation result with a confirmed name collision.
+	GDSync.set_block_signals(true)
+	await get_tree().create_timer(0.8).timeout
+	GDSync.lobby_leave()
+	GDSync.set_block_signals(false)
+	GDSync.lobby_creation_failed.emit(OnlineSession.LOBBY_PREFIX + first_code,
+		ENUMS.LOBBY_CREATION_ERROR.LOBBY_ALREADY_EXISTS)
+	if _case == "cancel-retry":
+		lobby.get_node("%ChoiceBackButton").pressed.emit()
+		await get_tree().create_timer(3.5).timeout
+		if OnlineSession.state != "idle" or GDSync.is_active():
+			_fail("A cancelled collision retry restarted hosting")
+			return
+		await _finish()
+		return
+	if not await _wait_for_state("in_lobby"):
+		return
+	if OnlineSession.code == first_code or OnlineSession.players.size() != 1:
+		_fail("A confirmed collision did not retry with a fresh code")
 		return
 	await _finish()
 

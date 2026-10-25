@@ -63,7 +63,7 @@ def run_case(godot: Path, case: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--godot")
-    parser.add_argument("--case", choices=(*CASES, "timeout"))
+    parser.add_argument("--case", choices=(*CASES, "timeout", "collision", "cancel-retry"))
     args = parser.parse_args()
     godot = find_godot(args.godot)
     for case in (args.case,) if args.case else CASES:

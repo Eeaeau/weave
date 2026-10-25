@@ -76,3 +76,5 @@ The disconnect cases kill one automated process after both clients load the matc
 `python tools/check_lobby_errors.py` tests full, closed, missing and incompatible lobbies, plus cancelling a join and then hosting successfully. It uses local SDK fixtures and the production menus, and is included in the normal quality gate. Add `--case timeout` for the optional 25-second connection deadline test, which suppresses SDK callbacks.
 
 Native `--online` match probes also print `ENET_TRAFFIC` totals and a one-second idle interval in the pickup case. These include SDK/protocol traffic on the current ENet connection, excluding OS UDP/IP headers and any earlier server connection. They do not measure browser WebSocket overhead or GD-Sync's billed usage.
+
+Optional `--case collision` and `--case cancel-retry` inject a confirmed SDK name-collision result, then verify a fresh code or safe cancellation of the pending retry.
