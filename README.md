@@ -16,6 +16,7 @@ src/
     web/                        Web nodes, strands, and triangle surfaces
     world/maps/branch_canopy/   Branches, layered backgrounds, camera, and wind
     ui/                         Title, settings, input, pause, game over, match HUD
+    multiplayer/                Lobby lifecycle, commands, state, and replication
 assets/                          Assets shared across features
 addons/                          Optional Godot plugins
 docs/                            Settings and deployment notes
@@ -30,6 +31,12 @@ The match plays in world X/Y: X is horizontal, Y is vertical, and Z provides dep
 To edit a branch, open `src/features/world/maps/branch_canopy/branch_web.tscn`. It is authored upright in X/Y and contains the assembled `branch_visual.tscn`, the web anchor markers, and the starting web edges, so you can place anchors and see the initial web against the artwork. Select two `WebAnchors` markers in the Scene tree or 3D viewport, then use **Project > Tools > Connect Selected Web Anchors**; the matching Remove command deletes an edge. Both support Undo. Edit `branch_visual.tscn` to rearrange the shared sprites. Branch Canopy instances `branch_web.tscn` twice and mirrors the right instance. Coloured editor-only rings show every anchor without selecting it. Add new markers at the end of `WebAnchors` so existing strand indices remain stable. Each player's runtime web also sees the other branch's anchors, allowing strands to cross between them. To set where windborne items enter and cross the web, select `WindEvent/WebPlane/LeftDropArea` or `RightDropArea` in Branch Canopy and move, rotate, or scale each editor-visible rectangle independently.
 
 Planned work is tracked in [GitHub Issues](https://github.com/Eeaeau/weave/issues) and the [project board](https://github.com/users/Eeaeau/projects/3/views/2).
+
+## Online play
+
+Choose **Play > Online > Host Lobby** and share the six-character code. Your friend chooses **Join Lobby** and enters it. Both players select **Ready** to start the three-second countdown; select **Unready** to cancel it. The host chooses the map and item drop count. If either player disconnects, the online match ends.
+
+Choose **Play > Local** for a shared-screen match with the same game settings. See [multiplayer setup and checks](docs/multiplayer_setup.md) for developer credentials and automated host/guest tests.
 
 ## Local checks and export
 

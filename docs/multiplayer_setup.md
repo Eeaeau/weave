@@ -20,6 +20,16 @@ GD-Sync's lobby namespace is shared by clients using the same project key. Game 
 
 A linked database enables cloud features such as player accounts and saved data. Lobby creation and gameplay messages do not require it.
 
+## Code responsibilities
+
+- `online_session.gd`: lobby membership, readiness, match loading and disconnect cleanup.
+- `player_command.gd` and `command_authority.gd`: shared local/scripted inputs and host validation.
+- `match_replication.gd`: authoritative fixed-step simulation, event revisions and recovery.
+- `match_state.gd`: canonical gameplay state and item catalog. Add new replicated gameplay values here.
+- `projectile_replication.gd`: guest projectile presentation from host launch/impact events.
+
+Keep camera, leg IK and ambient animation local. Replicate new gameplay outcomes through the host rather than letting guests apply damage or consume items independently.
+
 ## Checks
 
 Run `python tools/check.py` for the normal project checks, including a local SDK host/guest test.
