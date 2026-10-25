@@ -5,6 +5,7 @@ extends Node3D
 signal event_started(round_number: int)
 signal item_contact(item: Collectible3D, side: int, local_point: Vector2, world_point: Vector3)
 signal event_finished(round_number: int)
+signal group_planned(round_number: int, descriptions: Array)
 
 @export_range(1, 12) var group_size: int = 3
 @export_range(0.1, 5.0, 0.1) var spawn_interval: float = 0.8
@@ -32,6 +33,8 @@ var _selection := WindSelection.new()
 var _path_random := RandomNumberGenerator.new()
 var _seeded: bool = false
 var _active_flights: Array[WindFlight3D] = []
+var _planned_items: Array[Dictionary] = []
+var _excluded_items: Array = []
 
 
 func _ready() -> void:
@@ -52,9 +55,45 @@ func start_round(round_number: int) -> void:
 	_round_number = round_number
 	_elapsed = 0.0
 	_spawned = 0
+	_excluded_items.clear()
+	_planned_items.clear()
+	for index in range(group_size):
+		var description := _choose_description(index)
+		if description.is_empty():
+			break
+		_planned_items.append(description)
+	is_active = true
+	group_planned.emit(round_number, _planned_items)
+	event_started.emit(round_number)
+	_spawn_next()
+
+
+func play_group(round_number: int, descriptions: Array, elapsed: float,
+		excluded_items: Array = []) -> void:
+	for flight in _active_flights:
+		if is_instance_valid(flight):
+			flight.free()
+	_active_flights.clear()
+	_clear_debug_contacts()
+	_round_number = round_number
+	_elapsed = 0.0
+	_spawned = 0
+	_planned_items.assign(descriptions)
+	_excluded_items = excluded_items.duplicate()
 	is_active = true
 	event_started.emit(round_number)
 	_spawn_next()
+	advance(elapsed)
+
+
+func claim_named_item(id: String, target_parent: Node3D) -> Collectible3D:
+	for flight in _active_flights.duplicate():
+		if is_instance_valid(flight) and is_instance_valid(flight.item) \
+				and flight.item.get_meta("network_id", "") == id:
+			var item: Collectible3D = flight.item
+			if flight.claim_item(target_parent):
+				return item
+	return null
 
 
 ## Reset the side bag and random streams before the first round of a new match.
@@ -120,8 +159,7 @@ func skip_to_end() -> void:
 	if not is_active:
 		return
 	while _spawned < group_size:
-		if _spawn_next() == null:
-			break
+		_spawn_next()
 	for flight in _active_flights.duplicate():
 		if is_instance_valid(flight) and not flight.is_queued_for_deletion():
 			flight.complete_now()
@@ -129,31 +167,36 @@ func skip_to_end() -> void:
 	$Gust.stop()
 
 
-func _spawn_next() -> WindFlight3D:
+func _choose_description(index: int) -> Dictionary:
 	var entry := _selection.choose_entry(_round_number, spawn_entries)
 	if entry == null:
 		push_warning("No eligible wind collectibles for round %d" % _round_number)
-		_spawned = group_size
-		return null
-	var instance := entry.scene.instantiate()
-	var item := instance as Collectible3D
-	if item == null:
-		push_warning("Wind entry scene must inherit Collectible3D")
-		if instance != null:
-			instance.free()
-		_spawned = group_size
-		return null
+		return {}
 	var side := _selection.next_side()
 	if _get_drop_area(side) == null:
 		push_warning("Wind drop area is missing for side %d" % side)
-		item.free()
-		_spawned = group_size
-		return null
-	item.collectible = entry.data
+		return {}
 	var duration := _path_random.randf_range(flight_duration_min, flight_duration_max)
 	var sway := _path_random.randf_range(0.7, 1.0)
 	if _path_random.randi_range(0, 1) == 0:
 		sway = -sway
+	return {"entry": spawn_entries.find(entry), "side": side, "path": _sample_path(side),
+		"duration": duration, "sway": sway, "id": "wind-%d-%d" % [_round_number, index]}
+
+
+func _spawn_next() -> WindFlight3D:
+	if _spawned >= _planned_items.size():
+		_spawned = group_size
+		return null
+	var description := _planned_items[_spawned]
+	_spawned += 1
+	if _excluded_items.has(description.id):
+		return null
+	var entry := spawn_entries[description.entry]
+	var item := entry.scene.instantiate() as Collectible3D
+	item.collectible = entry.data
+	item.set_meta("network_id", description.id)
+	var side: int = description.side
 	var flight := WindFlight3D.new()
 	$Flights.add_child(flight)
 	flight.global_basis = _plane_camera_basis()
@@ -161,9 +204,8 @@ func _spawn_next() -> WindFlight3D:
 			world_point: Vector3) -> void: _on_plane_crossed(crossing_item, side, world_point))
 	flight.finished.connect(func() -> void: _on_flight_finished(flight))
 	_active_flights.append(flight)
-	flight.configure(item, _sample_path(side), duration, sway)
+	flight.configure(item, description.path, description.duration, description.sway)
 	flight.set_process(false)
-	_spawned += 1
 	if _spawned == 1:
 		$Gust.start_gust()
 	return flight

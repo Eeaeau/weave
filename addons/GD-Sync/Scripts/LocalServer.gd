@@ -122,6 +122,8 @@ func _clear_lobby_state() -> void:
 	local_lobby_data.clear()
 	local_lobby_tags.clear()
 	local_owner_cache.clear()
+	for client in peer_client_table.values() + lobby_client_table.values():
+		client.lobby_targets.clear()
 	peer_client_table.clear()
 	lobby_client_table.clear()
 	_lobby_host_id = -1

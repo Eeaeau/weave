@@ -15,6 +15,10 @@ var code := ""
 var host_id := -1
 var players: Array[int] = []
 var ready_players: Dictionary = {}
+var match_config: Dictionary = {}
+var transport: Node
+var replication: Node
+var _pending_match_messages: Array[Array] = []
 var use_local_network := false
 var _hosting := false
 var _generation := 0
@@ -22,6 +26,10 @@ var _creation_attempts := 0
 
 
 func _ready() -> void:
+	transport = preload("res://src/features/multiplayer/gd_sync_transport.gd").new()
+	transport.name = "Transport"
+	add_child(transport)
+	transport.received.connect(_on_message)
 	use_local_network = OS.get_cmdline_user_args().has("--local-network")
 	GDSync.connected.connect(_on_connected)
 	GDSync.connection_failed.connect(_on_connection_failed)
@@ -60,6 +68,89 @@ func can_start() -> bool:
 	return all_ready() and GDSync.get_client_id() == host_id
 
 
+func is_match_active() -> bool:
+	return state in ["loading", "playing"]
+
+
+func start_match() -> void:
+	if not can_start():
+		return
+	var slots := players.duplicate()
+	slots.sort()
+	slots.erase(host_id)
+	slots.push_front(host_id)
+	var config := {"match": Crypto.new().generate_random_bytes(16).hex_encode(), "slots": slots,
+		"seed": randi_range(
+			1,
+			2_147_483_647,
+		), "protocol": PROTOCOL_VERSION, "content": CONTENT_VERSION}
+	GDSync.lobby_close()
+	transport.broadcast("prepare", config)
+	_prepare_match(config)
+
+
+func _on_message(sender: int, kind: String, payload: Dictionary) -> void:
+	if kind == "prepare" and sender == host_id and state == "in_lobby":
+		_prepare_match(payload)
+	elif is_match_active() and match_config.slots.has(sender) \
+			and payload.get("match") == match_config.match:
+		if is_instance_valid(replication):
+			replication.receive(sender, kind, payload)
+		elif _pending_match_messages.size() < 64:
+			_pending_match_messages.append([sender, kind, payload])
+
+
+func attach_replication(driver: Node, arena: Node3D) -> void:
+	replication = driver
+	driver.setup(arena)
+	for entry in _pending_match_messages:
+		driver.receive(entry[0], entry[1], entry[2])
+	_pending_match_messages.clear()
+
+
+func _prepare_match(config: Dictionary) -> void:
+	if not _valid_match_config(config):
+		_fail("The host sent an incompatible match setup.")
+		return
+	match_config = config.duplicate(true)
+	_set_state("loading", "Waiting for both players to load...")
+	var generation := _generation
+	get_tree().create_timer(30.0).timeout.connect(func() -> void:
+		if generation == _generation and state == "loading":
+			_fail("The other player did not finish loading. Please try again."))
+	_load_match.call_deferred()
+
+
+func _valid_match_config(config: Dictionary) -> bool:
+	if config.get("protocol") != PROTOCOL_VERSION or config.get("content") != CONTENT_VERSION \
+			or not config.get("match") is String or config.match.length() != 32 \
+			or not config.get("seed") is int or not config.get("slots") is Array:
+		return false
+	var slots: Array = config.slots
+	if slots.size() != PLAYER_LIMIT or slots[0] != host_id:
+		return false
+	for peer in players:
+		if slots.count(peer) != 1:
+			return false
+	return players.size() == slots.size()
+
+
+func _load_match() -> void:
+	if (state == "loading"
+			and get_tree().change_scene_to_file("res://src/game/web_match.tscn") != OK):
+		_fail("Couldn't load the match. Please restart the game.")
+
+
+func mark_playing() -> void:
+	if state == "loading":
+		_set_state("playing", "")
+
+
+func end_match(reason: String) -> void:
+	if is_match_active():
+		_fail(reason)
+
+
 func _receive_ready(protocol: Variant, content: Variant, value: Variant) -> void:
 	_accept_ready(GDSync.get_sender_id(), protocol, content, value)
 
@@ -80,7 +171,6 @@ func _publish_readiness() -> void:
 
 
 func _receive_readiness(values: Variant) -> void:
-	print("READINESS RECEIVE ", GDSync.get_client_id(), " <- ", GDSync.get_sender_id(), " ", values)
 	if state != "in_lobby" or GDSync.get_sender_id() != host_id or not values is Dictionary:
 		return
 	if values.size() > PLAYER_LIMIT:
@@ -93,7 +183,7 @@ func _receive_readiness(values: Variant) -> void:
 
 
 func host_lobby() -> void:
-	if is_busy() or state == "in_lobby":
+	if is_busy() or state == "in_lobby" or is_match_active():
 		return
 	_hosting = true
 	_creation_attempts = 0
@@ -102,7 +192,7 @@ func host_lobby() -> void:
 
 
 func join_lobby(entered_code: String) -> void:
-	if is_busy() or state == "in_lobby":
+	if is_busy() or state == "in_lobby" or is_match_active():
 		return
 	var normalized := entered_code.strip_edges().to_upper()
 	var valid := normalized.length() == 6
@@ -126,11 +216,14 @@ func leave_lobby() -> void:
 	host_id = -1
 	players.clear()
 	ready_players.clear()
+	match_config.clear()
+	replication = null
+	_pending_match_messages.clear()
 	_set_state("idle", "Host a lobby or enter a friend's code.")
 
 
 func is_busy() -> bool:
-	return state in ["connecting", "creating", "joining"]
+	return state in ["connecting", "creating", "joining", "loading"]
 
 
 func _start() -> void:
@@ -232,6 +325,9 @@ func _on_client_joined(client_id: int) -> void:
 
 
 func _on_client_left(client_id: int) -> void:
+	if is_match_active() and match_config.slots.has(client_id):
+		_fail("A player disconnected. The online match has ended.")
+		return
 	if state != "in_lobby":
 		return
 	if client_id == host_id:
@@ -247,18 +343,22 @@ func _on_host_changed(_is_host: bool, new_host_id: int) -> void:
 		host_id = new_host_id
 		changed.emit()
 		return
-	if state == "in_lobby" and host_id != -1 and new_host_id != host_id:
+	if (state == "in_lobby" or is_match_active()) and host_id != -1 and new_host_id != host_id:
 		_fail("The host left the lobby.")
 
 
 func _on_kicked(_reason: String) -> void:
-	if state == "in_lobby":
+	if state == "in_lobby" or is_match_active():
 		_fail("The host closed the lobby.")
 
 
 func _fail(reason: String) -> void:
+	var was_in_match := is_match_active()
 	leave_lobby()
 	_set_state("error", reason)
+	if was_in_match:
+		get_tree().paused = false
+		get_tree().change_scene_to_file.call_deferred("res://src/features/ui/main_menu.tscn")
 
 
 func _set_state(next_state: String, next_message: String) -> void:

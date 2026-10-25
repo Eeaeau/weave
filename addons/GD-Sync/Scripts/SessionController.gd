@@ -668,10 +668,12 @@ func disconnect_gdsync_owner_changed(node : Node, callable : Callable) -> void:
 func _on_scene_change() -> void:
 	request_processor.end_scene_swap()
 	current_scene = get_tree().current_scene
-	current_scene.tree_exiting.connect(_on_old_scene_exiting)
+	if is_instance_valid(current_scene) and !current_scene.tree_exiting.is_connected(_on_old_scene_exiting):
+		current_scene.tree_exiting.connect(_on_old_scene_exiting)
 
 func _on_old_scene_exiting() -> void:
-	current_scene.tree_exiting.disconnect(_on_old_scene_exiting)
+	if is_instance_valid(current_scene) and current_scene.tree_exiting.is_connected(_on_old_scene_exiting):
+		current_scene.tree_exiting.disconnect(_on_old_scene_exiting)
 	request_processor.begin_scene_swap()
 
 func change_scene(scene_path : String) -> void:

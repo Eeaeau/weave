@@ -57,27 +57,11 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 			and health > 0:
 		take_damage(1)
 
+	update_presentation()
 	if not is_active:
-		selected_indicator.visible = false
-		aim_arrow.visible = false
-		if silk_builder:
-			silk_builder.hide_preview()
 		return
-
-	selected_indicator.visible = true
-
 	var aim_magnitude: float = 0.2 + (sin(action_charged_time * 2) + 1)
-
 	var selected_weapon: Weapon3D = weapons[selected_weapon_idx]
-	if not selected_weapon or selected_weapon is WeaponNoAction:
-		aim_arrow.visible = false
-	elif selected_weapon is SilkBuildAction3D:
-		aim_arrow.visible = false
-	else:
-		aim_arrow.visible = true
-		aim_arrow.position = aim_arrow_offset.rotated(Vector3(0, 1, 0), aim_angle)
-		aim_arrow.scale.x = aim_magnitude
-		aim_arrow.rotation.y = aim_angle
 
 	var movement_direction := command.movement_direction()
 	if not movement_direction.is_zero_approx():
@@ -105,7 +89,7 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 	_update_weapon_pose()
 	if command.action_pressed:
 		action_charged_time = 0.0
-	if command.action_released and n_remaining_actions > 0:
+	if command.action_released and n_remaining_actions > 0 and not command.cancel:
 		if selected_weapon is SilkBuildAction3D:
 			silk_builder.try_build_selected_silk()
 		elif selected_weapon:
@@ -140,6 +124,21 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 			silk_builder.hide_preview()
 	else:
 		if silk_builder:
+			silk_builder.hide_preview()
+
+
+func update_presentation() -> void:
+	selected_indicator.visible = is_active and health > 0
+	aim_arrow.visible = selected_indicator.visible and selected_weapon_idx >= 2
+	if aim_arrow.visible:
+		aim_arrow.position = aim_arrow_offset.rotated(Vector3(0, 1, 0), aim_angle)
+		aim_arrow.scale.x = 0.2 + (sin(action_charged_time * 2) + 1)
+		aim_arrow.rotation.y = aim_angle
+	_update_weapon_pose()
+	if silk_builder:
+		if is_active and selected_weapon_idx == 1:
+			silk_builder.update_preview()
+		else:
 			silk_builder.hide_preview()
 
 

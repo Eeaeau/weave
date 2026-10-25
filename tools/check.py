@@ -193,7 +193,7 @@ def main() -> int:
 
     check_dir = ROOT / "build" / "check"
     check_dir.mkdir(parents=True, exist_ok=True)
-    base = [str(godot), "--headless", "--path", str(ROOT)]
+    base = [str(godot), "--headless", "--disable-crash-handler", "--path", str(ROOT)]
     run(base + ["--import", "--log-file", str(check_dir / "import.log")], godot=True, timeout=300)
     for script, marker in (
         ("resource_smoke", "RESOURCE PASS:"),
@@ -236,6 +236,11 @@ def main() -> int:
         [sys.executable, "tools/check_gd_sync.py", "--godot", str(godot), "--lobby"],
         marker="GD-SYNC PASS:",
         timeout=60,
+    )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot), "--scenario", "turns"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
     )
     print("\nLOCAL CHECKS PASS")
     return 0

@@ -1,8 +1,8 @@
 # Multiplayer dependency setup
 
-Choose **Play > Online**, then **Host Lobby** to get a six-character code or **Join Lobby** to enter a friend's code. Each player can toggle **Ready**. Both copies must use the same game version. **Leave Lobby** returns to the play menu.
+Choose **Play > Online**, then **Host Lobby** to get a six-character code or **Join Lobby** to enter a friend's code. Both players select **Ready**, then the host selects **Start Match**. Both copies must use the same game version. **Leave Lobby** returns to the play menu.
 
-This connects the lobby; synchronized match gameplay is not implemented yet. **Play > Local** opens the existing local game.
+Online play is in development. Movement, aiming, turns and wind playback use host authority; projectile presentation and the remaining acceptance tests are still pending. Play starts after both scenes load and acknowledge the initial state. **Play > Local** opens the existing local game.
 
 GD-Sync 1.0.2 is pinned in `addons/GD-Sync`. The editor plugin and `GDSync` autoload are registered in `project.godot`. Dependency credits, revision and compatibility fixes are in `ATTRIBUTION.md`.
 
@@ -37,3 +37,11 @@ python tools/check_gd_sync.py --online
 Both commands accept `--godot PATH`. The online probe uses a small amount of service data. It verifies native relay connectivity, not the browser export or multiplayer gameplay integration.
 
 Add `--lobby` to either probe command to exercise the actual menu controls, code normalization, player count, readiness, leaving, and hosting a fresh lobby in the same process.
+
+Run the two-client match test without online allowance:
+
+```text
+python tools/check_multiplayer.py
+```
+
+It loads the actual match, skips the wind, moves a spider, rejects another team's input, and plays both teams through a round. It checks state acknowledgements and clean shutdown. Logs are in `build/check/multiplayer/`. Use `--scenario load` for the loading handshake alone, or `--online` for the managed relay. These tests are included in the normal local checks; browser export verification is separate.

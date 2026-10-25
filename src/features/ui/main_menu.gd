@@ -15,6 +15,9 @@ func _ready() -> void:
 	$SettingsMenu.closed.connect(_on_settings_closed)
 	$OnlineLobby.closed.connect(_on_online_closed)
 	$Center/Menu/PlayButton.grab_focus()
+	if get_node("/root/OnlineSession").state == "error":
+		_on_play_pressed()
+		_on_online_pressed()
 
 
 func _on_play_pressed() -> void:

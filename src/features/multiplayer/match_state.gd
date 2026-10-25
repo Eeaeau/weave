@@ -174,8 +174,11 @@ func _create_caught(arena: WebMatch3D, id: String, description: Dictionary) -> v
 	caught.set_meta("network_id", id)
 	web.get_node("CaughtItems").add_child(caught)
 	caught.global_position = unpack_vector(description.position)
-	var item := create_item(description.type)
-	caught.add_child(item)
+	var item := arena.wind_event.claim_named_item(id, caught)
+	if item == null:
+		item = create_item(description.type)
+		caught.add_child(item)
+	item.position = Vector3.ZERO
 	caught.configure(web, description.face, item)
 	if item.pickup_area:
 		item.pickup_area.set_deferred("monitoring", false)
@@ -309,6 +312,8 @@ static func diff(previous: Dictionary, current: Dictionary) -> Dictionary:
 static func merge(previous: Dictionary, changes: Dictionary) -> Dictionary:
 	var result := previous.duplicate(true)
 	for section in changes:
+		if not result.has(section) or not changes[section] is Dictionary:
+			return {}
 		for key in changes[section]:
 			if changes[section][key] == null:
 				result[section].erase(key)

@@ -48,6 +48,12 @@ func _run() -> void:
 	command.held = 0
 	command.action_released = true
 	spider.select_weapon(0)
+	command.cancel = true
+	spider.call("simulate", 0.0, command)
+	if spider.n_remaining_actions != 1:
+		_fail("Cancelling a held action must not fire or spend it")
+		return
+	command.cancel = false
 	spider.call("simulate", 0.0, command)
 	spider.call("simulate", 0.0, command)
 	if spider.n_remaining_actions != 0:

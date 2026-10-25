@@ -90,3 +90,8 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Ready"
+
+[node name="StartButton" type="Button" parent="Center/Menu"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Start Match"

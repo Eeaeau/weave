@@ -16,6 +16,8 @@ from check import ROOT, find_godot
 def wait_for_host(process: subprocess.Popen, log_path: Path, deadline: float, lobby: bool) -> str | None:
     while time.monotonic() < deadline:
         output = log_path.read_text(encoding="utf-8", errors="replace")
+        if "SCRIPT ERROR:" in output:
+            raise RuntimeError(f"Host reported a script error. See {log_path}")
         code_match = re.search(r"ONLINE_LOBBY_READY: ([A-Z2-9]{6})", output)
         if lobby and code_match:
             return code_match.group(1)
@@ -50,7 +52,7 @@ def main() -> int:
             handle = log_path.open("w", encoding="utf-8")
             handles.append(handle)
             command = [
-                str(godot), "--headless", "--path", str(ROOT),
+                str(godot), "--headless", "--disable-crash-handler", "--path", str(ROOT),
                 "--log-file", str(log_dir / f"{role}-engine.log"),
                 f"res://tests/multiplayer/{scene}.tscn", "--",
                 f"--role={role}", f"--code={join_code}",

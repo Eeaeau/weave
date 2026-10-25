@@ -34,7 +34,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func show_pause() -> void:
 	visible = true
-	get_tree().paused = true
+	get_tree().paused = not get_node("/root/OnlineSession").is_match_active()
 	$Backdrop/Center/Menu/ResumeButton.grab_focus()
 
 
@@ -45,6 +45,8 @@ func resume_game() -> void:
 
 func _on_main_menu_pressed() -> void:
 	resume_game()
+	if get_node("/root/OnlineSession").is_match_active():
+		get_node("/root/OnlineSession").leave_lobby()
 	get_tree().change_scene_to_file("res://src/features/ui/main_menu.tscn")
 
 
