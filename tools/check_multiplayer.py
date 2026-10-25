@@ -17,7 +17,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--godot")
     parser.add_argument("--online", action="store_true", help="Use configured keys and the managed relay")
-    parser.add_argument("--scenario", choices=("load", "turns"), default="turns")
+    parser.add_argument("--scenario", choices=("load", "turns", "combat", "silk"), default="turns")
     args = parser.parse_args()
     godot = find_godot(args.godot)
     log_dir = ROOT / "build" / "check" / "multiplayer" / uuid.uuid4().hex[:12]

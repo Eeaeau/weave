@@ -6,7 +6,7 @@ const CODE_ALPHABET := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 const LOBBY_PREFIX := "spiders-v1-"
 const PLAYER_LIMIT := 2
 const PROTOCOL_VERSION := 1
-const CONTENT_VERSION := "spiders-online-1"
+const CONTENT_VERSION := "spiders-online-2"
 const KEY_STORE := preload("res://addons/GD-Sync/Scripts/KeyStore.gd")
 
 var state := "idle"

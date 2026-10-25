@@ -36,12 +36,14 @@ var _digests: Dictionary = {}
 var _match_id := ""
 var _slots: Array = []
 var _host := false
+var _projectiles: Node
 
 
 func _process(delta: float) -> void:
 	if OnlineSession.state != "playing" or not is_instance_valid(_arena):
 		return
 	if not _host:
+		_projectiles.present()
 		if _arena.wind_event.is_active and not _wind_description.is_empty():
 			var elapsed := maxf(0.0, GDSync.get_multiplayer_time() - float(_wind_description.time))
 			_arena.wind_event.advance(maxf(0.0, elapsed - _arena.wind_event._elapsed))
@@ -145,6 +147,8 @@ func _accept_command(sender: int, packet: Dictionary) -> void:
 		else:
 			result.reason = "Waiting for the action to finish"
 	result["turn"] = packet.get("turn", -1)
+	if result.accepted:
+		_needs_digest = true
 	result["seq"] = packet.get("seq", -1)
 	if sender == GDSync.get_client_id():
 		command_result.emit(result)
@@ -276,6 +280,13 @@ func setup(arena: WebMatch3D) -> void:
 	_match_id = OnlineSession.match_config.match
 	_slots = OnlineSession.match_config.slots
 	_host = GDSync.get_client_id() == OnlineSession.host_id
+	_projectiles = load("res://src/features/multiplayer/projectile_replication.gd").new()
+	add_child(_projectiles)
+	_projectiles.setup(arena, _host, GDSync.get_multiplayer_time)
+	_projectiles.event_ready.connect(_broadcast_projectile)
+	for team in _manager.teams:
+		for spider in team.spiders:
+			spider.silk_builder.network_replica = not _host
 	_arena.wind_event.set_process(false)
 	_arena.wind_event.reset_match(OnlineSession.match_config.seed)
 	if _host:
@@ -284,6 +295,17 @@ func setup(arena: WebMatch3D) -> void:
 		_record_scene_ready(GDSync.get_client_id())
 	else:
 		_send_host("scene_ready", {})
+
+
+func register_projectile(projectile: Projectile3D) -> void:
+	_projectiles.register(projectile)
+	_needs_digest = true
+
+
+func _broadcast_projectile(payload: Dictionary) -> void:
+	var message := payload.duplicate(true)
+	message["match"] = _match_id
+	OnlineSession.transport.broadcast("projectile", message)
 
 
 func receive(sender: int, kind: String, payload: Dictionary) -> void:
@@ -338,6 +360,8 @@ func _receive_as_guest(kind: String, payload: Dictionary) -> void:
 		"wind_contact":
 			if payload.get("id") is String and payload.get("caught") is bool:
 				_wind_contacts[payload.id] = payload.caught
+		"projectile":
+			_projectiles.receive(payload)
 
 
 func _on_wind_planned(round_number: int, descriptions: Array) -> void:
@@ -406,7 +430,8 @@ func _send_snapshot(peer: int) -> void:
 	OnlineSession.transport.send_to(peer, "snapshot", {"match": _match_id,
 		"revision": revision, "state": state, "digest": _codec.digest(state),
 		"input": _input_state(), "motions": _motions,
-		"wind": _wind_description if _manager.waiting_for_wind else {}, "contacts": _wind_contacts})
+		"wind": _wind_description if _manager.waiting_for_wind else {}, "contacts": _wind_contacts,
+		"projectiles": _projectiles.capture()})
 
 
 func _apply_snapshot(payload: Dictionary) -> void:
@@ -422,6 +447,9 @@ func _apply_snapshot(payload: Dictionary) -> void:
 	_state = actual
 	revision = payload.revision
 	initial_state_confirmed = true
+	if not _projectiles.restore(payload.get("projectiles", [])):
+		OnlineSession.end_match("The projectile state could not be synchronized.")
+		return
 	_apply_input_state(payload.get("input"))
 	_motions.clear()
 	_apply_motions(payload.get("motions", {}))

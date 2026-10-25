@@ -58,7 +58,10 @@ func _capture_actor(spider: PlayerSpider3D) -> Dictionary:
 		"health": quantize(maxf(spider.health, 0)),
 		"movement": quantize(spider.remaining_movement), "actions": spider.n_remaining_actions,
 		"aim": quantize(spider.aim_angle), "silk": spider.silk_amount,
-		"selected": spider.selected_weapon_idx, "active": spider.is_active, "inventory": inventory}
+		"selected": spider.selected_weapon_idx, "active": spider.is_active, "inventory": inventory,
+		"build": {"source": spider.silk_builder.silk_source_index,
+			"targets": spider.silk_builder.silk_target_indices.duplicate(),
+			"selected": spider.silk_builder.selected_silk_target_index}}
 
 
 func _capture_caught(web: Web3D, web_index: int, result: Dictionary) -> void:
@@ -141,6 +144,11 @@ func _apply_actor(spider: PlayerSpider3D, values: Dictionary) -> void:
 	spider.silk_amount = values.silk
 	spider.is_active = values.active
 	spider.select_weapon(values.selected)
+	var builder := spider.silk_builder
+	builder.silk_source_index = values.build.source
+	builder.silk_source_web = builder.owned_web if values.build.source >= 0 else null
+	builder.silk_target_indices.assign(values.build.targets)
+	builder.selected_silk_target_index = values.build.selected
 	spider._update_weapon_pose()
 
 
@@ -205,9 +213,28 @@ func _valid_actors(manager: MatchManager, state: Dictionary) -> bool:
 		for index in range(team.spiders.size()):
 			count += 1
 			var values: Variant = state.actors.get("%d:%d" % [team_index, index])
-			if not values is Dictionary or not _valid_actor(values):
+			if not values is Dictionary or not _valid_actor(values) \
+					or not _valid_build(values.get("build"), team.home_web):
 				return false
 	return count == state.actors.size()
+
+
+func _valid_build(value: Variant, web: Web3D) -> bool:
+	if not value is Dictionary or web == null:
+		return false
+	var limit := web.valid_nodes.size() - 1
+	if not _bounded_int(value.get("source"), -1, limit) \
+			or not value.get("targets") is Array or value.targets.size() > limit + 1 \
+			or not _bounded_int(value.get("selected"), 0, maxi(0, value.targets.size() - 1)):
+		return false
+	if (value.source == -1) != value.targets.is_empty():
+		return false
+	var seen: Dictionary = {}
+	for target in value.targets:
+		if not _bounded_int(target, 0, limit) or target == value.source or seen.has(target):
+			return false
+		seen[target] = true
+	return true
 
 
 func _valid_actor(values: Dictionary) -> bool:

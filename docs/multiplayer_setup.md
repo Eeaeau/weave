@@ -2,7 +2,7 @@
 
 Choose **Play > Online**, then **Host Lobby** to get a six-character code or **Join Lobby** to enter a friend's code. Both players select **Ready**, then the host selects **Start Match**. Both copies must use the same game version. **Leave Lobby** returns to the play menu.
 
-Online play is in development. Movement, aiming, turns and wind playback use host authority; projectile presentation and the remaining acceptance tests are still pending. Play starts after both scenes load and acknowledge the initial state. **Play > Local** opens the existing local game.
+Online play is in development. Movement, aiming, turns, wind, projectiles and silk building use host authority. Guests animate shots locally and display the host-approved silk targets. Remaining acceptance tests and the final design review are pending. Play starts after both scenes load and acknowledge the initial state. **Play > Local** opens the existing local game.
 
 GD-Sync 1.0.2 is pinned in `addons/GD-Sync`. The editor plugin and `GDSync` autoload are registered in `project.godot`. Dependency credits, revision and compatibility fixes are in `ATTRIBUTION.md`.
 
@@ -45,3 +45,5 @@ python tools/check_multiplayer.py
 ```
 
 It loads the actual match, skips the wind, moves a spider, rejects another team's input, and plays both teams through a round. It checks state acknowledgements and clean shutdown. Logs are in `build/check/multiplayer/`. Use `--scenario load` for the loading handshake alone, or `--online` for the managed relay. These tests are included in the normal local checks; browser export verification is separate.
+
+Use `--scenario combat` to check a real projectile collision, one authoritative hit, guest presentation and three shot messages. Use `--scenario silk` to cycle the shared target hints and build a strand with the same resource cost on both clients. Both scenarios run in the normal local checks.

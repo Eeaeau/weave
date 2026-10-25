@@ -2,6 +2,8 @@
 # gdstyle:ignore-file=quality/await-in-loop
 extends Node
 
+const COMMAND := preload("res://src/features/multiplayer/player_command.gd")
+
 var _role := ""
 var _code := ""
 var _ready_requested := false
@@ -12,6 +14,7 @@ var _menu: MainMenu
 var _scenario := "load"
 var _testing_turns := false
 var _rejected_command := false
+var _damage_events := 0
 
 
 func _ready() -> void:
@@ -23,6 +26,7 @@ func _ready() -> void:
 		elif argument.begins_with("--scenario="):
 			_scenario = argument.trim_prefix("--scenario=")
 	get_tree().create_timer(35.0).timeout.connect(func() -> void: _fail("Match load timed out"))
+	get_tree().scene_changed.connect(_configure_match)
 	call_deferred("_open_menu")
 
 
@@ -30,6 +34,33 @@ func _process(_delta: float) -> void:
 	if _done or _testing_turns or OnlineSession.state != "playing":
 		return
 	_check_loaded_match()
+
+
+func _configure_match() -> void:
+	if _role != "host" or _scenario not in ["combat", "silk"]:
+		return
+	var arena := get_tree().current_scene as WebMatch3D
+	if arena == null:
+		return
+	var shooter: PlayerSpider3D = arena.get_node("TeamA").spiders[0]
+	if _scenario == "silk":
+		var web := arena.get_node("TeamA").home_web as Web3D
+		web.edges = [Vector2i(0, 1)]
+		for spider in arena.get_node("TeamA").spiders:
+			spider.webs.clear()
+		shooter.webs.append(web)
+		shooter.global_position = web.valid_nodes[0].global_position
+		return
+	var target: PlayerSpider3D = arena.get_node("TeamB").spiders[0]
+	shooter.webs.clear()
+	target.webs.clear()
+	shooter.global_position = Vector3(0, 50, 0)
+	target.global_position = Vector3(10, 50, 0)
+	var codec = load("res://src/features/multiplayer/match_state.gd").new()
+	var weapon := codec.create_item(3) as Weapon3D
+	arena.add_child(weapon)
+	shooter.pick_up(weapon)
+	target.hurtbox.hurt.connect(func(_amount: float) -> void: _damage_events += 1)
 
 
 func _check_loaded_match() -> void:
@@ -51,11 +82,166 @@ func _check_loaded_match() -> void:
 			if spider.is_active or not is_equal_approx(spider.health, 1.0):
 				_fail("Spiders acted or died before the initial wind finished")
 				return
-	if _scenario == "turns":
+	if _scenario in ["turns", "combat", "silk"]:
 		_testing_turns = true
-		_play_turns.call_deferred(arena, driver)
+		if _scenario == "combat":
+			_play_combat.call_deferred(arena, driver)
+		elif _scenario == "silk":
+			_play_silk.call_deferred(arena, driver)
+		else:
+			_play_turns.call_deferred(arena, driver)
 	else:
 		_pass()
+
+
+func _play_silk(arena: WebMatch3D, driver: Node) -> void:
+	driver.scripted_input = true
+	var spider: PlayerSpider3D = arena.get_node("TeamA").spiders[0]
+	var web := arena.get_node("TeamA").home_web as Web3D
+	if _role == "guest":
+		var skip := COMMAND.new()
+		skip.held = 128
+		driver.submit_command(skip)
+	if not await _wait_until(_wind_finished.bind(arena)):
+		return
+	if _role == "host":
+		var selection := COMMAND.new()
+		selection.selection = 1
+		driver.submit_command(selection)
+	if not await _wait_until(_silk_options_ready.bind(spider)):
+		return
+	if _role == "host":
+		var cycle := COMMAND.new()
+		cycle.cycle = 1
+		driver.submit_command(cycle)
+	if not await _wait_until(_silk_cycled.bind(spider)):
+		return
+	spider.update_presentation()
+	if spider.silk_builder.target_markers.size() < 2:
+		_fail("Silk options are not visible on both clients")
+		return
+	var target_index: int = spider.silk_builder.silk_target_indices[1]
+	if _role == "host":
+		await get_tree().create_timer(0.2).timeout
+		var press := COMMAND.new()
+		press.held = 64
+		driver.submit_command(press)
+		await get_tree().create_timer(0.05).timeout
+		driver.submit_command(COMMAND.new())
+	await _verify_silk(driver, spider, web, target_index)
+
+
+func _verify_silk(driver: Node, spider: PlayerSpider3D, web: Web3D, target: int) -> void:
+	if not await _wait_until(_edge_built.bind(web, target)):
+		return
+	if spider.silk_amount != 2 or spider.n_remaining_actions != 0 or spider.health != 1.0:
+		_fail("Silk build did not replicate its cost or preserve its spider")
+		return
+	if _role == "host" and not await _wait_until(_outcomes_acknowledged.bind(driver)):
+		return
+	_pass()
+
+
+func _edge_built(web: Web3D, target: int) -> bool:
+	return web.edges.has(Vector2i(0, target)) or web.edges.has(Vector2i(target, 0))
+
+
+func _silk_options_ready(spider: PlayerSpider3D) -> bool:
+	return spider.selected_weapon_idx == 1 and spider.silk_builder.silk_target_indices.size() >= 2
+
+
+func _silk_cycled(spider: PlayerSpider3D) -> bool:
+	return spider.silk_builder.selected_silk_target_index == 1
+
+
+func _play_combat(arena: WebMatch3D, driver: Node) -> void:
+	driver.scripted_input = true
+	var target: PlayerSpider3D = arena.get_node("TeamB").spiders[0]
+	if _role == "guest":
+		var skip = COMMAND.new()
+		skip.held = 128
+		driver.submit_command(skip)
+		if not await _wait_until(_has_projectile):
+			return
+		var replica := get_tree().get_nodes_in_group("camera_focus_projectiles")[0] as Projectile3D
+		var health := target.health
+		replica.hit(target.hurtbox)
+		if not replica.network_replica or target.health != health:
+			_fail("Guest projectile applied damage independently")
+			return
+	if _role == "host" and not await _fire_rocket(arena, driver, target):
+		return
+	await _verify_combat(driver, target)
+
+
+func _fire_rocket(arena: WebMatch3D, driver: Node, target: PlayerSpider3D) -> bool:
+	if not await _wait_until(_wind_finished.bind(arena)):
+		return false
+	var selection = COMMAND.new()
+	selection.selection = 2
+	driver.submit_command(selection)
+	if not await _wait_until(_rocket_selected.bind(arena)):
+		return false
+	var press = COMMAND.new()
+	press.held = 64
+	driver.submit_command(press)
+	await get_tree().create_timer(0.12).timeout
+	driver.submit_command(COMMAND.new())
+	if not await _wait_until(_has_projectile):
+		return false
+	var projectile := get_tree().get_nodes_in_group("camera_focus_projectiles")[0] as Projectile3D
+	projectile.damage = 0.25
+	projectile.explosion_damage = 0.0
+	await get_tree().create_timer(0.35).timeout
+	target.global_position = projectile.global_position + projectile.velocity * 0.03
+	if not await _wait_until(_shot_frozen.bind(projectile)):
+		return false
+	projectile.hit(target.hurtbox)
+	if not is_equal_approx(target.health, 0.75) or _damage_events != 1:
+		_fail("Host collision did not apply direct damage exactly once")
+		return false
+	return true
+
+
+func _verify_combat(driver: Node, target: PlayerSpider3D) -> void:
+	if not await _wait_until(_no_projectile):
+		return
+	if not await _wait_until(_health_matches.bind(target, 0.75)):
+		return
+	if _role == "host" and not await _wait_until(_outcomes_acknowledged.bind(driver)):
+		return
+	var transport := OnlineSession.transport
+	var counts: Dictionary = transport.sent_messages
+	if _role == "guest":
+		counts = transport.received_messages
+	if counts.get("projectile", 0) != 3:
+		_fail("A shot must send only launch, impact and removal")
+		return
+	_pass()
+
+
+func _has_projectile() -> bool:
+	return not get_tree().get_nodes_in_group("camera_focus_projectiles").is_empty()
+
+
+func _no_projectile() -> bool:
+	return not _has_projectile()
+
+
+func _shot_frozen(projectile: Projectile3D) -> bool:
+	return is_instance_valid(projectile) and projectile.freeze
+
+
+func _health_matches(target: PlayerSpider3D, expected: float) -> bool:
+	return is_equal_approx(target.health, expected)
+
+
+func _wind_finished(arena: WebMatch3D) -> bool:
+	return not arena.get_node("MatchManager").waiting_for_wind
+
+
+func _rocket_selected(arena: WebMatch3D) -> bool:
+	return arena.get_node("TeamA").spiders[0].selected_weapon_idx == 2
 
 
 func _play_turns(arena: WebMatch3D, driver: Node) -> void:
@@ -66,7 +252,7 @@ func _play_turns(arena: WebMatch3D, driver: Node) -> void:
 	driver.command_result.connect(func(result: Dictionary) -> void:
 		if not result.accepted:
 			_rejected_command = true)
-	var command_script = load("res://src/features/multiplayer/player_command.gd")
+	var command_script = COMMAND
 	if _role == "guest":
 		var skip = command_script.new()
 		skip.held = 128

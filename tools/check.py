@@ -210,6 +210,7 @@ def main() -> int:
         ("multiplayer/player_simulation_smoke", "PLAYER SIMULATION PASS:"),
         ("multiplayer/command_authority_smoke", "COMMAND AUTHORITY PASS:"),
         ("multiplayer/match_state_smoke", "MATCH STATE PASS:"),
+        ("multiplayer/projectile_replication_smoke", "PROJECTILE REPLICATION PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
         ("action_camera_smoke", "ACTION CAMERA PASS:"),
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),
@@ -239,6 +240,16 @@ def main() -> int:
     )
     run(
         [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot), "--scenario", "turns"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
+    )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot), "--scenario", "combat"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
+    )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot), "--scenario", "silk"],
         marker="MULTIPLAYER PASS:",
         timeout=65,
     )

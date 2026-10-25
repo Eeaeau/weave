@@ -34,6 +34,10 @@ func _run() -> void:
 		_fail("Recovery did not restore the actual match state")
 		return
 	var changed: Dictionary = before.duplicate(true)
+	if not changed.actors["0:0"].has("build"):
+		_fail("Recovery does not preserve the host-approved silk targets")
+		return
+	changed.actors["0:0"].build = { "source": 0, "targets": [1, 2], "selected": 1 }
 	changed.actors["0:0"].health = 50_000
 	changed.actors["0:0"].silk = 4
 	changed.actors["0:0"].inventory.append(3)
@@ -44,13 +48,7 @@ func _run() -> void:
 	) or codec.digest(codec.capture(arena)) != codec.digest(changed):
 		_fail("Authoritative inventory and resource changes did not reach the game objects")
 		return
-	var patch: Dictionary = codec.diff(before, changed)
-	if patch.size() != 1 or not patch.has("actors") or patch.actors.size() != 1:
-		_fail("A changed actor sent unrelated actors or unchanged match state")
-		return
-	var merged: Dictionary = codec.merge(before, patch)
-	if codec.digest(merged) != codec.digest(changed):
-		_fail("Sparse updates did not reproduce the authoritative state")
+	if not _check_sparse_and_build(codec, arena, spider, before, changed):
 		return
 	if not _check_collectible_recovery(codec, arena, web, spider, changed):
 		return
@@ -59,6 +57,31 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	print("MATCH STATE PASS: real actor, inventory and web recovery with sparse updates")
 	quit(0)
+
+
+func _check_sparse_and_build(codec: RefCounted, arena: WebMatch3D, spider: PlayerSpider3D,
+		before: Dictionary, changed: Dictionary) -> bool:
+	var patch: Dictionary = codec.diff(before, changed)
+	if patch.size() != 1 or not patch.has("actors") or patch.actors.size() != 1:
+		_fail("A changed actor sent unrelated actors or unchanged match state")
+		return false
+	var merged: Dictionary = codec.merge(before, patch)
+	if codec.digest(merged) != codec.digest(changed):
+		_fail("Sparse updates did not reproduce the authoritative state")
+		return false
+	spider.silk_builder.set("network_replica", true)
+	spider.silk_builder.update_preview()
+	if spider.silk_builder.silk_source_index != 0 \
+			or spider.silk_builder.silk_target_indices != [1, 2] \
+			or spider.silk_builder.selected_silk_target_index != 1:
+		_fail("Guest presentation replaced the host-approved target selection")
+		return false
+	var invalid: Dictionary = changed.duplicate(true)
+	invalid.actors["0:0"].build.targets = [999]
+	if codec.apply(arena, invalid) or codec.digest(codec.capture(arena)) != codec.digest(changed):
+		_fail("Invalid silk targets modified game state")
+		return false
+	return true
 
 
 func _check_collectible_recovery(codec: RefCounted, arena: WebMatch3D, web: Web3D,
