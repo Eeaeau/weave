@@ -18,9 +18,6 @@ func _run() -> void:
 	var rocket := ROCKET.instantiate() as Projectile3D
 	arena.add_child(rocket)
 	rocket.set_process(false)
-	if not "network_replica" in rocket:
-		_fail("Guest projectile must have a presentation-only mode")
-		return
 	rocket.set("network_replica", true)
 	var health := spider.health
 	var edges := arena.catch_webs[0].edges.duplicate()
@@ -32,6 +29,16 @@ func _run() -> void:
 		_fail("Guest projectile callbacks changed gameplay")
 		return
 	rocket.free()
+	var authoritative := ROCKET.instantiate() as Projectile3D
+	arena.add_child(authoritative)
+	authoritative.global_position = Vector3(10, 10, 0)
+	authoritative.velocity = Vector3(2, 4, 0)
+	for tick in range(60):
+		authoritative._process(1.0 / 60.0)
+	if authoritative.global_position.distance_to(Vector3(12, 9.095, 0)) > 0.001:
+		_fail("Host gravity differs from the guest analytic flight")
+		return
+	authoritative.free()
 	var replication = load("res://src/features/multiplayer/projectile_replication.gd").new()
 	arena.add_child(replication)
 	replication.setup(arena, false, func() -> float: return 2.0)

@@ -36,7 +36,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if freeze or network_replica:
 		return
-	global_position += velocity * delta
+	global_position += velocity * delta + Vector3.DOWN * 4.905 * delta * delta
 	velocity.y -= 9.81 * delta
 	if global_position.y <= despawn_below_y:
 		hit(null)
