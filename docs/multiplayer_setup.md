@@ -60,3 +60,14 @@ python tools/check_multiplayer.py --scenario pickups --host-fps 24 --guest-fps 1
 ```
 
 This case is included in the normal local checks. It verifies guest pickup authority and an idle interval without gameplay messages. Per-peer logs report serialized application bytes by message type; these exclude SDK/relay overhead and are not billed usage measurements.
+
+
+Additional local fault/isolation checks (no online allowance):
+
+```text
+python tools/check_multiplayer.py --scenario disconnect-host
+python tools/check_multiplayer.py --scenario disconnect-guest
+python tools/check_multiplayer_rooms.py
+```
+
+The disconnect cases kill one automated process after both clients load the match, then verify that the survivor reports the failure, clears its session and returns to the menu. The room check runs two matches simultaneously. These checks are optional additions to the normal quality gate.

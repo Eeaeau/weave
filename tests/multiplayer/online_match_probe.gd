@@ -16,6 +16,7 @@ var _testing_turns := false
 var _rejected_command := false
 var _damage_events := 0
 var _interactive := false
+var _disconnect_expected := false
 
 
 func _ready() -> void:
@@ -30,7 +31,8 @@ func _ready() -> void:
 			GDSync.set_artificial_latency(int(argument.trim_prefix("--latency-ms=")))
 		elif argument == "--interactive":
 			_interactive = true
-	get_tree().create_timer(120.0 if _interactive else 35.0).timeout.connect(
+	var timeout := 60.0 if _scenario.begins_with("disconnect-") else 35.0
+	get_tree().create_timer(120.0 if _interactive else timeout).timeout.connect(
 		func() -> void: _fail("Match load timed out"))
 	get_tree().scene_changed.connect(_configure_match)
 	call_deferred("_open_menu")
@@ -94,7 +96,12 @@ func _check_loaded_match() -> void:
 			if spider.is_active or not is_equal_approx(spider.health, 1.0):
 				_fail("Spiders acted or died before the initial wind finished")
 				return
-	if _scenario in ["turns", "combat", "silk", "pickups"]:
+	if _scenario.begins_with("disconnect-"):
+		_testing_turns = true
+		_disconnect_expected = true
+		driver.scripted_input = true
+		print("ONLINE_MATCH_LOADED: ", _role)
+	elif _scenario in ["turns", "combat", "silk", "pickups"]:
 		_testing_turns = true
 		if _scenario == "pickups":
 			_play_pickups.call_deferred(arena, driver)
@@ -380,6 +387,10 @@ func _observe_lobby() -> void:
 	if _done:
 		return
 	if OnlineSession.state == "error":
+		if _disconnect_expected:
+			_disconnect_expected = false
+			_verify_disconnect.call_deferred()
+			return
 		_fail(OnlineSession.message)
 		return
 	if OnlineSession.state != "in_lobby":
@@ -528,3 +539,24 @@ func _verify_pickup_recovery(arena: WebMatch3D, driver: Node,
 
 func _received_count(kind: String, minimum: int) -> bool:
 	return OnlineSession.transport.received_messages.get(kind, 0) >= minimum
+
+
+func _verify_disconnect() -> void:
+	if OnlineSession.message not in ["A player disconnected. The online match has ended.",
+			"The host left the lobby.", "The host closed the lobby.",
+			"Connection lost. Please host or join again."]:
+		_fail("Unexpected disconnect error: " + OnlineSession.message)
+		return
+	if not await _wait_until(_returned_to_menu):
+		return
+	if OnlineSession.is_match_active() or OnlineSession.replication != null \
+			or not OnlineSession.players.is_empty() or get_tree().paused:
+		_fail("Disconnect retained match authority, players or a paused tree")
+		return
+	print("DISCONNECT_PASS: ", _role, " ", OnlineSession.message)
+	_pass()
+
+
+func _returned_to_menu() -> bool:
+	return get_tree().current_scene is MainMenu \
+		and get_tree().current_scene.get_node("OnlineLobby").visible

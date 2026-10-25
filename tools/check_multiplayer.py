@@ -13,11 +13,25 @@ from check import ROOT, find_godot
 from check_gd_sync import wait_for_host
 
 
+def wait_for_loaded(process: subprocess.Popen, path: Path, role: str, deadline: float) -> None:
+    while time.monotonic() < deadline:
+        output = path.read_text(encoding="utf-8", errors="replace")
+        if any(marker in output for marker in ("SCRIPT ERROR:", "ONLINE_MATCH_FAIL:", "Parse Error:")):
+            raise RuntimeError(f"{role} failed before disconnect test; see {path.parent}")
+        if f"ONLINE_MATCH_LOADED: {role}" in output:
+            return
+        if process.poll() is not None:
+            raise RuntimeError(f"{role} exited before disconnect test; see {path.parent}")
+        time.sleep(0.05)
+    raise RuntimeError(f"{role} did not load before disconnect test; see {path.parent}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--godot")
     parser.add_argument("--online", action="store_true", help="Use configured keys and the managed relay")
-    parser.add_argument("--scenario", choices=("load", "turns", "combat", "silk", "pickups"), default="turns")
+    parser.add_argument("--scenario", choices=("load", "turns", "combat", "silk", "pickups",
+                                                 "disconnect-host", "disconnect-guest"), default="turns")
     parser.add_argument("--host-fps", type=int, default=60)
     parser.add_argument("--guest-fps", type=int, default=60)
     parser.add_argument("--latency-ms", type=int, default=0)
@@ -29,7 +43,8 @@ def main() -> int:
     log_dir.mkdir(parents=True)
     processes: dict[str, subprocess.Popen] = {}
     handles = []
-    deadline = time.monotonic() + 50.0
+    killed_role = args.scenario.removeprefix("disconnect-") if args.scenario.startswith("disconnect-") else ""
+    deadline = time.monotonic() + (75.0 if killed_role else 50.0)
     code = ""
     try:
         for role in ("host", "guest"):
@@ -48,7 +63,14 @@ def main() -> int:
             processes[role] = subprocess.Popen(command, cwd=ROOT, stdout=handle, stderr=subprocess.STDOUT)
             if role == "host":
                 code = wait_for_host(processes[role], log_path, deadline, True) or ""
+        if killed_role:
+            for role, process in processes.items():
+                wait_for_loaded(process, log_dir / f"{role}.log", role, deadline)
+            processes[killed_role].kill()
+            processes[killed_role].wait(timeout=5)
         for role, process in processes.items():
+            if role == killed_role:
+                continue
             try:
                 status = process.wait(timeout=max(0.01, deadline - time.monotonic()))
             except subprocess.TimeoutExpired as error:
