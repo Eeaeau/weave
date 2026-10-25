@@ -1,8 +1,8 @@
 # Multiplayer dependency setup
 
-Choose **Online** in the main menu, then **Host Lobby** to get a six-character code or **Join Lobby** to enter a friend's code. The player count updates when someone joins or leaves. **Leave Lobby** returns to the menu.
+Choose **Play > Online**, then **Host Lobby** to get a six-character code or **Join Lobby** to enter a friend's code. Each player can toggle **Ready**. Both copies must use the same game version. **Leave Lobby** returns to the play menu.
 
-This connects the lobby; synchronized match gameplay is not implemented yet. **Play** opens the existing local game.
+This connects the lobby; synchronized match gameplay is not implemented yet. **Play > Local** opens the existing local game.
 
 GD-Sync 1.0.2 is pinned in `addons/GD-Sync`. The editor plugin and `GDSync` autoload are registered in `project.godot`. Dependency credits, revision and compatibility fixes are in `ATTRIBUTION.md`.
 
@@ -12,7 +12,7 @@ Open **Project > Tools > GD-Sync** and enter the runtime public/private project 
 
 Each developer/build machine needs these runtime keys for online tests. Local tests do not. The SDK export plugin includes runtime keys in game exports, as required by its connection protocol; keep exported builds separate from the source repository.
 
-GD-Sync's lobby namespace is shared by clients using the same project key. This project's dependency probe uses the `spiders-test-` prefix and a fresh random suffix on every run. Future game lobbies should also use a project-specific prefix.
+GD-Sync's lobby namespace is shared by clients using the same project key. Game lobbies use `spiders-v1-`; the dependency probe uses `spiders-test-` with a fresh random suffix.
 
 A linked database enables cloud features such as player accounts and saved data. Lobby creation and gameplay messages do not require it.
 
@@ -36,4 +36,4 @@ python tools/check_gd_sync.py --online
 
 Both commands accept `--godot PATH`. The online probe uses a small amount of service data. It verifies native relay connectivity, not the browser export or multiplayer gameplay integration.
 
-Add `--lobby` to either probe command to exercise the actual menu controls, code normalization, player count, leaving, and hosting a fresh lobby in the same process.
+Add `--lobby` to either probe command to exercise the actual menu controls, code normalization, player count, readiness, leaving, and hosting a fresh lobby in the same process.

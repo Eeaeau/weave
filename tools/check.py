@@ -208,6 +208,8 @@ def main() -> int:
         ("menu_smoke", "MENU PASS:"),
         ("multiplayer/player_command_smoke", "PLAYER COMMAND PASS:"),
         ("multiplayer/player_simulation_smoke", "PLAYER SIMULATION PASS:"),
+        ("multiplayer/command_authority_smoke", "COMMAND AUTHORITY PASS:"),
+        ("multiplayer/match_state_smoke", "MATCH STATE PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
         ("action_camera_smoke", "ACTION CAMERA PASS:"),
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),
