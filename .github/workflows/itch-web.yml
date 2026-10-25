@@ -15,7 +15,8 @@ on:
         default: false
       channel:
         description: itch.io channel name
-        type: string
+        type: choice
+        options: [html5]
         required: true
         default: html5
 
@@ -27,25 +28,24 @@ permissions:
   contents: read
 
 jobs:
-  web:
+  build:
+    environment: ${{ github.ref == 'refs/heads/main' && 'spiders-production' || 'spiders-preview' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Check deployment configuration
+      - name: Check production runtime configuration
+        if: github.ref == 'refs/heads/main'
         env:
           GDSYNC_PUBLIC_KEY: ${{ secrets.GDSYNC_PUBLIC_KEY }}
           GDSYNC_PRIVATE_KEY: ${{ secrets.GDSYNC_PRIVATE_KEY }}
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-          PUBLISH: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy) }}
         run: |
-          : "${GDSYNC_PUBLIC_KEY:?Add the GDSYNC_PUBLIC_KEY Actions secret}"
-          : "${GDSYNC_PRIVATE_KEY:?Add the GDSYNC_PRIVATE_KEY Actions secret}"
-          if [[ "$PUBLISH" == "true" ]]; then
-            : "${BUTLER_API_KEY:?Add the BUTLER_API_KEY Actions secret}"
-          fi
+          : "${GDSYNC_PUBLIC_KEY:?Add GDSYNC_PUBLIC_KEY to spiders-production}"
+          : "${GDSYNC_PRIVATE_KEY:?Add GDSYNC_PRIVATE_KEY to spiders-production}"
 
       - name: Check out project
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Install Godot and export templates
         uses: chickensoft-games/setup-godot@f166999204a4f2722c6fe042fbaa3b3ea0d9c789 # v2.4.1
@@ -87,27 +87,37 @@ jobs:
         with:
           name: godot-web-build
           path: build/web/
-          retention-days: 7
+          retention-days: 1
 
-      - name: Install butler
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy)
+  deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy)
+    needs: build
+    environment: itch-production
+    permissions: {}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download the checked build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: godot-web-build
+          path: ${{ runner.temp }}/web
+
+      - name: Install verified butler
+        env:
+          BUTLER_VERSION: "15.32.0"
+          BUTLER_SHA256: "2335971394ef6596f95ded0833e85ee28755e13761716ef4c91d6b11f69162f5"
         run: |
-          curl -fsSL 'https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default' -o butler.zip
-          unzip -q butler.zip -d "$RUNNER_TEMP/butler"
+          curl -fsSL "https://broth.itch.zone/butler/linux-amd64/$BUTLER_VERSION/archive/default" -o "$RUNNER_TEMP/butler.zip"
+          printf '%s  %s\n' "$BUTLER_SHA256" "$RUNNER_TEMP/butler.zip" | sha256sum --check --strict
+          unzip -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
           chmod +x "$RUNNER_TEMP/butler/butler"
-          echo "$RUNNER_TEMP/butler" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/butler/butler" -V
 
       - name: Upload to itch.io
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy)
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-          ITCH_USER: ${{ vars.ITCH_USER || 'eeaeau' }}
-          ITCH_GAME: ${{ vars.ITCH_GAME || 'spiders' }}
           ITCH_CHANNEL: ${{ inputs.channel || 'html5' }}
         run: |
-          : "${BUTLER_API_KEY:?Set the BUTLER_API_KEY repository secret}"
-          : "${ITCH_USER:?Set the ITCH_USER repository variable}"
-          : "${ITCH_GAME:?Set the ITCH_GAME repository variable}"
-          : "${ITCH_CHANNEL:?Choose a channel}"
-          butler push build/web "$ITCH_USER/$ITCH_GAME:$ITCH_CHANNEL" --userversion "${GITHUB_SHA::7}"
+          : "${BUTLER_API_KEY:?Add BUTLER_API_KEY to itch-production}"
+          "$RUNNER_TEMP/butler/butler" push "$RUNNER_TEMP/web" "eeaeau/spiders:$ITCH_CHANNEL" --userversion "${GITHUB_SHA::7}"

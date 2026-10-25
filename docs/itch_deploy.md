@@ -1,29 +1,37 @@
-# Browser build and itch.io upload
+# Browser builds and itch.io deployment
 
-After this workflow is merged, game changes pushed to `main` run the local quality gate, export Web and upload to [Spiders on itch.io](https://eeaeau.itch.io/spiders). Documentation-only pushes are skipped. Deployments run in order so an older build cannot overwrite a newer one.
+Game changes merged to `main` run checks, export Web and upload to [Spiders on itch.io](https://eeaeau.itch.io/spiders). Documentation-only pushes are skipped. Uploads are serialized.
 
-## One-time configuration
+## Credential boundaries
 
-Add these encrypted **Actions secrets** to `Eeaeau/weave`:
+Configure these GitHub **environments**, each with a selected deployment **branch** rule matching only `main`:
 
-- `GDSYNC_PUBLIC_KEY` and `GDSYNC_PRIVATE_KEY`: runtime project keys for online-capable exports.
-- `BUTLER_API_KEY`: the itch.io upload key. It is available only to configuration checks and the upload step, never to the Godot export.
+- `spiders-production`: encrypted `GDSYNC_PUBLIC_KEY` and `GDSYNC_PRIVATE_KEY` secrets, available only to the production build job.
+- `itch-production`: encrypted `BUTLER_API_KEY`, available only to the isolated uploader. Use the `wharf` token created by `butler login`.
 
-Never put credential values in workflow files, repository variables or commits. GD-Sync bundles its runtime project keys in player builds as required by the SDK; dashboard credentials and the itch.io upload key must stay private.
+Do not store production credentials as repository-level secrets. A workflow edited on a feature branch could request repository secrets. Environment branch rules enforce the boundary outside the workflow file. Protect `main` and require owner review of workflow/CODEOWNERS changes.
 
-The upload destination defaults to `eeaeau/spiders:html5`. Optional Actions variables `ITCH_USER` and `ITCH_GAME` can override the account/game slugs.
+The uploader downloads this run's checked artifact. It does no source checkout and runs no game code. Butler is pinned to a version and verified SHA-256 checksum before the upload token is supplied. The token never reaches the build job or game export.
 
-After the first upload, set the itch.io project type to **HTML** and mark the uploaded channel **HTML5 / Playable in browser** on the game's edit page.
+GD-Sync requires both runtime keys in the exported game; players can extract them. Encrypted CI storage keeps them out of source and logs, not out of released clients. Dedicate the pair to Spiders, avoid an unused database link, and monitor service usage. Keep dashboard credentials and the itch upload token private.
 
 ## Manual builds
 
-Open **Actions > Build and deploy web to itch.io > Run workflow**. Any branch can create a downloadable artifact. Publishing is allowed only from `main`: select **deploy** and optionally choose a channel. No feature-branch push publishes a build.
+Open **Actions > Build and deploy web to itch.io > Run workflow**. Feature branches build a local-play preview without production keys, using the empty `spiders-preview` environment. Only `main` can build with production keys or publish; select **deploy** to upload a manual main build.
 
-Artifacts are retained for seven days. The deployed build is tagged with its source commit's short SHA. Missing credentials fail before tool installation; failed checks prevent uploading.
+The destination is `eeaeau/spiders:html5`. Artifacts are kept for one day; deployed builds are tagged with the source commit's short SHA. Failed checks prevent uploading.
+
+After the first upload, set the itch.io project type to **HTML** and mark the uploaded channel **HTML5 / Playable in browser**.
+
+## Secret maintenance
+
+Use `gh secret set NAME --repo Eeaeau/weave --env ENVIRONMENT`, supplying the value through stdin. Never put values in arguments, repository variables, commits or logs.
+
+If the itch token leaks, revoke it on itch.io, run `butler login` again, and replace the environment secret. A GD-Sync key replacement requires rebuilding clients; old builds stop connecting after the old pair is revoked.
 
 ## Local export
 
-The Web preset exports from Godot 4.7.2 into ignored `build/web/`, excludes tests and disables threading so ordinary itch.io hosting works without cross-origin isolation headers.
+The Web preset uses Godot 4.7.2, excludes tests and disables threading for ordinary itch.io hosting. Local runtime keys come from ignored `addons/GD-Sync/keys.cfg` or the two `GDSYNC_*` environment variables.
 
 ```powershell
 New-Item -ItemType Directory -Force build/web | Out-Null
