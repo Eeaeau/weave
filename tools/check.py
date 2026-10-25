@@ -259,6 +259,11 @@ def main() -> int:
         marker="MULTIPLAYER PASS:",
         timeout=65,
     )
+    run(
+        [sys.executable, "tools/check_lobby_errors.py", "--godot", str(godot)],
+        marker="LOBBY ERRORS PASS",
+        timeout=210,
+    )
     print("\nLOCAL CHECKS PASS")
     return 0
 
