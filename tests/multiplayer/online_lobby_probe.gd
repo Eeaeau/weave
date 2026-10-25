@@ -12,6 +12,10 @@ var _requested_ready := false
 var _both_ready := false
 var _settings_changed := false
 var _ready_revision := -1
+var _saw_countdown := false
+var _saw_cancellation := false
+var _cancel_test_started := false
+var _cancel_wait_complete := false
 
 
 func _ready() -> void:
@@ -89,6 +93,11 @@ func _announce_host() -> void:
 
 
 func _observe_pair() -> void:
+	if OnlineSession.match_settings.drops == 4:
+		if OnlineSession.countdown_remaining() >= 0:
+			_saw_countdown = true
+		elif _saw_countdown:
+			_saw_cancellation = true
 	if _role == "guest" and OnlineSession.set_match_settings(8):
 		_fail("Guest changed host settings")
 		return
@@ -101,6 +110,13 @@ func _observe_pair() -> void:
 		return
 	if OnlineSession.match_settings.drops != 4:
 		return
+	if _role == "host" and not _cancel_test_started:
+		_cancel_test_started = true
+		OnlineSession.set_ready(false)
+		get_tree().create_timer(3.3).timeout.connect(_check_countdown_cancelled)
+		return
+	if not _saw_cancellation or (_role == "host" and not _cancel_wait_complete):
+		return
 	_both_ready = true
 	_saw_guest = true
 	if _lobby.get_node("%PlayersCount").text != "2 / 2 players":
@@ -108,6 +124,14 @@ func _observe_pair() -> void:
 	elif _role == "guest":
 		_done = true
 		call_deferred("_finish")
+
+
+func _check_countdown_cancelled() -> void:
+	if OnlineSession.state != "in_lobby" or OnlineSession.countdown_remaining() >= 0:
+		_fail("Retracting readiness did not cancel the pending match start")
+		return
+	_cancel_wait_complete = true
+	OnlineSession.set_ready(true)
 
 
 func _ready_pair() -> bool:
@@ -123,6 +147,9 @@ func _ready_pair() -> bool:
 		ready_button.pressed.emit()
 	if OnlineSession.all_ready() and OnlineSession.can_start() != (_role == "host"):
 		_fail("Only the original host may start a ready lobby")
+		return false
+	if OnlineSession.all_ready() and not OnlineSession.has_method("countdown_remaining"):
+		_fail("All ready must start a cancellable countdown")
 		return false
 	return OnlineSession.all_ready()
 

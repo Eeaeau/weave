@@ -17,12 +17,16 @@ func _ready() -> void:
 	%ChoiceBackButton.pressed.connect(close_menu)
 	%CopyButton.pressed.connect(_copy_code)
 	%ReadyButton.pressed.connect(_toggle_ready)
-	%StartButton.pressed.connect(OnlineSession.start_match)
 	%LeaveButton.pressed.connect(close_menu)
 	drop_count.value_changed.connect(_change_drop_count)
 	code_field.text_submitted.connect(func(_text: String) -> void: _join())
 	OnlineSession.changed.connect(_refresh)
 	_refresh()
+
+
+func _process(_delta: float) -> void:
+	if visible and OnlineSession.state == "in_lobby":
+		_update_countdown()
 
 
 func open() -> void:
@@ -68,6 +72,15 @@ func _change_drop_count(value: float) -> void:
 	OnlineSession.set_match_settings(int(value))
 
 
+func _update_countdown() -> void:
+	var remaining := OnlineSession.countdown_remaining()
+	if remaining >= 0:
+		%LobbyStatus.text = "Starting in %d... Unready to cancel." % ceili(remaining)
+	else:
+		%LobbyStatus.text = "%d / %d ready. Ready up to start." % [
+			OnlineSession.ready_players.values().count(true), OnlineSession.PLAYER_LIMIT]
+
+
 func _refresh() -> void:
 	var in_lobby := OnlineSession.state == "in_lobby"
 	var busy := OnlineSession.is_busy()
@@ -89,13 +102,9 @@ func _refresh() -> void:
 	]
 	%PlayersList.text = _player_list()
 	%ReadyButton.disabled = OnlineSession.host_id < 0
-	%ReadyButton.text = "Not Ready" if OnlineSession.ready_players.get(
+	%ReadyButton.text = "Unready" if OnlineSession.ready_players.get(
 		GDSync.get_client_id(), false) else "Ready"
-	%StartButton.visible = is_host
-	%StartButton.disabled = not OnlineSession.can_start()
-	%LobbyStatus.text = "%d / %d ready. %s" % [
-		OnlineSession.ready_players.values().count(true), OnlineSession.PLAYER_LIMIT,
-		"Ready up to start." if is_host else "The host starts the match."]
+	_update_countdown()
 	drop_count.set_value_no_signal(OnlineSession.match_settings.drops)
 	drop_count.editable = is_host
 	%SettingsNote.text = "Changing settings resets readiness."

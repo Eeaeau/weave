@@ -6,7 +6,8 @@ const CODE_ALPHABET := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 const LOBBY_PREFIX := "spiders-v1-"
 const PLAYER_LIMIT := 2
 const PROTOCOL_VERSION := 1
-const CONTENT_VERSION := "spiders-online-3"
+const CONTENT_VERSION := "spiders-online-4"
+const READY_COUNTDOWN_SECONDS := 3.0
 const KEY_STORE := preload("res://addons/GD-Sync/Scripts/KeyStore.gd")
 
 var state := "idle"
@@ -16,6 +17,7 @@ var host_id := -1
 var players: Array[int] = []
 var ready_players: Dictionary = {}
 var match_settings := { "map": "canopy", "drops": 3, "revision": 0 }
+var _countdown_ends_at := -1.0
 var match_config: Dictionary = {}
 var transport: Node
 var replication: Node
@@ -47,6 +49,12 @@ func _ready() -> void:
 	GDSync.expose_func(_receive_readiness)
 
 
+func _process(_delta: float) -> void:
+	if can_start() and _countdown_ends_at >= 0 \
+			and GDSync.get_multiplayer_time() >= _countdown_ends_at:
+		start_match()
+
+
 func set_ready(value: bool) -> void:
 	if state != "in_lobby" or host_id < 0:
 		return
@@ -55,6 +63,12 @@ func set_ready(value: bool) -> void:
 	else:
 		GDSync.call_func_on(host_id, _receive_ready, PROTOCOL_VERSION, CONTENT_VERSION,
 			value, match_settings.revision)
+
+
+func countdown_remaining() -> float:
+	if state != "in_lobby" or _countdown_ends_at < 0:
+		return -1.0
+	return maxf(0.0, _countdown_ends_at - GDSync.get_multiplayer_time())
 
 
 func set_match_settings(drops: int, map_id: String = "canopy") -> bool:
@@ -95,7 +109,8 @@ func is_match_active() -> bool:
 
 
 func start_match() -> void:
-	if not can_start():
+	if not can_start() or _countdown_ends_at < 0 \
+			or GDSync.get_multiplayer_time() < _countdown_ends_at:
 		return
 	var slots := players.duplicate()
 	slots.sort()
@@ -196,22 +211,30 @@ func _accept_ready(sender: int, protocol: Variant, content: Variant, value: Vari
 
 func _publish_readiness() -> void:
 	if GDSync.get_client_id() == host_id:
-		GDSync.call_func(_receive_readiness, ready_players, match_settings)
+		if all_ready():
+			if _countdown_ends_at < 0:
+				_countdown_ends_at = GDSync.get_multiplayer_time() + READY_COUNTDOWN_SECONDS
+		else:
+			_countdown_ends_at = -1.0
+		GDSync.call_func(_receive_readiness, ready_players, match_settings, _countdown_ends_at)
 	changed.emit()
 
 
-func _receive_readiness(values: Variant, settings: Variant) -> void:
+func _receive_readiness(values: Variant, settings: Variant, countdown_end: Variant) -> void:
 	if state != "in_lobby" or GDSync.get_sender_id() != host_id or not values is Dictionary:
 		return
 	if values.size() > PLAYER_LIMIT:
 		return
 	if not _valid_settings(settings) or settings.revision < match_settings.revision:
 		return
+	if not countdown_end is float or not is_finite(countdown_end):
+		return
 	for player in values:
 		if not player is int or not players.has(player) or not values[player] is bool:
 			return
 	ready_players = values.duplicate()
 	match_settings = settings.duplicate()
+	_countdown_ends_at = countdown_end
 	changed.emit()
 
 
@@ -250,6 +273,7 @@ func leave_lobby() -> void:
 	players.clear()
 	ready_players.clear()
 	match_settings = { "map": "canopy", "drops": 3, "revision": 0 }
+	_countdown_ends_at = -1.0
 	match_config.clear()
 	replication = null
 	_pending_match_messages.clear()

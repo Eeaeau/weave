@@ -1,6 +1,6 @@
 # Multiplayer dependency setup
 
-Choose **Play > Online**, then **Host Lobby** to get a six-character code or **Join Lobby** to open code entry. The lobby shows players on the left and host-controlled match settings on the right. Both players select **Ready**, then the host selects **Start Match**. Both copies must use the same game version. **Leave Lobby** returns to the play menu.
+Choose **Play > Online**, then **Host Lobby** to get a six-character code or **Join Lobby** to open code entry. The lobby shows players on the left and host-controlled match settings on the right. When both players are ready, a three-second countdown starts the match automatically. Select **Unready** to cancel it. Both copies must use the same game version. **Leave Lobby** returns to the play menu.
 
 The host can set **Collectibles per wind** from 1 to 12 (default 3). Wind still happens at the start of each round. **Canopy** is currently the only map. Changing match settings clears readiness so both players confirm the new settings before starting.
 

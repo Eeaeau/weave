@@ -8,7 +8,6 @@ var _role := ""
 var _code := ""
 var _ready_requested := false
 var _ready_revision := -1
-var _start_requested := false
 var _announced := false
 var _done := false
 var _menu: MainMenu
@@ -389,13 +388,6 @@ func _observe_lobby() -> void:
 		_ready_requested = true
 		_ready_revision = OnlineSession.match_settings.revision
 		OnlineSession.set_ready(true)
-	if _role == "host" and OnlineSession.can_start() and not _start_requested:
-		var start := _menu.get_node("OnlineLobby").get_node_or_null("%StartButton") as Button
-		if start == null:
-			_fail("Online lobby has no Start action")
-		else:
-			_start_requested = true
-			start.pressed.emit.call_deferred()
 
 
 func _finish() -> void:
