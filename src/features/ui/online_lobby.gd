@@ -3,33 +3,52 @@ extends Control
 
 signal closed
 
-@onready var menu: VBoxContainer = $Center/Menu
-@onready var status_label: Label = $Center/Menu/Status
-@onready var code_field: LineEdit = $Center/Menu/JoinCode
+var _join_mode := false
+
+@onready var code_field: LineEdit = %JoinCode
+@onready var drop_count: SpinBox = %DropCount
 
 
 func _ready() -> void:
-	menu.get_node("HostButton").pressed.connect(OnlineSession.host_lobby)
-	menu.get_node("JoinButton").pressed.connect(_join)
-	menu.get_node("CopyButton").pressed.connect(_copy_code)
-	menu.get_node("ReadyButton").pressed.connect(_toggle_ready)
-	menu.get_node("StartButton").pressed.connect(OnlineSession.start_match)
-	menu.get_node("BackButton").pressed.connect(close_menu)
+	%HostButton.pressed.connect(OnlineSession.host_lobby)
+	%JoinButton.pressed.connect(_open_join)
+	%ConfirmJoinButton.pressed.connect(_join)
+	%JoinBackButton.pressed.connect(_back_from_join)
+	%ChoiceBackButton.pressed.connect(close_menu)
+	%CopyButton.pressed.connect(_copy_code)
+	%ReadyButton.pressed.connect(_toggle_ready)
+	%StartButton.pressed.connect(OnlineSession.start_match)
+	%LeaveButton.pressed.connect(close_menu)
+	drop_count.value_changed.connect(_change_drop_count)
 	code_field.text_submitted.connect(func(_text: String) -> void: _join())
 	OnlineSession.changed.connect(_refresh)
 	_refresh()
 
 
 func open() -> void:
+	_join_mode = false
 	show()
 	_refresh()
-	menu.get_node("HostButton").grab_focus()
+	%HostButton.grab_focus()
 
 
 func close_menu() -> void:
 	OnlineSession.leave_lobby()
 	hide()
 	closed.emit()
+
+
+func _open_join() -> void:
+	_join_mode = true
+	_refresh()
+	code_field.grab_focus()
+
+
+func _back_from_join() -> void:
+	OnlineSession.leave_lobby()
+	_join_mode = false
+	_refresh()
+	%JoinButton.grab_focus()
 
 
 func _join() -> void:
@@ -45,30 +64,60 @@ func _toggle_ready() -> void:
 	OnlineSession.set_ready(not OnlineSession.ready_players.get(GDSync.get_client_id(), false))
 
 
+func _change_drop_count(value: float) -> void:
+	OnlineSession.set_match_settings(int(value))
+
+
 func _refresh() -> void:
 	var in_lobby := OnlineSession.state == "in_lobby"
 	var busy := OnlineSession.is_busy()
-	status_label.text = OnlineSession.message
-	menu.get_node("HostButton").visible = not in_lobby
-	menu.get_node("HostButton").disabled = busy
-	menu.get_node("JoinButton").visible = not in_lobby
-	menu.get_node("JoinButton").disabled = busy
-	code_field.visible = not in_lobby
+	var is_host := OnlineSession.host_id >= 0 and OnlineSession.host_id == GDSync.get_client_id()
+	$ChoiceCenter.visible = not in_lobby and not _join_mode
+	$JoinCenter.visible = not in_lobby and _join_mode
+	$LobbyMargin.visible = in_lobby
+	%ChoiceStatus.text = OnlineSession.message
+	%JoinStatus.text = OnlineSession.message
+	%HostButton.disabled = busy
+	%JoinButton.disabled = busy
+	%ConfirmJoinButton.disabled = busy
 	code_field.editable = not busy
-	menu.get_node("Code").visible = in_lobby
-	menu.get_node("Code").text = OnlineSession.code
-	menu.get_node("CopyButton").visible = in_lobby
-	menu.get_node("Players").visible = in_lobby
-	menu.get_node("Players").text = "%d / %d players" % [
-		OnlineSession.players.size(), OnlineSession.PLAYER_LIMIT]
-	menu.get_node("ReadyButton").visible = in_lobby
-	menu.get_node("ReadyButton").disabled = OnlineSession.host_id < 0
-	menu.get_node("ReadyButton").text = "Not Ready" if OnlineSession.ready_players.get(
+	%JoinBackButton.text = "Cancel" if busy else "Back"
+	%Code.text = OnlineSession.code
+	%PlayersCount.text = "%d / %d players" % [
+		OnlineSession.players.size(),
+		OnlineSession.PLAYER_LIMIT,
+	]
+	%PlayersList.text = _player_list()
+	%ReadyButton.disabled = OnlineSession.host_id < 0
+	%ReadyButton.text = "Not Ready" if OnlineSession.ready_players.get(
 		GDSync.get_client_id(), false) else "Ready"
-	menu.get_node("ReadyCount").visible = in_lobby
-	menu.get_node("ReadyCount").text = "%d / %d ready" % [
-		OnlineSession.ready_players.values().count(true), OnlineSession.PLAYER_LIMIT]
-	menu.get_node("StartButton").visible = (in_lobby
-		and OnlineSession.host_id == GDSync.get_client_id())
-	menu.get_node("StartButton").disabled = not OnlineSession.can_start()
-	menu.get_node("BackButton").text = "Leave Lobby" if in_lobby else "Back"
+	%StartButton.visible = is_host
+	%StartButton.disabled = not OnlineSession.can_start()
+	%LobbyStatus.text = "%d / %d ready. %s" % [
+		OnlineSession.ready_players.values().count(true), OnlineSession.PLAYER_LIMIT,
+		"Ready up to start." if is_host else "The host starts the match."]
+	drop_count.set_value_no_signal(OnlineSession.match_settings.drops)
+	drop_count.editable = is_host
+	%SettingsNote.text = "Changing settings resets readiness."
+	if not is_host:
+		%SettingsNote.text = "Host controls match settings."
+
+
+func _player_list() -> String:
+	var players := OnlineSession.players.duplicate()
+	players.sort()
+	players.erase(OnlineSession.host_id)
+	if OnlineSession.host_id >= 0:
+		players.push_front(OnlineSession.host_id)
+	var rows := PackedStringArray()
+	for index in range(OnlineSession.PLAYER_LIMIT):
+		if index >= players.size():
+			rows.append("Waiting for player...")
+			continue
+		var id: int = players[index]
+		var label := "Host" if id == OnlineSession.host_id else "Player %d" % (index + 1)
+		if id == GDSync.get_client_id():
+			label += " (You)"
+		rows.append("%s\n%s" % [label,
+			"Ready" if OnlineSession.ready_players.get(id, false) else "Not ready"])
+	return "\n\n".join(rows)

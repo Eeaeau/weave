@@ -6,7 +6,7 @@ const CODE_ALPHABET := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 const LOBBY_PREFIX := "spiders-v1-"
 const PLAYER_LIMIT := 2
 const PROTOCOL_VERSION := 1
-const CONTENT_VERSION := "spiders-online-2"
+const CONTENT_VERSION := "spiders-online-3"
 const KEY_STORE := preload("res://addons/GD-Sync/Scripts/KeyStore.gd")
 
 var state := "idle"
@@ -15,6 +15,7 @@ var code := ""
 var host_id := -1
 var players: Array[int] = []
 var ready_players: Dictionary = {}
+var match_settings := { "map": "canopy", "drops": 3, "revision": 0 }
 var match_config: Dictionary = {}
 var transport: Node
 var replication: Node
@@ -50,9 +51,30 @@ func set_ready(value: bool) -> void:
 	if state != "in_lobby" or host_id < 0:
 		return
 	if GDSync.get_client_id() == host_id:
-		_accept_ready(host_id, PROTOCOL_VERSION, CONTENT_VERSION, value)
+		_accept_ready(host_id, PROTOCOL_VERSION, CONTENT_VERSION, value, match_settings.revision)
 	else:
-		GDSync.call_func_on(host_id, _receive_ready, PROTOCOL_VERSION, CONTENT_VERSION, value)
+		GDSync.call_func_on(host_id, _receive_ready, PROTOCOL_VERSION, CONTENT_VERSION,
+			value, match_settings.revision)
+
+
+func set_match_settings(drops: int, map_id: String = "canopy") -> bool:
+	if state != "in_lobby" or host_id < 0 or GDSync.get_client_id() != host_id:
+		return false
+	var next := { "map": map_id, "drops": drops, "revision": match_settings.revision + 1 }
+	if not _valid_settings(next):
+		return false
+	if drops == match_settings.drops and map_id == match_settings.map:
+		return true
+	match_settings = next
+	ready_players.clear()
+	_publish_readiness()
+	return true
+
+
+func _valid_settings(value: Variant) -> bool:
+	return value is Dictionary and value.size() == 3 and value.get("map") == "canopy" \
+		and value.get("drops") is int and value.drops >= 1 and value.drops <= 12 \
+		and value.get("revision") is int and value.revision >= 0 and value.revision <= 1_000_000
 
 
 func all_ready() -> bool:
@@ -83,7 +105,8 @@ func start_match() -> void:
 		"seed": randi_range(
 			1,
 			2_147_483_647,
-		), "protocol": PROTOCOL_VERSION, "content": CONTENT_VERSION}
+		), "protocol": PROTOCOL_VERSION, "content": CONTENT_VERSION,
+		"settings": match_settings.duplicate()}
 	GDSync.lobby_close()
 	transport.broadcast("prepare", config)
 	_prepare_match(config)
@@ -126,6 +149,8 @@ func _valid_match_config(config: Dictionary) -> bool:
 			or not config.get("match") is String or config.match.length() != 32 \
 			or not config.get("seed") is int or not config.get("slots") is Array:
 		return false
+	if not _valid_settings(config.get("settings")) or config.settings != match_settings:
+		return false
 	var slots: Array = config.slots
 	if slots.size() != PLAYER_LIMIT or slots[0] != host_id:
 		return false
@@ -151,14 +176,19 @@ func end_match(reason: String) -> void:
 		_fail(reason)
 
 
-func _receive_ready(protocol: Variant, content: Variant, value: Variant) -> void:
-	_accept_ready(GDSync.get_sender_id(), protocol, content, value)
+func _receive_ready(protocol: Variant, content: Variant, value: Variant,
+		settings_revision: Variant) -> void:
+	_accept_ready(GDSync.get_sender_id(), protocol, content, value, settings_revision)
 
 
-func _accept_ready(sender: int, protocol: Variant, content: Variant, value: Variant) -> void:
+func _accept_ready(sender: int, protocol: Variant, content: Variant, value: Variant,
+		settings_revision: Variant) -> void:
 	if state != "in_lobby" or GDSync.get_client_id() != host_id or not players.has(sender):
 		return
 	if protocol != PROTOCOL_VERSION or content != CONTENT_VERSION or not value is bool:
+		return
+	if not settings_revision is int or settings_revision != match_settings.revision:
+		_publish_readiness()
 		return
 	ready_players[sender] = value
 	_publish_readiness()
@@ -166,19 +196,22 @@ func _accept_ready(sender: int, protocol: Variant, content: Variant, value: Vari
 
 func _publish_readiness() -> void:
 	if GDSync.get_client_id() == host_id:
-		GDSync.call_func(_receive_readiness, ready_players)
+		GDSync.call_func(_receive_readiness, ready_players, match_settings)
 	changed.emit()
 
 
-func _receive_readiness(values: Variant) -> void:
+func _receive_readiness(values: Variant, settings: Variant) -> void:
 	if state != "in_lobby" or GDSync.get_sender_id() != host_id or not values is Dictionary:
 		return
 	if values.size() > PLAYER_LIMIT:
 		return
+	if not _valid_settings(settings) or settings.revision < match_settings.revision:
+		return
 	for player in values:
-		if not player is int or not values[player] is bool:
+		if not player is int or not players.has(player) or not values[player] is bool:
 			return
 	ready_players = values.duplicate()
+	match_settings = settings.duplicate()
 	changed.emit()
 
 
@@ -216,6 +249,7 @@ func leave_lobby() -> void:
 	host_id = -1
 	players.clear()
 	ready_players.clear()
+	match_settings = { "map": "canopy", "drops": 3, "revision": 0 }
 	match_config.clear()
 	replication = null
 	_pending_match_messages.clear()

@@ -100,11 +100,21 @@ func _check_online_menu(menu: MainMenu) -> bool:
 	var lobby := menu.get_node("OnlineLobby") as Control
 	if not lobby.visible or play_menu.visible:
 		return false
-	lobby.get_node("Center/Menu/BackButton").pressed.emit()
+	if not _check_join_form(lobby):
+		return false
+	lobby.get_node("%ChoiceBackButton").pressed.emit()
 	if not play_menu.visible or lobby.visible:
 		return false
 	play_menu.get_node("BackButton").pressed.emit()
 	return menu.get_node("Center").visible
+
+
+func _check_join_form(lobby: Control) -> bool:
+	lobby.get_node("%JoinButton").pressed.emit()
+	if not lobby.get_node("%JoinCode").is_visible_in_tree():
+		return false
+	lobby.get_node("%JoinBackButton").pressed.emit()
+	return not lobby.get_node("%JoinCode").is_visible_in_tree()
 
 
 func _fail(message: String) -> void:

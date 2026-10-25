@@ -1,6 +1,17 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/features/ui/online_lobby.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="PanelStyle"]
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
+bg_color = Color(0.11, 0.16, 0.23, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="OnlineLobby" type="Control"]
 visible = false
@@ -21,7 +32,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.12, 0.18, 1)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="ChoiceCenter" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,69 +40,246 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Menu" type="VBoxContainer" parent="Center"]
+[node name="Menu" type="VBoxContainer" parent="ChoiceCenter"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Center/Menu"]
+[node name="Title" type="Label" parent="ChoiceCenter/Menu"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "ONLINE"
 horizontal_alignment = 1
 
-[node name="Status" type="Label" parent="Center/Menu"]
-custom_minimum_size = Vector2(400, 48)
+[node name="ChoiceStatus" type="Label" parent="ChoiceCenter/Menu"]
+unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = ""
+custom_minimum_size = Vector2(400, 48)
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="HostButton" type="Button" parent="Center/Menu"]
-custom_minimum_size = Vector2(0, 48)
+[node name="HostButton" type="Button" parent="ChoiceCenter/Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 text = "Host Lobby"
 
-[node name="JoinCode" type="LineEdit" parent="Center/Menu"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-placeholder_text = "Lobby code"
-max_length = 16
-alignment = 1
-
-[node name="JoinButton" type="Button" parent="Center/Menu"]
-custom_minimum_size = Vector2(0, 48)
+[node name="JoinButton" type="Button" parent="ChoiceCenter/Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 text = "Join Lobby"
 
-[node name="Code" type="Label" parent="Center/Menu"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 40
-horizontal_alignment = 1
-
-[node name="CopyButton" type="Button" parent="Center/Menu"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-text = "Copy Code"
-
-[node name="Players" type="Label" parent="Center/Menu"]
-layout_mode = 2
-horizontal_alignment = 1
-
-[node name="BackButton" type="Button" parent="Center/Menu"]
-custom_minimum_size = Vector2(0, 48)
+[node name="ChoiceBackButton" type="Button" parent="ChoiceCenter/Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 text = "Back"
 
-[node name="ReadyCount" type="Label" parent="Center/Menu"]
+[node name="JoinCenter" type="CenterContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Menu" type="VBoxContainer" parent="JoinCenter"]
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="JoinCenter/Menu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "JOIN LOBBY"
 horizontal_alignment = 1
 
-[node name="ReadyButton" type="Button" parent="Center/Menu"]
+[node name="JoinStatus" type="Label" parent="JoinCenter/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = ""
+custom_minimum_size = Vector2(400, 48)
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="JoinCode" type="LineEdit" parent="JoinCenter/Menu"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+placeholder_text = "Six-character lobby code"
+max_length = 16
+alignment = 1
+
+[node name="ConfirmJoinButton" type="Button" parent="JoinCenter/Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+text = "Join"
+
+[node name="JoinBackButton" type="Button" parent="JoinCenter/Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+text = "Back"
+
+[node name="LobbyMargin" type="MarginContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 64.0
+offset_top = 40.0
+offset_right = -64.0
+offset_bottom = -40.0
+
+[node name="Lobby" type="VBoxContainer" parent="LobbyMargin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Header" type="HBoxContainer" parent="LobbyMargin/Lobby"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="LobbyMargin/Lobby/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "LOBBY"
+size_flags_horizontal = 3
+
+[node name="CodeLabel" type="Label" parent="LobbyMargin/Lobby/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Lobby code"
+
+[node name="Code" type="Label" parent="LobbyMargin/Lobby/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = ""
+custom_minimum_size = Vector2(180, 0)
+horizontal_alignment = 1
+
+[node name="CopyButton" type="Button" parent="LobbyMargin/Lobby/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+text = "Copy Code"
+
+[node name="Columns" type="HBoxContainer" parent="LobbyMargin/Lobby"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="PlayersPanel" type="PanelContainer" parent="LobbyMargin/Lobby/Columns"]
+custom_minimum_size = Vector2(300, 280)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("PanelStyle")
+
+[node name="Content" type="VBoxContainer" parent="LobbyMargin/Lobby/Columns/PlayersPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SettingsPanel" type="PanelContainer" parent="LobbyMargin/Lobby/Columns"]
+custom_minimum_size = Vector2(360, 280)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("PanelStyle")
+
+[node name="Content" type="VBoxContainer" parent="LobbyMargin/Lobby/Columns/SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="PlayersCount" type="Label" parent="LobbyMargin/Lobby/Columns/PlayersPanel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Players"
+
+[node name="PlayersList" type="Label" parent="LobbyMargin/Lobby/Columns/PlayersPanel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = ""
+
+[node name="Title" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Match settings"
+
+[node name="MapLabel" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Map"
+
+[node name="MapSelection" type="OptionButton" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+disabled = true
+item_count = 1
+selected = 0
+popup/item_0/text = "Canopy"
+popup/item_0/id = 0
+
+[node name="DropsLabel" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Collectibles per wind"
+
+[node name="DropCount" type="SpinBox" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+min_value = 1.0
+max_value = 12.0
+value = 3.0
+alignment = 1
+
+[node name="SettingsNote" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Changing settings resets readiness."
+autowrap_mode = 2
+
+[node name="LobbyStatus" type="Label" parent="LobbyMargin/Lobby"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = ""
+horizontal_alignment = 2
+
+[node name="Footer" type="HBoxContainer" parent="LobbyMargin/Lobby"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LeaveButton" type="Button" parent="LobbyMargin/Lobby/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+text = "Leave Lobby"
+
+[node name="Spacer" type="Control" parent="LobbyMargin/Lobby/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ReadyButton" type="Button" parent="LobbyMargin/Lobby/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 text = "Ready"
 
-[node name="StartButton" type="Button" parent="Center/Menu"]
-custom_minimum_size = Vector2(0, 48)
+[node name="StartButton" type="Button" parent="LobbyMargin/Lobby/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 text = "Start Match"

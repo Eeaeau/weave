@@ -10,6 +10,8 @@ var _done := false
 var _checking_rehost := false
 var _requested_ready := false
 var _both_ready := false
+var _settings_changed := false
+var _ready_revision := -1
 
 
 func _ready() -> void:
@@ -28,17 +30,24 @@ func _run() -> void:
 	_menu.get_node("Center/Menu/PlayButton").pressed.emit()
 	_menu.get_node("PlayMenu/OnlineButton").pressed.emit()
 	_lobby = _menu.get_node("OnlineLobby")
+	if _lobby.get_node("%JoinCode").is_visible_in_tree():
+		_fail("Code entry should only appear after choosing Join Lobby")
+		return
 	OnlineSession.changed.connect(_observe)
 	if _role == "host":
-		_lobby.get_node("Center/Menu/HostButton").pressed.emit()
+		_lobby.get_node("%HostButton").pressed.emit()
 	else:
-		_lobby.get_node("Center/Menu/JoinCode").text = "!"
-		_lobby.get_node("Center/Menu/JoinButton").pressed.emit()
+		_lobby.get_node("%JoinButton").pressed.emit()
+		if not _lobby.get_node("%JoinCode").is_visible_in_tree():
+			_fail("Join Lobby did not open code entry")
+			return
+		_lobby.get_node("%JoinCode").text = "!"
+		_lobby.get_node("%ConfirmJoinButton").pressed.emit()
 		if OnlineSession.state != "error" or GDSync.is_active():
 			_fail("Invalid code was not rejected before connecting")
 			return
-		_lobby.get_node("Center/Menu/JoinCode").text = " " + _join_code.to_lower() + " "
-		_lobby.get_node("Center/Menu/JoinButton").pressed.emit()
+		_lobby.get_node("%JoinCode").text = " " + _join_code.to_lower() + " "
+		_lobby.get_node("%ConfirmJoinButton").pressed.emit()
 
 
 func _observe() -> void:
@@ -58,23 +67,45 @@ func _observe() -> void:
 			_done = true
 			call_deferred("_finish")
 		return
-	if _lobby.get_node("Center/Menu/Code").text != OnlineSession.code:
+	if _lobby.get_node("%Code").text != OnlineSession.code:
 		_fail("The visible code differs from the joined lobby")
 		return
-	if _role == "host" and not _announced:
-		_announced = true
-		print("ONLINE_LOBBY_READY: ", OnlineSession.code)
+	if _role == "host" and not _announced and OnlineSession.host_id >= 0:
+		_announce_host()
 	if OnlineSession.players.size() == 2:
-		if not _ready_pair():
-			return
-		_both_ready = true
-		_saw_guest = true
-		if _lobby.get_node("Center/Menu/Players").text != "2 / 2 players":
-			_fail("Player count did not update")
-		elif _role == "guest":
-			_done = true
-			call_deferred("_finish")
+		_observe_pair()
 	elif _role == "host" and _saw_guest and _both_ready:
+		_done = true
+		call_deferred("_finish")
+
+
+func _announce_host() -> void:
+	_announced = true
+	if OnlineSession.set_match_settings(0):
+		_fail("Invalid drop count was accepted")
+		return
+	_lobby.get_node("%DropCount").value = 5
+	print("ONLINE_LOBBY_READY: ", OnlineSession.code)
+
+
+func _observe_pair() -> void:
+	if _role == "guest" and OnlineSession.set_match_settings(8):
+		_fail("Guest changed host settings")
+		return
+	if not _ready_pair():
+		return
+	if OnlineSession.match_settings.drops == 5:
+		if _role == "host" and not _settings_changed:
+			_settings_changed = true
+			_lobby.get_node("%DropCount").value = 4
+		return
+	if OnlineSession.match_settings.drops != 4:
+		return
+	_both_ready = true
+	_saw_guest = true
+	if _lobby.get_node("%PlayersCount").text != "2 / 2 players":
+		_fail("Player count did not update")
+	elif _role == "guest":
 		_done = true
 		call_deferred("_finish")
 
@@ -82,12 +113,13 @@ func _observe() -> void:
 func _ready_pair() -> bool:
 	if OnlineSession.host_id < 0:
 		return false
-	if not _requested_ready:
-		var ready_button := _lobby.get_node_or_null("Center/Menu/ReadyButton") as Button
+	if not _requested_ready or _ready_revision != OnlineSession.match_settings.revision:
+		var ready_button := _lobby.get_node_or_null("%ReadyButton") as Button
 		if ready_button == null:
 			_fail("Lobby has no Ready action")
 			return false
 		_requested_ready = true
+		_ready_revision = OnlineSession.match_settings.revision
 		ready_button.pressed.emit()
 	if OnlineSession.all_ready() and OnlineSession.can_start() != (_role == "host"):
 		_fail("Only the original host may start a ready lobby")
@@ -96,7 +128,7 @@ func _ready_pair() -> bool:
 
 
 func _finish() -> void:
-	_lobby.get_node("Center/Menu/BackButton").pressed.emit()
+	_lobby.get_node("%LeaveButton").pressed.emit()
 	if OnlineSession.state != "idle" or not _menu.get_node("PlayMenu").visible:
 		push_error("ONLINE_LOBBY_FAIL: Leaving did not return to the play menu")
 		get_tree().quit(1)
@@ -105,7 +137,7 @@ func _finish() -> void:
 		_checking_rehost = true
 		_done = false
 		_menu.get_node("PlayMenu/OnlineButton").pressed.emit()
-		_lobby.get_node("Center/Menu/HostButton").pressed.emit()
+		_lobby.get_node("%HostButton").pressed.emit()
 		return
 	_menu.queue_free()
 	await get_tree().process_frame

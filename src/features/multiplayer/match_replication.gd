@@ -288,6 +288,7 @@ func setup(arena: WebMatch3D) -> void:
 		for spider in team.spiders:
 			spider.silk_builder.network_replica = not _host
 	_arena.wind_event.set_process(false)
+	_arena.wind_event.group_size = OnlineSession.match_config.settings.drops
 	_arena.wind_event.reset_match(OnlineSession.match_config.seed)
 	if _host:
 		_arena.wind_event.group_planned.connect(_on_wind_planned)

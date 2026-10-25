@@ -7,6 +7,7 @@ const COMMAND := preload("res://src/features/multiplayer/player_command.gd")
 var _role := ""
 var _code := ""
 var _ready_requested := false
+var _ready_revision := -1
 var _start_requested := false
 var _announced := false
 var _done := false
@@ -15,6 +16,7 @@ var _scenario := "load"
 var _testing_turns := false
 var _rejected_command := false
 var _damage_events := 0
+var _interactive := false
 
 
 func _ready() -> void:
@@ -25,7 +27,10 @@ func _ready() -> void:
 			_code = argument.trim_prefix("--code=")
 		elif argument.begins_with("--scenario="):
 			_scenario = argument.trim_prefix("--scenario=")
-	get_tree().create_timer(35.0).timeout.connect(func() -> void: _fail("Match load timed out"))
+		elif argument == "--interactive":
+			_interactive = true
+	get_tree().create_timer(120.0 if _interactive else 35.0).timeout.connect(
+		func() -> void: _fail("Match load timed out"))
 	get_tree().scene_changed.connect(_configure_match)
 	call_deferred("_open_menu")
 
@@ -71,6 +76,9 @@ func _check_loaded_match() -> void:
 	var driver := arena.get_node_or_null("MatchReplication")
 	if driver == null or not driver.get("initial_state_confirmed"):
 		_fail("Controls activated before the initial state acknowledgement")
+		return
+	if arena.wind_event.group_size != OnlineSession.match_config.settings.drops:
+		_fail("The selected drop count did not reach the match")
 		return
 	if not arena.get_node("MatchManager").waiting_for_wind:
 		return
@@ -334,7 +342,7 @@ func _move_spider(driver: Node, spider: PlayerSpider3D, command_script: GDScript
 
 
 func _wait_until(predicate: Callable) -> bool:
-	var deadline := Time.get_ticks_msec() + 12_000
+	var deadline := Time.get_ticks_msec() + (60_000 if _interactive else 12_000)
 	while not _done and not predicate.call():
 		if Time.get_ticks_msec() > deadline:
 			_fail("Timed out waiting for an acknowledged gameplay transition")
@@ -370,14 +378,19 @@ func _observe_lobby() -> void:
 		return
 	if OnlineSession.state != "in_lobby":
 		return
-	if _role == "host" and not _announced:
+	if _role == "host" and not _announced and OnlineSession.host_id >= 0:
 		_announced = true
+		if _scenario == "turns":
+			OnlineSession.set_match_settings(5)
 		print("ONLINE_LOBBY_READY: ", OnlineSession.code)
-	if OnlineSession.players.size() == 2 and OnlineSession.host_id >= 0 and not _ready_requested:
+	if (OnlineSession.players.size() == 2
+			and OnlineSession.host_id >= 0
+			and (not _ready_requested or _ready_revision != OnlineSession.match_settings.revision)):
 		_ready_requested = true
+		_ready_revision = OnlineSession.match_settings.revision
 		OnlineSession.set_ready(true)
 	if _role == "host" and OnlineSession.can_start() and not _start_requested:
-		var start := _menu.get_node_or_null("OnlineLobby/Center/Menu/StartButton") as Button
+		var start := _menu.get_node("OnlineLobby").get_node_or_null("%StartButton") as Button
 		if start == null:
 			_fail("Online lobby has no Start action")
 		else:
