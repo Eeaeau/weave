@@ -15,3 +15,7 @@ The current spider, branch, web, and weapon visuals are drawn in Godot code for 
 | Soft wind (alternate) | storegraphic | [Pixabay](https://pixabay.com/sound-effects/soft-wind-477404/) | [Pixabay Content License](https://pixabay.com/service/license-summary/) | Unmodified, unused candidate |
 
 Add art, audio, fonts, and plugin credits here as they enter the project.
+
+## Plugins
+
+GD-Sync 1.0.2, [revision ba7f8e4](https://github.com/GD-Sync/GD-Sync/tree/ba7f8e4068f6afb4b72e7b864a1e0c0c4e1069c2), is included under `addons/GD-Sync`. Local compatibility fixes guard absent startup scenes and editor signals, disable the profiler without an attached debugger, and create log directories recursively. See its bundled `LICENSE` for redistribution terms.
