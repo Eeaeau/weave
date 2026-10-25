@@ -4,7 +4,9 @@ Choose **Play > Online**, then **Host Lobby** to get a six-character code or **J
 
 The host can set **Collectibles per wind** from 1 to 12 (default 3). Wind still happens at the start of each round. **Canopy** is currently the only map. Changing match settings clears readiness so both players confirm the new settings before starting.
 
-Online play is in development. Movement, aiming, turns, wind, projectiles and silk building use host authority. Guests animate shots locally and display the host-approved silk targets. Remaining acceptance tests and the final design review are pending. Play starts after both scenes load and acknowledge the initial state. **Play > Local** opens the existing local game.
+Online play is in development. Movement, aiming, turns, wind, projectiles and silk building use host authority. Guests animate shots locally and display the host-approved silk targets. Remaining acceptance tests and the final design review are pending. Play starts after both scenes load and acknowledge the initial state.
+
+**Play > Local** opens the same map/drop settings. Its **Play** button starts immediately, with no readiness or countdown.
 
 GD-Sync 1.0.2 is pinned in `addons/GD-Sync`. The editor plugin and `GDSync` autoload are registered in `project.godot`. Dependency credits, revision and compatibility fixes are in `ATTRIBUTION.md`.
 

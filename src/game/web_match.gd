@@ -3,6 +3,8 @@ extends Node3D
 
 signal collectible_contact_resolved(id: String, caught: bool, world_point: Vector3)
 
+const OPTIONS := preload("res://src/game/match_options.gd")
+
 @export var sound_tracks: Array[AudioStream]
 
 var _current_track_index := -1
@@ -17,6 +19,14 @@ var _current_track_index := -1
 	$BranchCanopy/Branches/RightBranch/StartingWeb,
 ]
 @onready var audio_stream_player: AudioStreamPlayer = $AudioStreamPlayer
+
+
+func _enter_tree() -> void:
+	if get_node("/root/OnlineSession").is_match_active():
+		return
+	var local_options: Dictionary = OPTIONS.consume_local(get_tree())
+	if not local_options.is_empty():
+		get_node("BranchCanopy/WindEvent").group_size = local_options.drops
 
 
 func _ready() -> void:

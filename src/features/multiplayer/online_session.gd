@@ -9,6 +9,7 @@ const PROTOCOL_VERSION := 1
 const CONTENT_VERSION := "spiders-online-4"
 const READY_COUNTDOWN_SECONDS := 3.0
 const KEY_STORE := preload("res://addons/GD-Sync/Scripts/KeyStore.gd")
+const OPTIONS := preload("res://src/game/match_options.gd")
 
 var state := "idle"
 var message := "Host a lobby or enter a friend's code."
@@ -16,7 +17,7 @@ var code := ""
 var host_id := -1
 var players: Array[int] = []
 var ready_players: Dictionary = {}
-var match_settings := { "map": "canopy", "drops": 3, "revision": 0 }
+var match_settings: Dictionary = OPTIONS.defaults().merged({ "revision": 0 })
 var _countdown_ends_at := -1.0
 var match_config: Dictionary = {}
 var transport: Node
@@ -86,8 +87,7 @@ func set_match_settings(drops: int, map_id: String = "canopy") -> bool:
 
 
 func _valid_settings(value: Variant) -> bool:
-	return value is Dictionary and value.size() == 3 and value.get("map") == "canopy" \
-		and value.get("drops") is int and value.drops >= 1 and value.drops <= 12 \
+	return OPTIONS.valid(value) and value.size() == 3 \
 		and value.get("revision") is int and value.revision >= 0 and value.revision <= 1_000_000
 
 
@@ -272,7 +272,7 @@ func leave_lobby() -> void:
 	host_id = -1
 	players.clear()
 	ready_players.clear()
-	match_settings = { "map": "canopy", "drops": 3, "revision": 0 }
+	match_settings = OPTIONS.defaults().merged({ "revision": 0 })
 	_countdown_ends_at = -1.0
 	match_config.clear()
 	replication = null

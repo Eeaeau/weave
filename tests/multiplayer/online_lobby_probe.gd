@@ -88,7 +88,7 @@ func _announce_host() -> void:
 	if OnlineSession.set_match_settings(0):
 		_fail("Invalid drop count was accepted")
 		return
-	_lobby.get_node("%DropCount").value = 5
+	_lobby.get("options").drop_count.value = 5
 	print("ONLINE_LOBBY_READY: ", OnlineSession.code)
 
 
@@ -106,7 +106,7 @@ func _observe_pair() -> void:
 	if OnlineSession.match_settings.drops == 5:
 		if _role == "host" and not _settings_changed:
 			_settings_changed = true
-			_lobby.get_node("%DropCount").value = 4
+			_lobby.get("options").drop_count.value = 4
 		return
 	if OnlineSession.match_settings.drops != 4:
 		return

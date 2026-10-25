@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/features/ui/online_lobby.gd" id="1"]
+
+[ext_resource type="PackedScene" path="res://src/features/ui/match_options_panel.tscn" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="PanelStyle"]
 content_margin_left = 24.0
@@ -188,15 +190,9 @@ theme_override_styles/panel = SubResource("PanelStyle")
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="SettingsPanel" type="PanelContainer" parent="LobbyMargin/Lobby/Columns"]
-custom_minimum_size = Vector2(360, 280)
+[node name="SettingsPanel" parent="LobbyMargin/Lobby/Columns" instance=ExtResource("2")]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("PanelStyle")
-
-[node name="Content" type="VBoxContainer" parent="LobbyMargin/Lobby/Columns/SettingsPanel"]
-layout_mode = 2
-theme_override_constants/separation = 20
 
 [node name="PlayersCount" type="Label" parent="LobbyMargin/Lobby/Columns/PlayersPanel/Content"]
 unique_name_in_owner = true
@@ -209,47 +205,6 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = ""
-
-[node name="Title" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Match settings"
-
-[node name="MapLabel" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Map"
-
-[node name="MapSelection" type="OptionButton" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-disabled = true
-item_count = 1
-selected = 0
-popup/item_0/text = "Canopy"
-popup/item_0/id = 0
-
-[node name="DropsLabel" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Collectibles per wind"
-
-[node name="DropCount" type="SpinBox" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-min_value = 1.0
-max_value = 12.0
-value = 3.0
-alignment = 1
-
-[node name="SettingsNote" type="Label" parent="LobbyMargin/Lobby/Columns/SettingsPanel/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Changing settings resets readiness."
-autowrap_mode = 2
 
 [node name="LobbyStatus" type="Label" parent="LobbyMargin/Lobby"]
 unique_name_in_owner = true

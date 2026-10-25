@@ -6,7 +6,7 @@ signal closed
 var _join_mode := false
 
 @onready var code_field: LineEdit = %JoinCode
-@onready var drop_count: SpinBox = %DropCount
+@onready var options: PanelContainer = $LobbyMargin/Lobby/Columns/SettingsPanel
 
 
 func _ready() -> void:
@@ -18,7 +18,7 @@ func _ready() -> void:
 	%CopyButton.pressed.connect(_copy_code)
 	%ReadyButton.pressed.connect(_toggle_ready)
 	%LeaveButton.pressed.connect(close_menu)
-	drop_count.value_changed.connect(_change_drop_count)
+	options.drop_count_changed.connect(_change_drop_count)
 	code_field.text_submitted.connect(func(_text: String) -> void: _join())
 	OnlineSession.changed.connect(_refresh)
 	_refresh()
@@ -68,8 +68,8 @@ func _toggle_ready() -> void:
 	OnlineSession.set_ready(not OnlineSession.ready_players.get(GDSync.get_client_id(), false))
 
 
-func _change_drop_count(value: float) -> void:
-	OnlineSession.set_match_settings(int(value))
+func _change_drop_count(value: int) -> void:
+	OnlineSession.set_match_settings(value)
 
 
 func _update_countdown() -> void:
@@ -105,11 +105,10 @@ func _refresh() -> void:
 	%ReadyButton.text = "Unready" if OnlineSession.ready_players.get(
 		GDSync.get_client_id(), false) else "Ready"
 	_update_countdown()
-	drop_count.set_value_no_signal(OnlineSession.match_settings.drops)
-	drop_count.editable = is_host
-	%SettingsNote.text = "Changing settings resets readiness."
+	var note := "Changing settings resets readiness."
 	if not is_host:
-		%SettingsNote.text = "Host controls match settings."
+		note = "Host controls match settings."
+	options.set_values(OnlineSession.match_settings, is_host, note)
 
 
 func _player_list() -> String:

@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://src/features/ui/settings_menu.tscn" id="2"]
 [ext_resource type="AudioStream" uid="uid://fpg0qjm58l6g" path="res://assets/music/Menu.wav" id="3_0of7v"]
 [ext_resource type="PackedScene" path="res://src/features/ui/online_lobby.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://src/features/ui/local_game_setup.tscn" id="5"]
 
 [node name="MainMenu" type="Control" unique_id=1319209700]
 layout_mode = 3
@@ -102,6 +103,9 @@ text = "Back"
 layout_mode = 1
 
 [node name="OnlineLobby" parent="." instance=ExtResource("4")]
+layout_mode = 1
+
+[node name="LocalGameSetup" parent="." instance=ExtResource("5")]
 layout_mode = 1
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=628101610]

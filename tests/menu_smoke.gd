@@ -27,11 +27,7 @@ func _run() -> void:
 	controls.close_menu()
 	settings.close_menu()
 	menu.get_node("Center/Menu/PlayButton").pressed.emit()
-	menu.get_node("PlayMenu/LocalButton").pressed.emit()
-	await process_frame
-	await process_frame
-	if not current_scene is WebMatch3D:
-		_fail("Play did not open the 3D match")
+	if not await _start_local_match(menu):
 		return
 	var match_scene: WebMatch3D = current_scene
 	var pause_menu: PauseMenu = match_scene.get_node("PauseMenu")
@@ -55,6 +51,26 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	print("MENU PASS: title, settings, controls, play, pause, and return")
 	quit(0)
+
+
+func _start_local_match(menu: MainMenu) -> bool:
+	menu.get_node("PlayMenu/LocalButton").pressed.emit()
+	var local_setup := menu.get_node_or_null("LocalGameSetup") as Control
+	if local_setup == null or not local_setup.visible:
+		_fail("Local play must open match settings before starting")
+		return false
+	local_setup.get("options").drop_count.value = 5
+	local_setup.get_node("%PlayButton").pressed.emit()
+	await process_frame
+	await process_frame
+	if not current_scene is WebMatch3D:
+		_fail("Play did not open the 3D match")
+		return false
+	var match_scene: WebMatch3D = current_scene
+	if match_scene.wind_event.group_size != 5:
+		_fail("Local match ignored the selected drop count")
+		return false
+	return true
 
 
 func _has_player_actions(controls: ControlsMenu) -> bool:

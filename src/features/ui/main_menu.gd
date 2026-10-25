@@ -14,6 +14,7 @@ func _ready() -> void:
 	$Center/Menu/QuitButton.visible = not OS.has_feature("web")
 	$SettingsMenu.closed.connect(_on_settings_closed)
 	$OnlineLobby.closed.connect(_on_online_closed)
+	$LocalGameSetup.closed.connect(_on_local_setup_closed)
 	$Center/Menu/PlayButton.grab_focus()
 	if get_node("/root/OnlineSession").state == "error":
 		_on_play_pressed()
@@ -33,7 +34,13 @@ func _on_play_closed() -> void:
 
 
 func _on_local_pressed() -> void:
-	get_tree().change_scene_to_file("res://src/game/web_match.tscn")
+	$PlayMenu.hide()
+	$LocalGameSetup.open()
+
+
+func _on_local_setup_closed() -> void:
+	$PlayMenu.show()
+	$PlayMenu/LocalButton.grab_focus()
 
 
 func _on_online_pressed() -> void:
