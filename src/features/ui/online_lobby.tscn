@@ -81,3 +81,12 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Back"
+
+[node name="ReadyCount" type="Label" parent="Center/Menu"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="ReadyButton" type="Button" parent="Center/Menu"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Ready"

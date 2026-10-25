@@ -5,6 +5,8 @@ signal changed
 const CODE_ALPHABET := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 const LOBBY_PREFIX := "spiders-v1-"
 const PLAYER_LIMIT := 2
+const PROTOCOL_VERSION := 1
+const CONTENT_VERSION := "spiders-online-1"
 const KEY_STORE := preload("res://addons/GD-Sync/Scripts/KeyStore.gd")
 
 var state := "idle"
@@ -12,6 +14,7 @@ var message := "Host a lobby or enter a friend's code."
 var code := ""
 var host_id := -1
 var players: Array[int] = []
+var ready_players: Dictionary = {}
 var use_local_network := false
 var _hosting := false
 var _generation := 0
@@ -31,6 +34,62 @@ func _ready() -> void:
 	GDSync.client_left.connect(_on_client_left)
 	GDSync.host_changed.connect(_on_host_changed)
 	GDSync.kicked.connect(_on_kicked)
+	GDSync.expose_func(_receive_ready)
+	GDSync.expose_func(_receive_readiness)
+
+
+func set_ready(value: bool) -> void:
+	if state != "in_lobby" or host_id < 0:
+		return
+	if GDSync.get_client_id() == host_id:
+		_accept_ready(host_id, PROTOCOL_VERSION, CONTENT_VERSION, value)
+	else:
+		GDSync.call_func_on(host_id, _receive_ready, PROTOCOL_VERSION, CONTENT_VERSION, value)
+
+
+func all_ready() -> bool:
+	if state != "in_lobby" or players.size() != PLAYER_LIMIT:
+		return false
+	for player in players:
+		if not ready_players.get(player, false):
+			return false
+	return true
+
+
+func can_start() -> bool:
+	return all_ready() and GDSync.get_client_id() == host_id
+
+
+func _receive_ready(protocol: Variant, content: Variant, value: Variant) -> void:
+	_accept_ready(GDSync.get_sender_id(), protocol, content, value)
+
+
+func _accept_ready(sender: int, protocol: Variant, content: Variant, value: Variant) -> void:
+	if state != "in_lobby" or GDSync.get_client_id() != host_id or not players.has(sender):
+		return
+	if protocol != PROTOCOL_VERSION or content != CONTENT_VERSION or not value is bool:
+		return
+	ready_players[sender] = value
+	_publish_readiness()
+
+
+func _publish_readiness() -> void:
+	if GDSync.get_client_id() == host_id:
+		GDSync.call_func(_receive_readiness, ready_players)
+	changed.emit()
+
+
+func _receive_readiness(values: Variant) -> void:
+	print("READINESS RECEIVE ", GDSync.get_client_id(), " <- ", GDSync.get_sender_id(), " ", values)
+	if state != "in_lobby" or GDSync.get_sender_id() != host_id or not values is Dictionary:
+		return
+	if values.size() > PLAYER_LIMIT:
+		return
+	for player in values:
+		if not player is int or not values[player] is bool:
+			return
+	ready_players = values.duplicate()
+	changed.emit()
 
 
 func host_lobby() -> void:
@@ -66,6 +125,7 @@ func leave_lobby() -> void:
 	code = ""
 	host_id = -1
 	players.clear()
+	ready_players.clear()
 	_set_state("idle", "Host a lobby or enter a friend's code.")
 
 
@@ -105,7 +165,8 @@ func _create_lobby() -> void:
 	for random_byte in Crypto.new().generate_random_bytes(6):
 		code += CODE_ALPHABET[random_byte % CODE_ALPHABET.length()]
 	_set_state("creating", "Creating lobby...")
-	GDSync.lobby_create(LOBBY_PREFIX + code, "", false, PLAYER_LIMIT)
+	GDSync.lobby_create(LOBBY_PREFIX + code, "", false, PLAYER_LIMIT,
+		{ "protocol": PROTOCOL_VERSION, "content": CONTENT_VERSION })
 
 
 func _on_lobby_created(lobby_name: String) -> void:
@@ -119,6 +180,10 @@ func _on_lobby_joined(lobby_name: String) -> void:
 	if state != "joining" or lobby_name != LOBBY_PREFIX + code:
 		return
 	host_id = GDSync.get_host()
+	if GDSync.lobby_get_tag("protocol") != PROTOCOL_VERSION \
+			or GDSync.lobby_get_tag("content") != CONTENT_VERSION:
+		_fail("This lobby uses a different game version. Update both copies and try again.")
+		return
 	players.assign(GDSync.lobby_get_all_clients())
 	_set_state("in_lobby", "Share the code with a friend." if _hosting else "Joined lobby.")
 
@@ -162,7 +227,8 @@ func _on_disconnected() -> void:
 func _on_client_joined(client_id: int) -> void:
 	if state == "in_lobby" and not players.has(client_id):
 		players.append(client_id)
-		changed.emit()
+		ready_players.clear()
+		_publish_readiness()
 
 
 func _on_client_left(client_id: int) -> void:
@@ -172,10 +238,15 @@ func _on_client_left(client_id: int) -> void:
 		_fail("The host left the lobby.")
 	else:
 		players.erase(client_id)
-		changed.emit()
+		ready_players.clear()
+		_publish_readiness()
 
 
 func _on_host_changed(_is_host: bool, new_host_id: int) -> void:
+	if state == "in_lobby" and host_id == -1:
+		host_id = new_host_id
+		changed.emit()
+		return
 	if state == "in_lobby" and host_id != -1 and new_host_id != host_id:
 		_fail("The host left the lobby.")
 

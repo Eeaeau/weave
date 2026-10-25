@@ -8,6 +8,8 @@ var _announced := false
 var _saw_guest := false
 var _done := false
 var _checking_rehost := false
+var _requested_ready := false
+var _both_ready := false
 
 
 func _ready() -> void:
@@ -63,15 +65,34 @@ func _observe() -> void:
 		_announced = true
 		print("ONLINE_LOBBY_READY: ", OnlineSession.code)
 	if OnlineSession.players.size() == 2:
+		if not _ready_pair():
+			return
+		_both_ready = true
 		_saw_guest = true
 		if _lobby.get_node("Center/Menu/Players").text != "2 / 2 players":
 			_fail("Player count did not update")
 		elif _role == "guest":
 			_done = true
 			call_deferred("_finish")
-	elif _role == "host" and _saw_guest:
+	elif _role == "host" and _saw_guest and _both_ready:
 		_done = true
 		call_deferred("_finish")
+
+
+func _ready_pair() -> bool:
+	if OnlineSession.host_id < 0:
+		return false
+	if not _requested_ready:
+		var ready_button := _lobby.get_node_or_null("Center/Menu/ReadyButton") as Button
+		if ready_button == null:
+			_fail("Lobby has no Ready action")
+			return false
+		_requested_ready = true
+		ready_button.pressed.emit()
+	if OnlineSession.all_ready() and OnlineSession.can_start() != (_role == "host"):
+		_fail("Only the original host may start a ready lobby")
+		return false
+	return OnlineSession.all_ready()
 
 
 func _finish() -> void:

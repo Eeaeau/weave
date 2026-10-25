@@ -12,6 +12,7 @@ func _ready() -> void:
 	menu.get_node("HostButton").pressed.connect(OnlineSession.host_lobby)
 	menu.get_node("JoinButton").pressed.connect(_join)
 	menu.get_node("CopyButton").pressed.connect(_copy_code)
+	menu.get_node("ReadyButton").pressed.connect(_toggle_ready)
 	menu.get_node("BackButton").pressed.connect(close_menu)
 	code_field.text_submitted.connect(func(_text: String) -> void: _join())
 	OnlineSession.changed.connect(_refresh)
@@ -39,6 +40,10 @@ func _copy_code() -> void:
 		DisplayServer.clipboard_set(OnlineSession.code)
 
 
+func _toggle_ready() -> void:
+	OnlineSession.set_ready(not OnlineSession.ready_players.get(GDSync.get_client_id(), false))
+
+
 func _refresh() -> void:
 	var in_lobby := OnlineSession.state == "in_lobby"
 	var busy := OnlineSession.is_busy()
@@ -55,4 +60,11 @@ func _refresh() -> void:
 	menu.get_node("Players").visible = in_lobby
 	menu.get_node("Players").text = "%d / %d players" % [
 		OnlineSession.players.size(), OnlineSession.PLAYER_LIMIT]
+	menu.get_node("ReadyButton").visible = in_lobby
+	menu.get_node("ReadyButton").disabled = OnlineSession.host_id < 0
+	menu.get_node("ReadyButton").text = "Not Ready" if OnlineSession.ready_players.get(
+		GDSync.get_client_id(), false) else "Ready"
+	menu.get_node("ReadyCount").visible = in_lobby
+	menu.get_node("ReadyCount").text = "%d / %d ready" % [
+		OnlineSession.ready_players.values().count(true), OnlineSession.PLAYER_LIMIT]
 	menu.get_node("BackButton").text = "Leave Lobby" if in_lobby else "Back"
