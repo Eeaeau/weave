@@ -56,15 +56,47 @@ custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 text = "Settings"
 
-[node name="OnlineButton" type="Button" parent="Center/Menu"]
-custom_minimum_size = Vector2(280, 48)
-layout_mode = 2
-text = "Online"
-
 [node name="QuitButton" type="Button" parent="Center/Menu" unique_id=1907414394]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 text = "Quit"
+
+[node name="PlayMenu" type="VBoxContainer" parent="."]
+visible = false
+layout_mode = 0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -140.0
+offset_top = -116.0
+offset_right = 140.0
+offset_bottom = 116.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="PlayMenu"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Play"
+horizontal_alignment = 1
+
+[node name="LocalButton" type="Button" parent="PlayMenu"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+text = "Local"
+
+[node name="OnlineButton" type="Button" parent="PlayMenu"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+text = "Online"
+
+[node name="BackButton" type="Button" parent="PlayMenu"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+text = "Back"
 
 [node name="SettingsMenu" parent="." unique_id=1483647561 instance=ExtResource("2")]
 layout_mode = 1

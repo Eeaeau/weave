@@ -6,7 +6,9 @@ extends Control
 func _ready() -> void:
 	get_tree().paused = false
 	$Center/Menu/PlayButton.pressed.connect(_on_play_pressed)
-	$Center/Menu/OnlineButton.pressed.connect(_on_online_pressed)
+	$PlayMenu/LocalButton.pressed.connect(_on_local_pressed)
+	$PlayMenu/OnlineButton.pressed.connect(_on_online_pressed)
+	$PlayMenu/BackButton.pressed.connect(_on_play_closed)
 	$Center/Menu/SettingsButton.pressed.connect(_on_settings_pressed)
 	$Center/Menu/QuitButton.pressed.connect(_on_quit_pressed)
 	$Center/Menu/QuitButton.visible = not OS.has_feature("web")
@@ -16,17 +18,29 @@ func _ready() -> void:
 
 
 func _on_play_pressed() -> void:
+	$Center.hide()
+	$PlayMenu.show()
+	$PlayMenu/LocalButton.grab_focus()
+
+
+func _on_play_closed() -> void:
+	$PlayMenu.hide()
+	$Center.show()
+	$Center/Menu/PlayButton.grab_focus()
+
+
+func _on_local_pressed() -> void:
 	get_tree().change_scene_to_file("res://src/game/web_match.tscn")
 
 
 func _on_online_pressed() -> void:
-	$Center.hide()
+	$PlayMenu.hide()
 	$OnlineLobby.open()
 
 
 func _on_online_closed() -> void:
-	$Center.show()
-	$Center/Menu/OnlineButton.grab_focus()
+	$PlayMenu.show()
+	$PlayMenu/OnlineButton.grab_focus()
 
 
 func _on_quit_pressed() -> void:

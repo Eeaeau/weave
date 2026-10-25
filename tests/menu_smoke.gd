@@ -27,6 +27,7 @@ func _run() -> void:
 	controls.close_menu()
 	settings.close_menu()
 	menu.get_node("Center/Menu/PlayButton").pressed.emit()
+	menu.get_node("PlayMenu/LocalButton").pressed.emit()
 	await process_frame
 	await process_frame
 	if not current_scene is WebMatch3D:
@@ -87,15 +88,23 @@ func _has_player_actions(controls: ControlsMenu) -> bool:
 
 
 func _check_online_menu(menu: MainMenu) -> bool:
-	var online_button := menu.get_node_or_null("Center/Menu/OnlineButton") as Button
-	if online_button == null:
+	menu.get_node("Center/Menu/PlayButton").pressed.emit()
+	var play_menu := menu.get_node_or_null("PlayMenu") as Control
+	if play_menu == null or not play_menu.visible or menu.get_node("Center").visible:
 		return false
-	online_button.pressed.emit()
-	var lobby := menu.get_node_or_null("OnlineLobby") as Control
-	var opened := lobby != null and lobby.visible
-	if opened:
-		lobby.get_node("Center/Menu/BackButton").pressed.emit()
-	return opened and menu.get_node("Center").visible
+	play_menu.get_node("BackButton").pressed.emit()
+	if play_menu.visible or not menu.get_node("Center").visible:
+		return false
+	menu.get_node("Center/Menu/PlayButton").pressed.emit()
+	play_menu.get_node("OnlineButton").pressed.emit()
+	var lobby := menu.get_node("OnlineLobby") as Control
+	if not lobby.visible or play_menu.visible:
+		return false
+	lobby.get_node("Center/Menu/BackButton").pressed.emit()
+	if not play_menu.visible or lobby.visible:
+		return false
+	play_menu.get_node("BackButton").pressed.emit()
+	return menu.get_node("Center").visible
 
 
 func _fail(message: String) -> void:

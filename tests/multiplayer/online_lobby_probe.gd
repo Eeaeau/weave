@@ -23,7 +23,8 @@ func _ready() -> void:
 func _run() -> void:
 	_menu = load("res://src/features/ui/main_menu.tscn").instantiate()
 	add_child(_menu)
-	_menu.get_node("Center/Menu/OnlineButton").pressed.emit()
+	_menu.get_node("Center/Menu/PlayButton").pressed.emit()
+	_menu.get_node("PlayMenu/OnlineButton").pressed.emit()
 	_lobby = _menu.get_node("OnlineLobby")
 	OnlineSession.changed.connect(_observe)
 	if _role == "host":
@@ -75,14 +76,14 @@ func _observe() -> void:
 
 func _finish() -> void:
 	_lobby.get_node("Center/Menu/BackButton").pressed.emit()
-	if OnlineSession.state != "idle" or not _menu.get_node("Center").visible:
-		push_error("ONLINE_LOBBY_FAIL: Leaving did not return to the main menu")
+	if OnlineSession.state != "idle" or not _menu.get_node("PlayMenu").visible:
+		push_error("ONLINE_LOBBY_FAIL: Leaving did not return to the play menu")
 		get_tree().quit(1)
 		return
 	if not _checking_rehost:
 		_checking_rehost = true
 		_done = false
-		_menu.get_node("Center/Menu/OnlineButton").pressed.emit()
+		_menu.get_node("PlayMenu/OnlineButton").pressed.emit()
 		_lobby.get_node("Center/Menu/HostButton").pressed.emit()
 		return
 	_menu.queue_free()
