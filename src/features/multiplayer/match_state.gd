@@ -2,13 +2,14 @@ class_name MatchState
 extends RefCounted
 
 const PRECISION := 100000.0
-const INVENTORY_TYPES := [0, 1, 2, 3]
+const INVENTORY_TYPES := [0, 1, 2, 3, 7]
 const ENTRY_PATHS := [
 	"res://src/features/wind/entries/pebble.tres",
 	"res://src/features/wind/entries/rocket_launcher.tres",
 	"res://src/features/wind/entries/silk_moth.tres",
 	"res://src/features/wind/entries/twig_cutter.tres",
 	"res://src/features/wind/entries/health_beetle.tres",
+	"res://src/features/wind/entries/flamethrower.tres",
 ]
 
 var scenes: Array[PackedScene] = [
@@ -30,7 +31,8 @@ func capture(arena: WebMatch3D) -> Dictionary:
 	var manager := arena.get_node("MatchManager") as MatchManager
 	var state := {"actors": {}, "teams": {}, "webs": {}, "caught": {}, "turn": {
 		"team": manager.active_team_idx, "wind": manager.waiting_for_wind,
-		"round": manager._round_number}}
+		"round": manager._round_number, "finished": manager.finished,
+		"winner": manager.winner_team}}
 	for team_index in range(manager.teams.size()):
 		var team := manager.teams[team_index]
 		state.teams[str(team_index)] = team.active_spider_idx
@@ -45,7 +47,8 @@ func capture(arena: WebMatch3D) -> Dictionary:
 			edge_values.append([edge.x, edge.y])
 		for edge_health in web.edges_health:
 			health_values.append(quantize(edge_health))
-		state.webs[str(index)] = { "edges": edge_values, "health": health_values }
+		state.webs[str(index)] = { "edges": edge_values, "health": health_values,
+			"burns": web.burning_nodes.duplicate() }
 		_capture_caught(web, index, state.caught)
 	return state
 
@@ -55,6 +58,7 @@ func _capture_actor(spider: PlayerSpider3D) -> Dictionary:
 	for weapon in spider.weapons:
 		inventory.append(item_type(weapon))
 	return {"position": pack_vector(spider.global_position),
+		"burn": spider.burn_turns,
 		"health": quantize(maxf(spider.health, 0)),
 		"movement": quantize(spider.remaining_movement), "actions": spider.n_remaining_actions,
 		"aim": quantize(spider.aim_angle), "silk": spider.silk_amount,
@@ -109,6 +113,8 @@ func apply(arena: WebMatch3D, state: Dictionary) -> bool:
 		web.edges_health.clear()
 		for edge_health in values.health:
 			web.edges_health.append(float(edge_health) / PRECISION)
+		web.burning_nodes = values.burns.duplicate()
+		web.refresh_burn_visuals()
 	for team_index in range(manager.teams.size()):
 		var team := manager.teams[team_index]
 		team.active_spider_idx = state.teams[str(team_index)]
@@ -120,6 +126,7 @@ func apply(arena: WebMatch3D, state: Dictionary) -> bool:
 	manager._round_number = state.turn.round
 	manager.match_hud.update_team_label(manager.teams[manager.active_team_idx].name)
 	manager.match_hud.set_wind_waiting(manager.waiting_for_wind)
+	manager.apply_match_result(state.turn.finished, state.turn.winner)
 	return true
 
 
@@ -135,6 +142,8 @@ func _apply_actor(spider: PlayerSpider3D, values: Dictionary) -> void:
 			spider._attach_weapon(weapon)
 	spider.global_position = unpack_vector(values.position)
 	spider.health = float(values.health) / PRECISION
+	spider.burn_turns = values.burn
+	spider.match_finished = false
 	spider.visible = spider.health > 0
 	spider.hurtbox.set_deferred("monitorable", spider.health > 0)
 	spider.hurtbox.set_deferred("monitoring", spider.health > 0)
@@ -150,6 +159,7 @@ func _apply_actor(spider: PlayerSpider3D, values: Dictionary) -> void:
 	builder.silk_target_indices.assign(values.build.targets)
 	builder.selected_silk_target_index = values.build.selected
 	spider._update_weapon_pose()
+	spider._update_burn_visual()
 
 
 func _apply_caught(arena: WebMatch3D, values: Dictionary) -> void:
@@ -251,6 +261,7 @@ func _valid_actor(values: Dictionary) -> bool:
 		if not _bounded_int(values.get(key), 0, 100_000_000):
 			return false
 	return values.health <= int(PRECISION) and values.silk <= PlayerSpider3D.SILK_CAPACITY \
+		and _bounded_int(values.get("burn"), 0, 3) \
 		and values.selected < inventory.size() and values.actions <= 10 \
 		and _bounded_int(values.get("aim"), -1_000_000_000, 1_000_000_000)
 
@@ -258,6 +269,19 @@ func _valid_actor(values: Dictionary) -> bool:
 func _valid_webs(arena: WebMatch3D, values: Dictionary) -> bool:
 	for index in range(arena.catch_webs.size()):
 		var value: Variant = values.get(str(index))
+		if not value is Dictionary or not value.get("burns") is Dictionary:
+			return false
+		if value.burns.size() > arena.catch_webs[index].valid_nodes.size():
+			return false
+		for key in value.burns:
+			if not key is String or not key.is_valid_int() or str(int(key)) != key \
+					or not _bounded_int(
+						int(key),
+						0,
+						arena.catch_webs[index].valid_nodes.size() - 1,
+					) \
+					or not _bounded_int(value.burns[key], 1, 3):
+				return false
 		if not value is Dictionary or not value.get("edges") is Array \
 				or not value.get("health") is Array or value.edges.size() != value.health.size() \
 				or value.edges.size() > 1024:
@@ -291,7 +315,10 @@ func _valid_caught(arena: WebMatch3D, values: Dictionary) -> bool:
 
 func _valid_turn(manager: MatchManager, values: Dictionary) -> bool:
 	return _bounded_int(values.get("team"), 0, manager.teams.size() - 1) \
-		and _bounded_int(values.get("round"), 0, 1_000_000) and values.get("wind") is bool
+		and _bounded_int(values.get("round"), 0, 1_000_000) and values.get("wind") is bool \
+		and values.get("finished") is bool \
+		and _bounded_int(values.get("winner"), -1, manager.teams.size() - 1) \
+		and (values.finished or values.winner == -1)
 
 
 static func quantize(value: float) -> int:

@@ -23,6 +23,7 @@ signal group_planned(round_number: int, descriptions: Array)
 	preload("res://src/features/wind/entries/silk_moth.tres"),
 	preload("res://src/features/wind/entries/twig_cutter.tres"),
 	preload("res://src/features/wind/entries/health_beetle.tres"),
+	preload("res://src/features/wind/entries/flamethrower.tres"),
 ]
 
 var is_active: bool = false
@@ -269,6 +270,16 @@ func _on_flight_finished(flight: WindFlight3D) -> void:
 	flight.queue_free()
 	if is_active and _spawned >= group_size and _active_flights.is_empty():
 		_finish_event()
+
+
+func cancel_event() -> void:
+	for flight in _active_flights:
+		if is_instance_valid(flight):
+			flight.queue_free()
+	_active_flights.clear()
+	_planned_items.clear()
+	_finish_event()
+	$Gust.stop()
 
 
 func _finish_event() -> void:

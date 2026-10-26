@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="CollectibleData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/features/collectibles/collectible_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Flamethrower"
+description = "Ignites spiders and web anchors. Healing insects extinguish burning spiders."

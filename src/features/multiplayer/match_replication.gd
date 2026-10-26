@@ -50,6 +50,8 @@ func _process(delta: float) -> void:
 	if not _host:
 		if _recovering:
 			_request_recovery()
+		if _manager.finished:
+			return
 		_projectiles.present()
 		if _arena.wind_event.is_active and not _wind_description.is_empty():
 			var elapsed := maxf(0.0, GDSync.get_multiplayer_time() - float(_wind_description.time))
@@ -64,7 +66,7 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if not _host or OnlineSession.state != "playing":
+	if not _host or OnlineSession.state != "playing" or _manager.finished:
 		return
 	_arena.wind_event.advance(delta)
 	_simulate_spiders(delta)
@@ -72,6 +74,7 @@ func _physics_process(delta: float) -> void:
 	for projectile in projectiles:
 		projectile.set_process(false)
 		projectile._process(delta)
+	_manager.check_match_result()
 	if not _manager.waiting_for_wind and projectiles.is_empty():
 		for team in _manager.teams:
 			team.advance(delta)
@@ -99,6 +102,8 @@ func _simulate_spiders(delta: float) -> void:
 
 
 func _poll_input(delta: float) -> void:
+	if _manager.finished:
+		return
 	_input_cooldown = maxf(0.0, _input_cooldown - delta)
 	var command := COMMAND.from_input()
 	if _manager.waiting_for_wind:
@@ -162,7 +167,7 @@ func _reconcile_local_aim() -> void:
 
 
 func submit_command(command: PlayerCommand) -> bool:
-	if OnlineSession.state != "playing":
+	if OnlineSession.state != "playing" or _manager.finished:
 		return false
 	if not _manager.waiting_for_wind and active_owner_id != GDSync.get_client_id():
 		return false
@@ -177,6 +182,8 @@ func submit_command(command: PlayerCommand) -> bool:
 
 
 func _accept_command(sender: int, packet: Dictionary) -> void:
+	if _manager.finished:
+		return
 	var result := { "accepted": false, "reason": "Waiting for the wind" }
 	if _manager.waiting_for_wind:
 		var reason := COMMAND.validate_packet(packet, _match_id, turn_id, -1, 0)
@@ -208,16 +215,20 @@ func _active_spider() -> PlayerSpider3D:
 
 
 func _update_turn() -> void:
+	if _manager.finished:
+		_motions.clear()
+		_needs_digest = true
 	var team := _manager.teams[_manager.active_team_idx]
 	var key := "%d:%d:%d:%s" % [_manager._round_number, _manager.active_team_idx,
-		team.active_spider_idx, _manager.waiting_for_wind]
+		team.active_spider_idx, str(_manager.waiting_for_wind) + str(_manager.finished)]
 	if key == _turn_key:
 		return
 	_turn_key = key
 	turn_id += 1
-	active_actor_id = -1 if _manager.waiting_for_wind else _manager.active_team_idx * 100 \
+	var blocked := _manager.waiting_for_wind or _manager.finished
+	active_actor_id = -1 if blocked else _manager.active_team_idx * 100 \
 		+ team.active_spider_idx
-	active_owner_id = -1 if _manager.waiting_for_wind else _slots[_manager.active_team_idx]
+	active_owner_id = -1 if blocked else _slots[_manager.active_team_idx]
 	_authority.set_turn(_match_id, turn_id, active_actor_id, active_owner_id)
 	_clear_local_input()
 	_needs_digest = true
@@ -403,6 +414,15 @@ func _request_recovery() -> void:
 
 func _receive_as_guest(kind: String, payload: Dictionary) -> void:
 	match kind:
+		"return_lobby":
+			OnlineSession.resume_lobby()
+		"flame":
+			if STATE._valid_vector(payload.get("position")) \
+					and payload.get("aim") is float and is_finite(payload.aim) \
+					and payload.get("reach") is float \
+					and payload.reach >= 0.5 and payload.reach <= 10:
+				Flamethrower3D.present_burst(_arena, STATE.unpack_vector(payload.position),
+					payload.aim, payload.reach)
 		"snapshot":
 			_apply_snapshot(payload)
 		"start":
@@ -603,3 +623,13 @@ func _apply_events(payload: Dictionary) -> void:
 func _send_host(kind: String, payload: Dictionary) -> void:
 	payload["match"] = _match_id
 	OnlineSession.transport.send_to(OnlineSession.host_id, kind, payload)
+
+
+func broadcast_flame(point: Vector3, aim: float, reach: float) -> void:
+	if _host:
+		OnlineSession.transport.broadcast("flame", {"match": _match_id,
+			"position": STATE.pack_vector(point), "aim": aim, "reach": reach})
+
+
+func match_has_finished() -> bool:
+	return _manager.finished

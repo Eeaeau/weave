@@ -30,7 +30,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--godot")
     parser.add_argument("--online", action="store_true", help="Use configured keys and the managed relay")
-    parser.add_argument("--scenario", choices=("load", "turns", "combat", "silk", "pickups",
+    parser.add_argument("--scenario", choices=("load", "turns", "combat", "silk", "pickups", "fire",
+                                                 "fire-leave",
                                                  "disconnect-host", "disconnect-guest"), default="turns")
     parser.add_argument("--host-fps", type=int, default=60)
     parser.add_argument("--guest-fps", type=int, default=60)

@@ -2,6 +2,7 @@ class_name MatchManager extends Node
 
 signal team_changed(previous_team, new_team)
 signal new_round_started
+signal match_finished(winner: int)
 
 @export var teams: Array[Team]
 @export var match_hud: MatchHud
@@ -13,6 +14,8 @@ var active_team_idx: int = 0
 var waiting_for_wind: bool = false
 var _round_number: int = 0
 var _network_controlled := false
+var finished := false
+var winner_team := -1
 
 
 # Called when the node enters the scene tree for the first time.
@@ -43,10 +46,18 @@ func _process(delta: float) -> void:
 
 
 func advance(_delta: float) -> void:
-	if waiting_for_wind:
+	if finished or has_pending_attacks():
+		return
+	check_match_result()
+	if finished or waiting_for_wind:
 		return
 	var active_team: Team = teams[active_team_idx]
 	if active_team.turn_is_done():
+		for spider in active_team.spiders:
+			spider.end_turn_effects()
+		check_match_result()
+		if finished:
+			return
 		var next_team_idx: int = (active_team_idx + 1) % len(teams)
 		active_team = give_turn_to(next_team_idx)
 		if active_team_idx == 0:
@@ -65,7 +76,7 @@ func refresh_hud() -> void:
 
 
 func give_turn_to(team_idx: int) -> Team:
-	if waiting_for_wind:
+	if finished or waiting_for_wind:
 		return teams[active_team_idx]
 	var previous_team_idx = active_team_idx
 	teams[active_team_idx].end_turn()
@@ -78,6 +89,9 @@ func give_turn_to(team_idx: int) -> Team:
 		waiting_for_wind = true
 		match_hud.set_wind_waiting(true)
 		_round_number += 1
+		if _round_number > 1:
+			for web in get_tree().get_nodes_in_group("gameplay_webs"):
+				web.tick_burning_nodes()
 		wind_event.start_round(_round_number)
 	else:
 		active_team.start_turn(movement_per_turn)
@@ -89,8 +103,42 @@ func _on_wind_event_finished(round_number: int) -> void:
 			and get_node("/root/GDSync").get_client_id()
 			!= get_node("/root/OnlineSession").host_id):
 		return
-	if not waiting_for_wind or round_number != _round_number:
+	if finished or not waiting_for_wind or round_number != _round_number:
 		return
 	waiting_for_wind = false
 	match_hud.set_wind_waiting(false)
 	teams[active_team_idx].start_turn(movement_per_turn)
+
+
+func has_pending_attacks() -> bool:
+	return not get_tree().get_nodes_in_group("camera_focus_projectiles").is_empty()
+
+
+func check_match_result() -> void:
+	if finished or has_pending_attacks():
+		return
+	var survivors: Array[int] = []
+	for index in range(teams.size()):
+		if teams[index].has_living_spiders():
+			survivors.append(index)
+	if survivors.size() <= 1 and teams.size() > 1:
+		apply_match_result(true, survivors[0] if survivors.size() == 1 else -1)
+
+
+func apply_match_result(is_finished: bool, winner: int) -> void:
+	var newly_finished := is_finished and not finished
+	finished = is_finished
+	winner_team = winner
+	if not finished:
+		return
+	waiting_for_wind = false
+	if wind_event != null:
+		wind_event.cancel_event()
+	match_hud.set_wind_waiting(false)
+	for team in teams:
+		team.end_turn()
+		for spider in team.spiders:
+			spider.match_finished = true
+			spider.update_presentation()
+	if newly_finished:
+		match_finished.emit(winner_team)

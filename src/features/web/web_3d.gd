@@ -1,3 +1,5 @@
+# Authoring, topology queries and runtime damage share the same web instance.
+# gdstyle:ignore-file=quality/max-public-methods
 @tool
 class_name Web3D
 extends Node3D
@@ -83,6 +85,8 @@ var valid_nodes: Array[Node3D] = []:
 		if is_inside_tree():
 			rebuild()
 var edges_health: Array[float] = []
+var burning_nodes: Dictionary = {}
+var _burn_visuals: Dictionary = {}
 var _last_node_positions: Array[Vector3] = []
 var _catch_regions: Dictionary = {}
 # ============================================================
@@ -394,6 +398,51 @@ func deal_damage(point: Vector2, radius: float, damage: float):
 	edges = remaining_edges
 	edges_health = remaining_health
 	rebuild()
+
+
+func ignite_node(index: int) -> void:
+	if index < 0 or index >= valid_nodes.size():
+		return
+	burning_nodes[str(index)] = 3
+	refresh_burn_visuals()
+
+
+func tick_burning_nodes() -> void:
+	if burning_nodes.is_empty():
+		return
+	var remaining_edges: Array[Vector2i] = []
+	var remaining_health: Array[float] = []
+	for index in range(edges.size()):
+		var edge := edges[index]
+		var health := edges_health[index]
+		if burning_nodes.has(str(edge.x)) or burning_nodes.has(str(edge.y)):
+			health -= 35.0
+		if health > 0:
+			remaining_edges.append(edge)
+			remaining_health.append(health)
+	for key in burning_nodes.keys():
+		burning_nodes[key] -= 1
+		if burning_nodes[key] <= 0:
+			burning_nodes.erase(key)
+	edges = remaining_edges
+	edges_health = remaining_health
+	rebuild()
+	refresh_burn_visuals()
+
+
+func refresh_burn_visuals() -> void:
+	for key in _burn_visuals.keys():
+		if not burning_nodes.has(key):
+			_burn_visuals[key].queue_free()
+			_burn_visuals.erase(key)
+	for key in burning_nodes:
+		if not _burn_visuals.has(key):
+			var flame: Node3D = load(
+				"res://src/features/collectibles/weapons/rocket_exhaust.tscn").instantiate()
+			add_child(flame)
+			flame.global_position = valid_nodes[int(key)].global_position
+			flame.global_basis = Basis.IDENTITY.scaled(Vector3(0.18, 0.3, 0.18))
+			_burn_visuals[key] = flame
 
 
 func _synchronize_edge_health() -> void:
