@@ -12,19 +12,24 @@ signal new_round_started
 var active_team_idx: int = 0
 var waiting_for_wind: bool = false
 var _round_number: int = 0
+var _network_controlled := false
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	_network_controlled = get_node("/root/OnlineSession").is_match_active()
 	if wind_event:
 		wind_event.event_finished.connect(_on_wind_event_finished)
 	for team in teams:
 		team.spawn_spiders(n_spiders_per_team)
 		team.end_turn()  # doesn't hurt to be sure
-	give_turn_to(0)
+	if not _network_controlled:
+		give_turn_to(0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _network_controlled:
+		return
 	if (waiting_for_wind and wind_event != null
 			and event.is_action_pressed("skip_wind") and not event.is_echo()):
 		wind_event.skip_to_end()
@@ -33,6 +38,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	if not _network_controlled:
+		advance(delta)
+
+
+func advance(_delta: float) -> void:
 	if waiting_for_wind:
 		return
 	var active_team: Team = teams[active_team_idx]
@@ -42,7 +52,11 @@ func _process(delta: float) -> void:
 		if active_team_idx == 0:
 			new_round_started.emit()
 
-	var active_spider: PlayerSpider3D = active_team.get_active_spider()
+	refresh_hud()
+
+
+func refresh_hud() -> void:
+	var active_spider := teams[active_team_idx].get_active_spider()
 	if active_spider:
 		match_hud.update_energy(active_spider.remaining_movement / movement_per_turn)
 		match_hud.update_actions_remaining(active_spider.n_remaining_actions)
@@ -71,6 +85,10 @@ func give_turn_to(team_idx: int) -> Team:
 
 
 func _on_wind_event_finished(round_number: int) -> void:
+	if (_network_controlled
+			and get_node("/root/GDSync").get_client_id()
+			!= get_node("/root/OnlineSession").host_id):
+		return
 	if not waiting_for_wind or round_number != _round_number:
 		return
 	waiting_for_wind = false

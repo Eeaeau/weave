@@ -16,6 +16,7 @@ src/
     web/                        Web nodes, strands, and triangle surfaces
     world/maps/branch_canopy/   Branches, layered backgrounds, camera, and wind
     ui/                         Title, settings, input, pause, game over, match HUD
+    multiplayer/                Lobby lifecycle, commands, state, and replication
 assets/                          Assets shared across features
 addons/                          Optional Godot plugins
 docs/                            Settings and deployment notes
@@ -31,8 +32,14 @@ To edit a branch, open `src/features/world/maps/branch_canopy/branch_web.tscn`. 
 
 Planned work is tracked in [GitHub Issues](https://github.com/Eeaeau/weave/issues) and the [project board](https://github.com/users/Eeaeau/projects/3/views/2).
 
+## Online play
+
+Choose **Play > Online > Host Lobby** and share the six-character code. Your friend chooses **Join Lobby** and enters it. Both players select **Ready** to start the three-second countdown; select **Unready** to cancel it. The host chooses the map and item drop count. If either player disconnects, the online match ends.
+
+Choose **Play > Local** for a shared-screen match with the same game settings. See [multiplayer setup and checks](docs/multiplayer_setup.md) for developer credentials and automated host/guest tests.
+
 ## Local checks and export
 
 Run `python tools/check.py` on Windows, Linux, or macOS. It finds Godot on common paths, downloads a pinned and checksum-verified gdstyle binary on first use, checks GDScript formatting and warnings, imports the project, loads resources, and runs scene and menu smoke checks. Python and Godot must already be installed. Pass `--godot /path/to/godot` if needed. The download and check outputs live under ignored `build/`.
 
-The Web export preset and manual itch.io workflow are carried over from the template. They will become usable after the project is published and itch.io variables are configured; see [itch deployment](docs/itch_deploy.md). GitHub quality checks run on pull requests or manually, while local checks are available for every edit. Godot's `.godot/` cache and other machine-specific files are ignored.
+The itch.io workflow builds and deploys changes on `main` after checks pass. Configure its encrypted Actions secrets before enabling deployment; see [itch deployment](docs/itch_deploy.md). Feature builds can be run manually. GitHub quality checks run on pull requests or manually, while local checks are available for every edit. Godot's `.godot/` cache and other machine-specific files are ignored.

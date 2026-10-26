@@ -13,10 +13,11 @@ func _run() -> void:
 	root.add_child(menu)
 	current_scene = menu
 	await process_frame
+	var online_menu_ok := _check_online_menu(menu)
 	menu.get_node("Center/Menu/SettingsButton").pressed.emit()
 	var settings: SettingsMenu = menu.get_node("SettingsMenu")
-	if not settings.visible:
-		_fail("Title settings did not open")
+	if not settings.visible or not online_menu_ok:
+		_fail("Title settings or online lobby did not open and close")
 		return
 	settings.get_node("Hub/Center/Menu/InputButton").pressed.emit()
 	var controls: ControlsMenu = settings.get_node("ControlsMenu")
@@ -26,10 +27,7 @@ func _run() -> void:
 	controls.close_menu()
 	settings.close_menu()
 	menu.get_node("Center/Menu/PlayButton").pressed.emit()
-	await process_frame
-	await process_frame
-	if not current_scene is WebMatch3D:
-		_fail("Play did not open the 3D match")
+	if not await _start_local_match(menu):
 		return
 	var match_scene: WebMatch3D = current_scene
 	var pause_menu: PauseMenu = match_scene.get_node("PauseMenu")
@@ -53,6 +51,26 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	print("MENU PASS: title, settings, controls, play, pause, and return")
 	quit(0)
+
+
+func _start_local_match(menu: MainMenu) -> bool:
+	menu.get_node("PlayMenu/LocalButton").pressed.emit()
+	var local_setup := menu.get_node_or_null("LocalGameSetup") as Control
+	if local_setup == null or not local_setup.visible:
+		_fail("Local play must open match settings before starting")
+		return false
+	local_setup.get("options").drop_count.value = 5
+	local_setup.get_node("%PlayButton").pressed.emit()
+	await process_frame
+	await process_frame
+	if not current_scene is WebMatch3D:
+		_fail("Play did not open the 3D match")
+		return false
+	var match_scene: WebMatch3D = current_scene
+	if match_scene.wind_event.group_size != 5:
+		_fail("Local match ignored the selected drop count")
+		return false
+	return true
 
 
 func _has_player_actions(controls: ControlsMenu) -> bool:
@@ -83,6 +101,36 @@ func _has_player_actions(controls: ControlsMenu) -> bool:
 	if not has_tab_binding:
 		return false
 	return true
+
+
+func _check_online_menu(menu: MainMenu) -> bool:
+	menu.get_node("Center/Menu/PlayButton").pressed.emit()
+	var play_menu := menu.get_node_or_null("PlayMenu") as Control
+	if play_menu == null or not play_menu.visible or menu.get_node("Center").visible:
+		return false
+	play_menu.get_node("BackButton").pressed.emit()
+	if play_menu.visible or not menu.get_node("Center").visible:
+		return false
+	menu.get_node("Center/Menu/PlayButton").pressed.emit()
+	play_menu.get_node("OnlineButton").pressed.emit()
+	var lobby := menu.get_node("OnlineLobby") as Control
+	if not lobby.visible or play_menu.visible:
+		return false
+	if not _check_join_form(lobby):
+		return false
+	lobby.get_node("%ChoiceBackButton").pressed.emit()
+	if not play_menu.visible or lobby.visible:
+		return false
+	play_menu.get_node("BackButton").pressed.emit()
+	return menu.get_node("Center").visible
+
+
+func _check_join_form(lobby: Control) -> bool:
+	lobby.get_node("%JoinButton").pressed.emit()
+	if not lobby.get_node("%JoinCode").is_visible_in_tree():
+		return false
+	lobby.get_node("%JoinBackButton").pressed.emit()
+	return not lobby.get_node("%JoinCode").is_visible_in_tree()
 
 
 func _fail(message: String) -> void:

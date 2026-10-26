@@ -1,5 +1,7 @@
 class_name Projectile3D extends Node3D
 
+signal impacted(point: Vector3)
+
 @export var damage: float = 0.0
 @export var explosion_damage: float = 0.0
 @export_range(0.1, 3.0, 0.1) var launch_speed_multiplier: float = 1.0
@@ -15,6 +17,7 @@ var freeze: bool = false
 var ready_for_removal: bool = false
 var source_hurtbox: Hurtbox3D
 var _launch_position: Vector3
+var network_replica := false
 
 
 # Called when the node enters the scene tree for the first time.
@@ -31,16 +34,16 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if freeze:
+	if freeze or network_replica:
 		return
-	global_position += velocity * delta
+	global_position += velocity * delta + Vector3.DOWN * 4.905 * delta * delta
 	velocity.y -= 9.81 * delta
 	if global_position.y <= despawn_below_y:
 		hit(null)
 
 
 func hit(hurtbox: Hurtbox3D) -> void:
-	if freeze:
+	if freeze or network_replica:
 		return
 	for node in hide_on_hit:
 		node.visible = false
@@ -50,7 +53,19 @@ func hit(hurtbox: Hurtbox3D) -> void:
 
 	hitbox.set_deferred("monitorable", false)
 	hitbox.set_deferred("monitoring", false)
+	impacted.emit(global_position)
 	explode()
+
+
+func present_impact(point: Vector3) -> void:
+	if not network_replica or freeze:
+		return
+	global_position = point
+	freeze = true
+	for node in hide_on_hit:
+		node.visible = false
+	if explosion_sprite:
+		explosion_sprite.visible = true
 
 
 func launch(direction: float, power: float) -> void:
@@ -78,6 +93,8 @@ func get_all_webs() -> Array[Web3D]:
 
 
 func explode() -> void:
+	if network_replica:
+		return
 	if not explosion_hitbox:
 		queue_free()
 		return
@@ -103,6 +120,8 @@ func explode() -> void:
 
 
 func _hitbox_entered(area: Area3D) -> void:
+	if network_replica:
+		return
 	if area.is_in_group("web_anchor_hitboxes"):
 		if (is_instance_valid(source_hurtbox)
 				and global_position.distance_to(_launch_position) < launch_ally_grace_distance):
@@ -129,5 +148,5 @@ func _is_shooter_teammate(target: Hurtbox3D) -> bool:
 
 
 func _explosion_hitbox_entered(area: Area3D) -> void:
-	if area is Hurtbox3D:
+	if not network_replica and area is Hurtbox3D:
 		area.take_damage(explosion_damage)

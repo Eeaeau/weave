@@ -7,6 +7,7 @@ class_name Team extends Node3D
 var spiders: Array[PlayerSpider3D] = []
 var spawn_offset: Vector3 = Vector3(0.5, 0, 0)
 var active_spider_idx: int = 0
+var _network_controlled := false
 
 
 # Called when the node enters the scene tree for the first time.
@@ -16,6 +17,11 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	if not _network_controlled:
+		advance(delta)
+
+
+func advance(_delta: float) -> void:
 	var active_spider: PlayerSpider3D = get_active_spider()
 	if not active_spider or not active_spider.is_active:
 		return
@@ -28,11 +34,13 @@ func _process(delta: float) -> void:
 
 
 func spawn_spiders(number: int) -> void:
+	_network_controlled = get_node("/root/OnlineSession").is_match_active()
 	var spawn_position := Vector3.ZERO
 	for i in range(number):
 		var instance: PlayerSpider3D = spider_scene.instantiate()
 		instance.position = spawn_position
 		instance.webs = webs
+		instance.network_controlled = _network_controlled
 		add_child(instance)
 		instance.call_deferred("set_build_web", home_web)
 		spiders.append(instance)

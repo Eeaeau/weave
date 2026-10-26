@@ -20,6 +20,10 @@ func after_picked_up() -> void:
 func _area_entered(area: Area3D) -> void:
 	if not visible:
 		return
+	var session := get_node_or_null("/root/OnlineSession")
+	if (session != null and session.is_match_active()
+			and session.host_id != get_node("/root/GDSync").get_client_id()):
+		return
 	var parent = area.get_parent_node_3d()
 	if parent and parent is PlayerSpider3D:
 		if parent.pick_up(self):

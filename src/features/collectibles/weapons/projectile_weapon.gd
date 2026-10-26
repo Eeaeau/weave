@@ -6,6 +6,10 @@ var is_thrown: bool = false
 
 
 func fire(direction: float, power: float) -> void:
+	var session := get_node_or_null("/root/OnlineSession")
+	if (session != null and session.is_match_active()
+			and session.host_id != get_node("/root/GDSync").get_client_id()):
+		return
 	var projectile: Projectile3D = projectile_scene.instantiate()
 	var ancestor := get_parent()
 	while ancestor != null:
@@ -16,6 +20,8 @@ func fire(direction: float, power: float) -> void:
 	get_tree().current_scene.add_child(projectile)
 	projectile.global_position = global_position
 	projectile.launch(direction, power)
+	if session != null and session.is_match_active() and session.replication != null:
+		session.replication.register_projectile(projectile)
 	is_thrown = true
 
 

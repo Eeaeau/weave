@@ -15,6 +15,11 @@ run/main_scene="res://src/features/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
+OnlineSession="*res://src/features/multiplayer/online_session.gd"
+
 [debug]
 
 gdscript/warnings/unused_parameter=0
@@ -31,7 +36,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/web_edge_authoring/plugin.cfg")
+enabled=PackedStringArray("res://addons/web_edge_authoring/plugin.cfg", "res://addons/GD-Sync/plugin.cfg")
 
 [input]
 

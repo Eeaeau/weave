@@ -129,41 +129,48 @@ def run(
 ) -> str:
     display = " ".join(command)
     print(f"\n$ {display}", flush=True)
-    try:
-        result = subprocess.run(
-            command,
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        partial = exc.stdout or b""
-        if isinstance(partial, bytes):
-            partial = partial.decode("utf-8", errors="replace")
-        print(partial, flush=True)
-        raise RuntimeError(f"Command timed out after {timeout}s: {display}") from exc
-    output = result.stdout
-    print(output, end="" if output.endswith("\n") else "\n", flush=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"Command exited with status {result.returncode}: {display}")
-    if marker and marker not in output:
-        raise RuntimeError(f"Missing test result marker: {marker}")
-    if godot and any(
-        error in output
-        for error in ("SCRIPT ERROR:", "Parse Error:", "Failed loading resource", "Failed to load script")
-    ):
-        raise RuntimeError(f"Godot reported a script or resource error: {display}")
-    if godot and any(
-        warning in output
-        for warning in ("ObjectDB instances were leaked at exit", "resources still in use at exit")
-    ):
-        raise RuntimeError(f"Godot reported leaked resources at exit: {display}")
-    return output.strip()
+    for attempt in range(3):
+        try:
+            result = subprocess.run(
+                command,
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired as exc:
+            partial = exc.stdout or b""
+            if isinstance(partial, bytes):
+                partial = partial.decode("utf-8", errors="replace")
+            print(partial, flush=True)
+            raise RuntimeError(f"Command timed out after {timeout}s: {display}") from exc
+        output = result.stdout
+        print(output, end="" if output.endswith("\n") else "\n", flush=True)
+        if godot and any(
+            error in output
+            for error in ("SCRIPT ERROR:", "Parse Error:", "Failed loading resource", "Failed to load script")
+        ):
+            raise RuntimeError(f"Godot reported a script or resource error: {display}")
+        if godot and any(
+            warning in output
+            for warning in ("ObjectDB instances were leaked at exit", "resources still in use at exit")
+        ):
+            raise RuntimeError(f"Godot reported leaked resources at exit: {display}")
+        # Godot 4.7.2 can access-violate on Windows during process shutdown.
+        if godot and platform.system() == "Windows" \
+                and result.returncode & 0xFFFFFFFF == 0xC0000005 and attempt < 2:
+            print(f"Godot shutdown crash; retrying ({attempt + 1}/2).", flush=True)
+            continue
+        if result.returncode != 0:
+            raise RuntimeError(f"Command exited with status {result.returncode}: {display}")
+        if marker and marker not in output:
+            raise RuntimeError(f"Missing test result marker: {marker}")
+        return output.strip()
+    raise RuntimeError(f"Godot did not exit cleanly: {display}")
 
 
 def main() -> int:
@@ -171,6 +178,8 @@ def main() -> int:
     parser.add_argument("--godot", default=os.environ.get("GODOT_BIN") or os.environ.get("GODOT_PATH"))
     parser.add_argument("--gdstyle", default=os.environ.get("GDSTYLE_BIN") or os.environ.get("GDSTYLE_PATH"))
     args = parser.parse_args()
+
+    run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_check_runner.py"])
 
     godot = find_godot(args.godot)
     gdstyle = find_gdstyle(args.gdstyle)
@@ -184,7 +193,7 @@ def main() -> int:
 
     check_dir = ROOT / "build" / "check"
     check_dir.mkdir(parents=True, exist_ok=True)
-    base = [str(godot), "--headless", "--path", str(ROOT)]
+    base = [str(godot), "--headless", "--disable-crash-handler", "--path", str(ROOT)]
     run(base + ["--import", "--log-file", str(check_dir / "import.log")], godot=True, timeout=300)
     for script, marker in (
         ("resource_smoke", "RESOURCE PASS:"),
@@ -197,6 +206,12 @@ def main() -> int:
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
+        ("multiplayer/player_command_smoke", "PLAYER COMMAND PASS:"),
+        ("multiplayer/transport_smoke", "TRANSPORT PASS:"),
+        ("multiplayer/player_simulation_smoke", "PLAYER SIMULATION PASS:"),
+        ("multiplayer/command_authority_smoke", "COMMAND AUTHORITY PASS:"),
+        ("multiplayer/match_state_smoke", "MATCH STATE PASS:"),
+        ("multiplayer/projectile_replication_smoke", "PROJECTILE REPLICATION PASS:"),
         ("wind_selection_smoke", "WIND SELECTION PASS:"),
         ("action_camera_smoke", "ACTION CAMERA PASS:"),
         ("wind_flight_smoke", "WIND FLIGHT PASS:"),
@@ -209,11 +224,47 @@ def main() -> int:
         ("silk_build_smoke", "SILK BUILD PASS:"),
     ):
         run(
-            base + ["--script", f"res://tests/{script}.gd", "--log-file", str(check_dir / f"{script}.log")],
+            base + ["--script", f"res://tests/{script}.gd", "--log-file", str(check_dir / f"{script.replace('/', '_')}.log")],
             marker=marker,
             godot=True,
             timeout=40,
         )
+    run(
+        [sys.executable, "tools/check_gd_sync.py", "--godot", str(godot)],
+        marker="GD-SYNC PASS:",
+        timeout=60,
+    )
+    run(
+        [sys.executable, "tools/check_gd_sync.py", "--godot", str(godot), "--lobby"],
+        marker="GD-SYNC PASS:",
+        timeout=60,
+    )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot), "--scenario", "turns"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
+    )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot), "--scenario", "combat"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
+    )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot), "--scenario", "silk"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
+    )
+    run(
+        [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot),
+         "--scenario", "pickups", "--host-fps", "24", "--guest-fps", "144", "--latency-ms", "60"],
+        marker="MULTIPLAYER PASS:",
+        timeout=65,
+    )
+    run(
+        [sys.executable, "tools/check_lobby_errors.py", "--godot", str(godot)],
+        marker="LOBBY ERRORS PASS",
+        timeout=210,
+    )
     print("\nLOCAL CHECKS PASS")
     return 0
 

@@ -11,6 +11,7 @@ var silk_source_web: Web3D
 var silk_source_index: int = -1
 var silk_target_indices: Array[int] = []
 var selected_silk_target_index: int = 0
+var network_replica := false
 var target_markers: Array[Sprite3D] = []
 var _preview_root: Node3D
 var _preview_line: Sprite3D
@@ -37,6 +38,8 @@ func set_build_web(web: Web3D) -> void:
 
 ## Exposes targets only when the spider is standing at an owned web vertex.
 func refresh_silk_build_options() -> void:
+	if network_replica:
+		return
 	var previous_target := -1
 	if not silk_target_indices.is_empty():
 		previous_target = silk_target_indices[selected_silk_target_index]
@@ -72,7 +75,7 @@ func refresh_silk_build_options() -> void:
 
 
 func cycle_silk_target(direction: int) -> void:
-	if silk_target_indices.is_empty() or direction == 0:
+	if network_replica or silk_target_indices.is_empty() or direction == 0:
 		return
 	selected_silk_target_index = posmod(
 		selected_silk_target_index + signi(direction), silk_target_indices.size()
@@ -89,7 +92,7 @@ func cancel_selection() -> void:
 
 
 func try_build_selected_silk() -> bool:
-	if spider == null:
+	if network_replica or spider == null:
 		return false
 	refresh_silk_build_options()
 	if silk_source_web == null or silk_target_indices.is_empty():
@@ -127,7 +130,7 @@ func _planar_vertex_distance(web: Web3D, local_spider_position: Vector3,
 
 
 func _can_build_on_web(web: Web3D, source_index: int, target_index: int) -> bool:
-	if spider == null or not spider.get("is_active"):
+	if network_replica or spider == null or not spider.get("is_active"):
 		return false
 	if (web == null or web != owned_web
 			or spider.get("n_remaining_actions") <= 0
