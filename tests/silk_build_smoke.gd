@@ -49,6 +49,7 @@ func _check_insect_proximity() -> bool:
 	spider_b.position = Vector3(10, 0, 0)
 	spider_a.set("silk_amount", 1)
 	spider_b.set("silk_amount", 3)
+	spider_a.is_active = true
 	root.add_child(spider_a)
 	root.add_child(spider_b)
 	var insect := INSECT_SCENE.instantiate() as WindborneInsect3D
