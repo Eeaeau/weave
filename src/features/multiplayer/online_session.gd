@@ -6,7 +6,7 @@ const CODE_ALPHABET := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 const LOBBY_PREFIX := "spiders-v1-"
 const PLAYER_LIMIT := 2
 const PROTOCOL_VERSION := 1
-const CONTENT_VERSION := "spiders-online-5"
+const CONTENT_VERSION := "spiders-online-6"
 const READY_COUNTDOWN_SECONDS := 3.0
 const KEY_STORE := preload("res://addons/GD-Sync/Scripts/KeyStore.gd")
 const OPTIONS := preload("res://src/game/match_options.gd")
@@ -195,6 +195,27 @@ func mark_playing() -> void:
 func end_match(reason: String) -> void:
 	if is_match_active():
 		_fail(reason)
+
+
+func return_to_lobby() -> void:
+	if not is_match_active() or GDSync.get_client_id() != host_id \
+			or not is_instance_valid(replication) or not replication.match_has_finished():
+		return
+	transport.broadcast("return_lobby", { "match": match_config.match })
+	resume_lobby()
+	GDSync.lobby_open()
+	_publish_readiness()
+
+
+func resume_lobby() -> void:
+	_generation += 1
+	ready_players.clear()
+	_countdown_ends_at = -1.0
+	match_config.clear()
+	replication = null
+	_pending_match_messages.clear()
+	_set_state("in_lobby", "Ready for another match.")
+	get_tree().change_scene_to_file.call_deferred("res://src/features/ui/main_menu.tscn")
 
 
 func _receive_ready(protocol: Variant, content: Variant, value: Variant,
@@ -392,6 +413,14 @@ func _on_client_joined(client_id: int) -> void:
 
 
 func _on_client_left(client_id: int) -> void:
+	if is_match_active() and match_config.slots.has(client_id) \
+			and host_id == GDSync.get_client_id() \
+			and is_instance_valid(replication) and replication.match_has_finished():
+		players.erase(client_id)
+		resume_lobby()
+		GDSync.lobby_open()
+		_publish_readiness()
+		return
 	if is_match_active() and match_config.slots.has(client_id):
 		_fail("A player disconnected. The online match has ended.")
 		return

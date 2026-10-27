@@ -47,12 +47,15 @@ func _process(_delta: float) -> void:
 
 
 func _configure_match() -> void:
-	if _role != "host" or _scenario not in ["combat", "silk", "pickups"]:
+	if _role != "host" or _scenario not in ["combat", "silk", "pickups", "fire", "fire-leave"]:
 		return
 	var arena := get_tree().current_scene as WebMatch3D
 	if arena == null:
 		return
 	var shooter: PlayerSpider3D = arena.get_node("TeamA").spiders[0]
+	if _scenario.begins_with("fire"):
+		_configure_fire(arena, shooter)
+		return
 	if _scenario == "pickups":
 		_configure_pickups(arena)
 		return
@@ -111,9 +114,11 @@ func _check_loaded_match() -> void:
 		_disconnect_expected = true
 		driver.scripted_input = true
 		print("ONLINE_MATCH_LOADED: ", _role)
-	elif _scenario in ["turns", "combat", "silk", "pickups"]:
+	elif _scenario in ["turns", "combat", "silk", "pickups", "fire", "fire-leave"]:
 		_testing_turns = true
-		if _scenario == "pickups":
+		if _scenario.begins_with("fire"):
+			_play_fire.call_deferred(arena, driver)
+		elif _scenario == "pickups":
 			_play_pickups.call_deferred(arena, driver)
 		elif _scenario == "combat":
 			_play_combat.call_deferred(arena, driver)
@@ -621,3 +626,106 @@ func _verify_disconnect() -> void:
 func _returned_to_menu() -> bool:
 	return get_tree().current_scene is MainMenu \
 		and get_tree().current_scene.get_node("OnlineLobby").visible
+
+
+func _configure_fire(arena: WebMatch3D, shooter: PlayerSpider3D) -> void:
+	var origin := arena.catch_webs[0].valid_nodes[0].global_position - Vector3.RIGHT
+	for team in arena.get_node("MatchManager").teams:
+		for spider in team.spiders:
+			spider.webs.clear()
+			spider.global_position = origin + Vector3.UP * 20
+	shooter.global_position = origin
+	arena.get_node("TeamA").spiders[1].global_position = origin + Vector3.RIGHT * 1.5
+	arena.get_node("TeamB").spiders[0].global_position = origin + Vector3.RIGHT * 2.5
+	var weapon: Weapon3D = load(
+		"res://src/features/collectibles/weapons/weapon_flamethrower.tscn").instantiate()
+	arena.add_child(weapon)
+	shooter.pick_up(weapon)
+
+
+func _play_fire(arena: WebMatch3D, driver: Node) -> void:
+	driver.scripted_input = true
+	var manager: MatchManager = arena.get_node("MatchManager")
+	var ally := manager.teams[0].spiders[1]
+	var target := manager.teams[1].spiders[0]
+	if _role == "guest":
+		var skip := COMMAND.new()
+		skip.held = 128
+		driver.submit_command(skip)
+	if not await _wait_until(_wind_finished.bind(arena)):
+		return
+	if _role == "host":
+		var selection := COMMAND.new()
+		selection.selection = 2
+		driver.submit_command(selection)
+		await get_tree().create_timer(0.1).timeout
+		var press := COMMAND.new()
+		press.held = 64
+		driver.submit_command(press)
+		await get_tree().create_timer(0.1).timeout
+		driver.submit_command(COMMAND.new())
+	var ignited := func() -> bool: return ally.burn_turns == 3 and target.burn_turns == 3
+	if not await _wait_until(ignited):
+		return
+	if arena.catch_webs[0].burning_nodes.is_empty():
+		_fail("Own anchor ignition did not replicate")
+		return
+	if manager.teams[0].spiders[0].weapons.size() != 2 \
+			or manager.teams[0].spiders[0].n_remaining_actions != 0:
+		_fail("Flamethrower did not consume one pickup and one action")
+		return
+	if _role == "host":
+		await get_tree().create_timer(0.8).timeout
+		var insect: Collectible3D = load(
+			"res://src/features/collectibles/insects/windborne_insect.tscn").instantiate()
+		insect.collectible = load("res://src/features/collectibles/insects/health_beetle.tres")
+		arena.add_child(insect)
+		ally.pick_up(insect)
+		insect.queue_free()
+		target.health = 0.25
+		for index in range(1, manager.teams[1].spiders.size()):
+			manager.teams[1].spiders[index].take_damage(1.0)
+		while not manager.finished and not _done:
+			if manager.waiting_for_wind:
+				arena.wind_event.skip_to_end()
+			var active := manager.teams[manager.active_team_idx].get_active_spider()
+			if active != null:
+				active.n_remaining_actions = 0
+			await get_tree().create_timer(0.08).timeout
+	if not await _wait_until(func() -> bool: return manager.finished):
+		return
+	await _verify_fire_result(arena, driver, ally)
+
+
+func _verify_fire_result(arena: WebMatch3D, driver: Node, ally: PlayerSpider3D) -> void:
+	var manager: MatchManager = arena.get_node("MatchManager")
+	var result := arena.get_node("GameOverMenu")
+	var expected := "Victory!" if _role == "host" else "Defeat"
+	if manager.winner_team != 0 or not result.visible or ally.burn_turns != 0 \
+			or result.get_node("Backdrop/Center/Menu/Title").text != expected:
+		_fail("Burn victory, cure or personalized result did not agree")
+		return
+	if driver.submit_command(COMMAND.new()):
+		_fail("Finished match accepted a player command")
+		return
+	if _scenario == "fire-leave":
+		if _role == "guest":
+			result.get_node("Backdrop/Center/Menu/MainMenuButton").pressed.emit()
+	elif _role == "host":
+		if not await _wait_until(_outcomes_acknowledged.bind(driver)):
+			return
+		OnlineSession.return_to_lobby()
+	else:
+		# The host's return must also work when a guest missed the final state patch.
+		manager.finished = false
+		driver.receive(OnlineSession.host_id, "return_lobby", {
+			"match": OnlineSession.match_config.match})
+	var returned := func() -> bool: return get_tree().current_scene is MainMenu
+	if not await _wait_until(returned):
+		return
+	var expected_state := "idle" if _scenario == "fire-leave" and _role == "guest" else "in_lobby"
+	if OnlineSession.state != expected_state or not OnlineSession.ready_players.values().all(
+			func(value: bool) -> bool: return not value):
+		_fail("Returning to lobby lost the room or retained readiness")
+		return
+	_pass()

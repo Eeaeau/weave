@@ -30,6 +30,9 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	for web in catch_webs:
+		web.add_to_group("gameplay_webs")
+	$MatchManager.match_finished.connect($GameOverMenu.show_result)
 	hud.set_show_hints(pause_settings.hints_check.button_pressed)
 	pause_settings.hints_changed.connect(hud.set_show_hints)
 	wind_event.item_contact.connect(_on_item_contact)

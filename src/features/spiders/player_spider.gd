@@ -1,3 +1,5 @@
+# The actor exposes movement, inventory, web building and turn effects to the match.
+# gdstyle:ignore-file=quality/max-public-methods
 class_name PlayerSpider3D
 extends BaseSpider3D
 
@@ -20,6 +22,10 @@ var selected_weapon_idx: int = 0
 var health: float = 1.0
 var silk_builder: SilkBuildAction3D
 var network_controlled: bool = false
+var match_finished := false
+var burn_turns := 0
+var _burn_tick_due := false
+var _burn_visual: Node3D
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -30,6 +36,7 @@ var network_controlled: bool = false
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	super._ready()
+	add_to_group("burnable_spiders")
 	aim_arrow_offset = aim_arrow.position
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
@@ -52,6 +59,8 @@ func _process(delta: float) -> void:
 
 
 func simulate(delta: float, command: PlayerCommand) -> void:
+	if match_finished:
+		return
 
 	if not webs.is_empty() and not is_on_web(Vector2(global_position.x, global_position.y)) \
 			and health > 0:
@@ -135,6 +144,7 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 
 
 func update_presentation() -> void:
+	_update_burn_visual()
 	selected_indicator.visible = is_active and health > 0
 	aim_arrow.visible = selected_indicator.visible and selected_weapon_idx >= 2
 	if aim_arrow.visible:
@@ -210,10 +220,16 @@ func is_done() -> bool:
 
 
 func pick_up(collectible: Collectible3D) -> bool:
+	if is_dead() or match_finished:
+		return false
 	if collectible.collectible is InsectData:
 		var insect_data := collectible.collectible as InsectData
 		silk_amount = mini(get_silk_capacity(), silk_amount + insect_data.silk_amount)
 		health = minf(1.0, health + insect_data.health_amount)
+		if insect_data.health_amount > 0:
+			burn_turns = 0
+			_burn_tick_due = false
+		_update_burn_visual()
 		return true
 	if collectible is Weapon3D:
 		weapons.append(collectible)
@@ -255,9 +271,13 @@ func _get_weapon_equip_target() -> Marker3D:
 
 
 func take_damage(damage: float) -> void:
-	print("ouch")
+	if is_dead() or match_finished:
+		return
 	health -= damage
 	if is_dead():
+		burn_turns = 0
+		is_active = false
+		_update_burn_visual()
 		visible = false
 		hurtbox.set_deferred("monitorable", false)
 		hurtbox.set_deferred("monitoring", false)
@@ -265,6 +285,39 @@ func take_damage(damage: float) -> void:
 
 func is_dead() -> bool:
 	return health <= 0
+
+
+func ignite() -> void:
+	if is_dead() or match_finished:
+		return
+	burn_turns = 3
+	_burn_tick_due = false
+	_update_burn_visual()
+
+
+func begin_turn_effects() -> void:
+	_burn_tick_due = burn_turns > 0
+
+
+func end_turn_effects() -> void:
+	if _burn_tick_due and burn_turns > 0 and not is_dead():
+		burn_turns -= 1
+		take_damage(0.1)
+	_burn_tick_due = false
+	_update_burn_visual()
+
+
+func _update_burn_visual() -> void:
+	if burn_turns > 0 and not is_dead():
+		if not is_instance_valid(_burn_visual):
+			_burn_visual = load(
+				"res://src/features/collectibles/weapons/rocket_exhaust.tscn").instantiate()
+			add_child(_burn_visual)
+			_burn_visual.scale = Vector3(0.2, 0.22, 0.2)
+			_burn_visual.global_basis = Basis.IDENTITY.scaled(_burn_visual.scale)
+		_burn_visual.visible = true
+	elif is_instance_valid(_burn_visual):
+		_burn_visual.visible = false
 
 
 func _on_hurtbox_3d_hurt(damage: float) -> void:

@@ -16,7 +16,7 @@ func _ready() -> void:
 	$OnlineLobby.closed.connect(_on_online_closed)
 	$LocalGameSetup.closed.connect(_on_local_setup_closed)
 	$Center/Menu/PlayButton.grab_focus()
-	if get_node("/root/OnlineSession").state == "error":
+	if get_node("/root/OnlineSession").state in ["error", "in_lobby"]:
 		_on_play_pressed()
 		_on_online_pressed()
 

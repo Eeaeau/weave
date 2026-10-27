@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bb7vd5vu3vj05"]
 
 [ext_resource type="Script" uid="uid://dfm7bd8aacsp0" path="res://src/game/web_match.gd" id="1"]
+[ext_resource type="PackedScene" path="res://src/features/ui/game_over_menu.tscn" id="14_result"]
 [ext_resource type="PackedScene" uid="uid://cjr2bhdata12b" path="res://src/features/world/maps/branch_canopy/branch_canopy.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://baf408x8r2h8j" path="res://src/features/spiders/player_spider.tscn" id="3"]
 [ext_resource type="AudioStream" uid="uid://bfgnr2r61m1ep" path="res://assets/music/Combat.wav" id="3_ggfpk"]
@@ -22,6 +23,8 @@ sound_tracks = Array[AudioStream]([ExtResource("4_xyjxb"), ExtResource("5_p1esv"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="MatchHud" parent="." unique_id=1199369611 instance=ExtResource("8")]
+
+[node name="GameOverMenu" parent="." instance=ExtResource("14_result")]
 
 [node name="PauseMenu" parent="." unique_id=2111747350 instance=ExtResource("9")]
 

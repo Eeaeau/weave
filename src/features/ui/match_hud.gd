@@ -90,6 +90,8 @@ func update_weapon(weapons: Array[Weapon3D], selected_weapon_idx: int) -> void:
 			w_container.visible = false
 		else:
 			w_container.visible = true
+			w_container.tooltip_text = weapon.collectible.display_name \
+				if weapon.collectible != null else weapon.name
 			var texture_rect: TextureRect = w_container.get_child(0)
 			texture_rect.texture = weapon.icon
 			var number_label: Label = texture_rect.get_child(0)
