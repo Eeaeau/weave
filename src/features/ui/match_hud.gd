@@ -6,6 +6,9 @@ var show_hints := true
 var wind_waiting := false
 var _guiding_rocket := false
 
+@onready var rocket_fuel: PanelContainer = $RocketFuel
+@onready var fuel_bar: ProgressBar = $RocketFuel/Content/Bar
+@onready var fuel_label: Label = $RocketFuel/Content/Label
 @onready var status: Label = $Margin/Panel/Status
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 @onready var team_label: Label = $LowerLeftPanel/TeamLabel
@@ -22,7 +25,15 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	var guiding := not get_tree().get_nodes_in_group("guided_rockets").is_empty()
+	var rockets := get_tree().get_nodes_in_group("guided_rockets")
+	var guiding := not rockets.is_empty()
+	rocket_fuel.visible = guiding and not rockets[0].freeze
+	if rocket_fuel.visible:
+		var rocket := rockets[0] as GuidedRocket3D
+		var remaining := maxf(0.0, rocket.flight_limit - rocket.flight_age)
+		fuel_bar.max_value = rocket.flight_limit
+		fuel_bar.value = remaining
+		fuel_label.text = "Rocket fuel - %.1f s" % remaining
 	if guiding != _guiding_rocket:
 		_guiding_rocket = guiding
 		_update_status()

@@ -44,7 +44,8 @@ func register(projectile: Projectile3D) -> void:
 		"velocity": STATE.pack_vector(projectile.velocity),
 		"rotation": STATE.pack_vector(projectile.rotation), "time": float(_clock.call())}
 	if projectile is GUIDED:
-		description.merge({ "steer": 0, "steer_revision": 0, "turn_speed": projectile.turn_speed })
+		description.merge({ "steer": 0, "steer_revision": 0, "turn_speed": projectile.turn_speed,
+			"flight_age": projectile.flight_age, "flight_limit": projectile.flight_limit })
 		projectile.steering_changed.connect(_on_steer.bind(id))
 	_descriptions[id] = description
 	projectile.impacted.connect(_on_impact.bind(id))
@@ -62,6 +63,7 @@ func _on_steer(id: int) -> void:
 	description.rotation = STATE.pack_vector(rocket.rotation)
 	description.time = float(_clock.call())
 	description.steer = rocket.get("steering")
+	description.flight_age = rocket.get("flight_age")
 	description.steer_revision += 1
 	var event := description.duplicate(true)
 	event.action = "steer"
@@ -142,6 +144,9 @@ func present() -> void:
 		var description: Dictionary = _descriptions[id]
 		var elapsed := clampf(float(_clock.call()) - float(description.time), 0.0, 30.0)
 		if projectile is GUIDED:
+			elapsed = minf(elapsed, maxf(0.0, description.flight_limit - description.flight_age))
+			projectile.flight_limit = description.flight_limit
+			projectile.flight_age = description.flight_age + elapsed
 			projectile.steering = description.steer
 			var motion := GUIDED.sample_flight(STATE.unpack_vector(description.position),
 				STATE.unpack_vector(description.velocity),
@@ -205,4 +210,8 @@ func _valid_guidance(value: Dictionary) -> bool:
 		and value.get("steer_revision") is int \
 		and value.steer_revision >= 0 and value.steer_revision <= 1_000_000 \
 		and value.get("turn_speed") is float and is_finite(value.turn_speed) \
-		and value.turn_speed >= 0.2 and value.turn_speed <= 5.0
+		and value.turn_speed >= 0.2 and value.turn_speed <= 5.0 \
+		and value.get("flight_limit") is float and is_finite(value.flight_limit) \
+		and value.flight_limit >= 1.0 and value.flight_limit <= 15.0 \
+		and value.get("flight_age") is float and is_finite(value.flight_age) \
+		and value.flight_age >= 0.0 and value.flight_age <= value.flight_limit
