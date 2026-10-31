@@ -42,6 +42,7 @@ const STEP_GROUPS := [[0, 3, 4, 7], [1, 2, 5, 6]]
 @export_range(0.0, 1.0, 0.01) var reach_extension := 0.35
 @export_range(1.0, 20.0, 0.5) var foot_recovery_speed := 8.0
 @export_range(0.5, 1.0, 0.01) var maximum_reach_ratio := 0.98
+@export_range(1.0, 20.0, 0.5) var joint_turn_speed := 8.0
 
 var _skeleton: Skeleton3D
 var _rig: Node3D
@@ -83,6 +84,7 @@ func _initialize_foot(targets: Node, foot_name: String) -> void:
 	foot_state.lift_marker = _rig.get_node("LiftTargets/" + foot_name.replace("Foot", "Lift"))
 	foot_state.lift_rest = foot_state.lift_marker.transform
 	var solver := _skeleton.get_node("CCDIK3D_" + foot_name.trim_prefix("Foot"))
+	foot_state.solver = solver
 	foot_state.hip_bone = int(solver.get("settings/0/root_bone"))
 	_visual_pose.anchors.append(foot_state.rest_offset)
 	foot.top_level = true
@@ -183,6 +185,9 @@ func _on_web_geometry_changed() -> void:
 
 
 func advance(delta: float) -> void:
+	var angular_budget := joint_turn_speed * maxf(0.0, delta)
+	for foot in _feet:
+		foot.solver.angular_delta_limit = angular_budget / foot.solver.max_iterations
 	if _weapon_carry != null:
 		_weapon_carry.advance(delta)
 	_advance_gait(delta)
@@ -675,6 +680,7 @@ class FootState:
 	var rest_offset: Vector3
 	var bone_reach := 0.0
 	var hip_bone := -1
+	var solver: CCDIK3D
 	var upper_reach := 0.0
 	var carried := false
 	var lift_marker: Marker3D

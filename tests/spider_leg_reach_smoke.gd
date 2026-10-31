@@ -32,6 +32,8 @@ func _run() -> void:
 				push_error("LEG REACH FAIL: a moving foot exceeded its physical reach")
 				quit(1)
 				return
-	spider.free()
+	spider.queue_free()
+	await process_frame
+	await create_timer(0.2).timeout
 	print("SPIDER LEG REACH PASS: physical reach and authored toe length")
 	quit(0)

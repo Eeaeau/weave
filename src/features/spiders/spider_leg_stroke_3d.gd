@@ -32,6 +32,9 @@ const LEG_SPECS := [
 		roughness = maxf(value, 0.0)
 		_rebuild()
 
+var _body: Sprite3D
+var _gait: SpiderLegController3D
+var _walking_plane := Plane()
 var _skeleton: Skeleton3D
 var _foot_targets: Node3D
 var _leg_bone_indices: Array[PackedInt32Array] = []
@@ -70,6 +73,9 @@ func _configure_material() -> void:
 
 
 func _resolve_rig() -> bool:
+	_body = get_node_or_null("../BoneAttachment3D/BodyOffset/Body") as Sprite3D
+	if not Engine.is_editor_hint():
+		_gait = get_node_or_null("../LegController") as SpiderLegController3D
 	var resolved_skeleton := get_node_or_null(skeleton_path) as Skeleton3D
 	if is_instance_valid(_skeleton) and _skeleton != resolved_skeleton:
 		if _skeleton.skeleton_updated.is_connected(_on_skeleton_updated):
@@ -118,6 +124,15 @@ func _rebuild() -> void:
 	_stroke_mesh.clear_surfaces()
 	if _leg_bone_indices.size() != LEG_SPECS.size():
 		return
+	if is_instance_valid(_body):
+		var rig := get_parent_node_3d()
+		var plane := rig.get_parent_node_3d()
+		var normal := (rig if plane == null else plane).global_basis.y.normalized()
+		var depth := INF
+		var bounds := _body.get_aabb()
+		for corner in range(8):
+			depth = minf(depth, (_body.global_transform * bounds.get_endpoint(corner)).dot(normal))
+		_walking_plane = Plane(normal, depth - 0.01)
 	var camera_position := _camera_position()
 	for leg_index in range(LEG_SPECS.size()):
 		var points := _collect_leg_points(leg_index)
@@ -144,6 +159,8 @@ func _collect_leg_points(leg_index: int) -> PackedVector3Array:
 func _add_leg_surface(
 	points: PackedVector3Array, leg_index: int, camera_position: Vector3
 ) -> void:
+	var foot_index: int = _gait.FOOT_NAMES.find(LEG_SPECS[leg_index][3]) if _gait != null else -1
+	var walking := _gait == null or not _gait.is_carried(foot_index)
 	_stroke_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 	for point_index in range(points.size()):
 		var tangent := _point_tangent(points, point_index)
@@ -152,10 +169,19 @@ func _add_leg_surface(
 		if point_index > 0 and point_index < points.size() - 1:
 			center += side * _rough_offset(leg_index, point_index)
 		_stroke_mesh.surface_set_color(Color.WHITE)
-		_stroke_mesh.surface_add_vertex(center - side * stroke_width * 0.5)
+		_stroke_mesh.surface_add_vertex(_layer_vertex(center - side * stroke_width * 0.5, walking))
 		_stroke_mesh.surface_set_color(Color.WHITE)
-		_stroke_mesh.surface_add_vertex(center + side * stroke_width * 0.5)
+		_stroke_mesh.surface_add_vertex(_layer_vertex(center + side * stroke_width * 0.5, walking))
 	_stroke_mesh.surface_end()
+
+
+func _layer_vertex(point: Vector3, walking: bool) -> Vector3:
+	if not walking:
+		return point
+	# Walking legs stay behind the flat body art; carrying hands retain real depth.
+	var world_point := to_global(point)
+	world_point -= _walking_plane.normal * maxf(0.0, _walking_plane.distance_to(world_point))
+	return to_local(world_point)
 
 
 func _point_tangent(points: PackedVector3Array, point_index: int) -> Vector3:

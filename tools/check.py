@@ -211,6 +211,7 @@ def main() -> int:
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
         ("spider_turning_smoke", "SPIDER TURNING PASS:"),
+        ("spider_pose_stability_smoke", "SPIDER POSE STABILITY PASS:"),
         ("spider_leg_reach_smoke", "SPIDER LEG REACH PASS:"),
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
