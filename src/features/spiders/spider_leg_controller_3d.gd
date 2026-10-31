@@ -49,10 +49,13 @@ var _visual_pose: VisualPose
 var _cycle: StepCycle
 var _feet: Array[FootState] = []
 var _steps: Array[Dictionary] = []
+var _carried_feet: Dictionary = {}
+var _weapon_carry: Node
 
 
 func _ready() -> void:
 	_rig = get_parent() as Node3D
+	_weapon_carry = _rig.get_node_or_null("WeaponCarry")
 	_skeleton = _rig.get_node("ImportedRig/RIG_spider/Skeleton3D")
 	_visual_pose = VisualPose.new(_rig.get_node("ImportedRig") as Node3D)
 	_cycle = StepCycle.new()
@@ -76,6 +79,9 @@ func _initialize_foot(targets: Node, foot_name: String) -> void:
 		planted_position.dot(_depth_normal())
 	)
 	foot_state.bone_reach = _measure_bone_reach(foot_name)
+	foot_state.upper_reach = _measure_bone_reach(foot_name, true)
+	foot_state.lift_marker = _rig.get_node("LiftTargets/" + foot_name.replace("Foot", "Lift"))
+	foot_state.lift_rest = foot_state.lift_marker.transform
 	var solver := _skeleton.get_node("CCDIK3D_" + foot_name.trim_prefix("Foot"))
 	foot_state.hip_bone = int(solver.get("settings/0/root_bone"))
 	_visual_pose.anchors.append(foot_state.rest_offset)
@@ -153,6 +159,8 @@ func _on_web_geometry_changed() -> void:
 			unsupported_feet.append(foot_index)
 	_steps = active_steps
 	for foot_index in range(_feet.size()):
+		if _feet[foot_index].carried:
+			continue
 		if _is_stepping(foot_index):
 			continue
 		var support := _find_support(_feet[foot_index].marker.global_position)
@@ -175,6 +183,8 @@ func _on_web_geometry_changed() -> void:
 
 
 func advance(delta: float) -> void:
+	if _weapon_carry != null:
+		_weapon_carry.advance(delta)
 	_advance_gait(delta)
 	_limit_foot_reach()
 
@@ -210,6 +220,8 @@ func _advance_gait(delta: float) -> void:
 
 func _start_group(group_index: int, only_dangling: bool = false) -> bool:
 	for foot_index in STEP_GROUPS[group_index]:
+		if _feet[foot_index].carried:
+			continue
 		if only_dangling and not _feet[foot_index].dangling:
 			continue
 		var old_anchor := _rig.to_global(_visual_pose.anchors[foot_index])
@@ -281,7 +293,7 @@ func _update_dangling(delta: float) -> void:
 
 func _release_crossed_feet() -> void:
 	for foot_index in range(_feet.size()):
-		if _feet[foot_index].dangling or _is_stepping(foot_index):
+		if _feet[foot_index].carried or _feet[foot_index].dangling or _is_stepping(foot_index):
 			continue
 		var foot := _feet[foot_index]
 		var foot_position := foot.marker.global_position
@@ -482,7 +494,7 @@ func _has_shared_strand_clearance(
 func can_land(foot_index: int, candidate: Vector3) -> bool:
 	if foot_index < 0 or foot_index >= _feet.size():
 		return false
-	if _hip_position(foot_index).distance_to(candidate) > _physical_reach(foot_index) + 0.0001:
+	if get_leg_origin(foot_index).distance_to(candidate) > get_leg_reach(foot_index) + 0.0001:
 		return false
 	var local_candidate := _rig.to_local(candidate)
 	if (targeting_mode != TargetingMode.WEB
@@ -491,7 +503,7 @@ func can_land(foot_index: int, candidate: Vector3) -> bool:
 	var from_point := _planar(_lift_position(foot_index))
 	var to_point := _planar(candidate)
 	for other_index in range(_feet.size()):
-		if other_index == foot_index:
+		if other_index == foot_index or _feet[other_index].carried:
 			continue
 		if _feet[other_index].dangling and not _is_stepping(other_index):
 			continue
@@ -593,12 +605,12 @@ func _release_foot(foot_index: int) -> void:
 	foot.strand_id = ""
 
 
-func _measure_bone_reach(foot_name: String) -> float:
+func _measure_bone_reach(foot_name: String, upper_only: bool = false) -> float:
 	var skeleton := _rig.get_node("ImportedRig/RIG_spider/Skeleton3D") as Skeleton3D
 	var solver := skeleton.get_node("CCDIK3D_" + foot_name.trim_prefix("Foot"))
-	var bone := int(solver.get("settings/1/end_bone"))
+	var bone := int(solver.get("settings/0/end_bone" if upper_only else "settings/1/end_bone"))
 	var root_bone := int(solver.get("settings/0/root_bone"))
-	var length := float(solver.get("settings/1/end_bone/length"))
+	var length := 0.0 if upper_only else float(solver.get("settings/1/end_bone/length"))
 	length *= skeleton.global_basis.y.length()
 	while bone != root_bone and bone >= 0:
 		var parent := skeleton.get_bone_parent(bone)
@@ -612,22 +624,50 @@ func _measure_bone_reach(foot_name: String) -> float:
 func _limit_foot_reach() -> void:
 	for index in range(_feet.size()):
 		var foot := _feet[index]
-		var origin := _hip_position(index)
+		var origin := get_leg_origin(index)
 		var offset := foot.marker.global_position - origin
-		var maximum := _physical_reach(index)
+		var maximum := get_leg_reach(index)
 		if offset.length_squared() > maximum * maximum:
 			foot.marker.global_position = origin + offset.normalized() * maximum
 			foot.dangling = true
 			foot.strand_id = ""
 
 
-func _hip_position(foot_index: int) -> Vector3:
+func get_leg_origin(foot_index: int) -> Vector3:
 	return (_skeleton.global_transform
 		* _skeleton.get_bone_global_pose(_feet[foot_index].hip_bone).origin)
 
 
-func _physical_reach(foot_index: int) -> float:
+func get_leg_reach(foot_index: int) -> float:
 	return _feet[foot_index].bone_reach * maximum_reach_ratio
+
+
+func is_carried(index: int) -> bool:
+	return index >= 0 and index < _feet.size() and _feet[index].carried
+
+
+func set_carried_feet(targets: Dictionary) -> void:
+	if targets.is_empty() and _carried_feet.is_empty():
+		return
+	for index in range(_feet.size()):
+		var foot := _feet[index]
+		if not targets.has(index):
+			if foot.carried:
+				foot.lift_marker.transform = foot.lift_rest
+				foot.carried = false
+				foot.dangling = true
+				foot.support_checked = false
+			continue
+		foot.carried = true
+		foot.dangling = false
+		foot.strand_id = ""
+		foot.marker.global_position = targets[index]
+		var origin := get_leg_origin(index)
+		var side := _rig.global_basis.x.normalized() * signf(foot.rest_offset.x)
+		var elbow := (foot.marker.global_position - origin) * 0.4 + side * 0.1 + Vector3.BACK * 0.06
+		foot.lift_marker.global_position = origin + elbow.limit_length(foot.upper_reach * 0.9)
+	_carried_feet = targets
+	_steps = _steps.filter(func(step: Dictionary) -> bool: return not _carried_feet.has(step.index))
 
 
 class FootState:
@@ -635,6 +675,10 @@ class FootState:
 	var rest_offset: Vector3
 	var bone_reach := 0.0
 	var hip_bone := -1
+	var upper_reach := 0.0
+	var carried := false
+	var lift_marker: Marker3D
+	var lift_rest: Transform3D
 	var ground_height: float
 	var dangling := false
 	var strand_id := ""

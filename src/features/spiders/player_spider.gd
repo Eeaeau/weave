@@ -6,6 +6,7 @@ const MOVE_SPEED: float = 2.0
 const SILK_CAPACITY: int = 5
 const STARTING_SILK: int = 3
 
+@export_range(0.02, 0.5, 0.01) var weapon_depth_clearance := 0.12
 @export var projectile_spawn_offset := Vector3(0, 0, 0.45)
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
@@ -145,6 +146,7 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 
 
 func update_presentation() -> void:
+	_update_weapon_pose()
 	selected_indicator.visible = is_active and health > 0
 	aim_arrow.visible = selected_indicator.visible and selected_weapon_idx >= 2
 	if aim_arrow.visible:
@@ -153,7 +155,6 @@ func update_presentation() -> void:
 			+ forward * aim_arrow_offset.length()
 		aim_arrow.global_basis = Basis(Vector3.BACK, aim_angle) * Basis.from_scale(
 			Vector3(0.2 + (sin(action_charged_time * 2) + 1), 1, 1))
-	_update_weapon_pose()
 	if silk_builder:
 		if is_active and selected_weapon_idx == 1:
 			silk_builder.update_preview()
@@ -266,7 +267,20 @@ func _sync_equipped_weapon_visuals() -> void:
 
 
 func _update_weapon_pose() -> void:
-	_get_weapon_equip_target().global_basis = Basis(Vector3.BACK, aim_angle)
+	var mount := _get_weapon_equip_target()
+	var depth := body.global_position.z
+	for sprite_name in ["Body", "LeftEye", "RightEye"]:
+		var sprite := get_node("SpiderRig/BoneAttachment3D/BodyOffset/" + sprite_name) as Sprite3D
+		var bounds := sprite.get_aabb()
+		for index in range(8):
+			depth = maxf(depth, (sprite.global_transform * bounds.get_endpoint(index)).z)
+	mount.global_position = Vector3(body.global_position.x, body.global_position.y,
+		depth + weapon_depth_clearance)
+	mount.global_basis = Basis(Vector3.BACK, aim_angle)
+	var weapon: Weapon3D = null
+	if selected_weapon_idx >= 0 and selected_weapon_idx < weapons.size():
+		weapon = weapons[selected_weapon_idx]
+	get_node("SpiderRig/WeaponCarry").set_weapon(weapon)
 
 
 func _get_weapon_equip_target() -> Marker3D:

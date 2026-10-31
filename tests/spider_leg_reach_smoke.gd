@@ -26,8 +26,8 @@ func _run() -> void:
 		gait.advance(1.0 / 60.0)
 		for index in range(gait.FOOT_NAMES.size()):
 			var target: Node3D = rig.get_node("FootTargets/" + gait.FOOT_NAMES[index])
-			var distance := target.global_position.distance_to(gait._hip_position(index))
-			if distance > gait._physical_reach(index) + 0.001:
+			var distance := target.global_position.distance_to(gait.get_leg_origin(index))
+			if distance > gait.get_leg_reach(index) + 0.001:
 				spider.free()
 				push_error("LEG REACH FAIL: a moving foot exceeded its physical reach")
 				quit(1)

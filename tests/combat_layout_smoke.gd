@@ -24,6 +24,10 @@ func _run() -> void:
 	for angle in [-PI, -PI / 2.0, 0.0, 0.6, PI / 2.0]:
 		player.aim_angle = angle
 		player.update_presentation()
+		if not _check_weapon_depth(player, mount):
+			arena.free()
+			quit(1)
+			return
 		var offset := mount.global_position - body.global_position
 		assert(Vector2(offset.x, offset.y).length() < 0.02,
 			"Launcher pivot must be centered over the spider's body")
@@ -58,3 +62,15 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	print("COMBAT LAYOUT PASS: centered launcher, aligned aim and larger depth-safe hitboxes")
 	quit(0)
+
+
+func _check_weapon_depth(player: PlayerSpider3D, mount: Node3D) -> bool:
+	for name in ["Body", "LeftEye", "RightEye"]:
+		var sprite := player.get_node("SpiderRig/BoneAttachment3D/BodyOffset/" + name) as Sprite3D
+		var bounds := sprite.get_aabb()
+		for index in range(8):
+			var point := sprite.global_transform * bounds.get_endpoint(index)
+			if mount.global_position.z <= point.z + 0.05:
+				push_error("COMBAT LAYOUT FAIL: carried weapon intersects the body or pupils")
+				return false
+	return true
