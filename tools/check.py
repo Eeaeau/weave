@@ -208,6 +208,8 @@ def main() -> int:
         ("background_layers_smoke", "BACKGROUND LAYERS PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
+        ("spider_turning_smoke", "SPIDER TURNING PASS:"),
+        ("spider_leg_reach_smoke", "SPIDER LEG REACH PASS:"),
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
         ("multiplayer/player_command_smoke", "PLAYER COMMAND PASS:"),

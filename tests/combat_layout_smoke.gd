@@ -35,6 +35,15 @@ func _run() -> void:
 		var arrow_offset := player.aim_arrow.global_position - mount.global_position
 		assert(absf(arrow_offset.dot(Vector3(-sin(angle), cos(angle), 0))) < 0.01,
 			"Aim arrow must share the launcher's aiming line")
+	var expected_origin := player.global_position + player.projectile_spawn_offset
+	for turn in [0.0, 1.0, -1.0]:
+		player.spider_rig.rotation.y = turn
+		player.update_presentation()
+		weapon.fire(0.0, 1.0)
+		var shot: Projectile3D = get_nodes_in_group("camera_focus_projectiles")[-1]
+		assert(shot.global_position.is_equal_approx(expected_origin),
+			"Cosmetic turning must not change the gameplay shot origin")
+		shot.free()
 	var hurt_shape := player.hurtbox.get_node("CollisionShape3D") as CollisionShape3D
 	assert(absf(hurt_shape.global_basis.y.normalized().dot(Vector3.BACK)) > 0.999)
 	var shape := hurt_shape.shape as CapsuleShape3D

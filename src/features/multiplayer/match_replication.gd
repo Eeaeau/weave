@@ -319,7 +319,7 @@ func _present_motion() -> void:
 			+ float(motion.aim_speed) / STATE.PRECISION * elapsed
 		spider.action_charged_time = float(motion.charge) + elapsed if motion.charging else 0.0
 		if not speed.is_zero_approx():
-			spider.spider_rig.rotation.y = atan2(speed.x, -speed.y)
+			spider.face_direction(atan2(speed.x, -speed.y))
 
 
 func _apply_motions(values: Variant) -> void:

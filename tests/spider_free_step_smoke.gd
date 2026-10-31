@@ -75,14 +75,16 @@ func _check_stationary(controller: Node3D, targets: Node) -> bool:
 
 
 func _check_steps(controller: Node3D, targets: Node, spider: Node3D) -> bool:
+	controller.set("step_distance", 0.02)
+	controller.set("step_lead", 0.01)
 	var initial := _positions(targets)
-	spider.position.z += 0.14
+	spider.position.z += 0.01
 	controller.call("advance", 0.016)
 	var moved_during_short_travel := not _same_positions(targets, initial)
 	controller.call("advance", 0.016)
 	if moved_during_short_travel or not _same_positions(targets, initial):
 		return _fail("Short movement must not step during travel or after stopping")
-	spider.position.z += 0.14
+	spider.position.z += 0.02
 	controller.call("advance", 0.05)
 	if not _moved_group(targets, initial, GROUP_A):
 		return _fail("First diagonal group did not start a step")

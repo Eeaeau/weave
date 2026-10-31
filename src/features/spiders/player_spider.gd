@@ -6,6 +6,7 @@ const MOVE_SPEED: float = 2.0
 const SILK_CAPACITY: int = 5
 const STARTING_SILK: int = 3
 
+@export var projectile_spawn_offset := Vector3(0, 0, 0.45)
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
 @export_range(0, 20) var silk_amount: int = STARTING_SILK
@@ -48,8 +49,11 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	super._process(delta)
 	if not network_controlled:
 		simulate(delta, PlayerCommand.from_input())
+	else:
+		update_presentation()
 
 
 func simulate(delta: float, command: PlayerCommand) -> void:
@@ -78,7 +82,7 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 
 	var movement_direction := command.movement_direction()
 	if not movement_direction.is_zero_approx():
-		spider_rig.rotation.y = atan2(movement_direction.x, -movement_direction.y)
+		face_direction(atan2(movement_direction.x, -movement_direction.y))
 	var velocity = movement_direction * MOVE_SPEED
 	if velocity.length() > 0:
 		if remaining_movement > 0:
