@@ -201,6 +201,9 @@ def main() -> int:
         ("moth_visual_smoke", "MOTH VISUAL PASS:"),
         ("insect_pickup_smoke", "INSECT PICKUP PASS:"),
         ("weapon_self_hit_smoke", "WEAPON SELF HIT PASS:"),
+        ("guided_rocket_smoke", "GUIDED ROCKET PASS:"),
+        ("guided_replication_smoke", "GUIDED REPLICATION PASS:"),
+        ("combat_layout_smoke", "COMBAT LAYOUT PASS:"),
         ("xy_gameplay_smoke", "XY GAMEPLAY PASS:"),
         ("background_layers_smoke", "BACKGROUND LAYERS PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
@@ -261,6 +264,13 @@ def main() -> int:
         marker="MULTIPLAYER PASS:",
         timeout=65,
     )
+    for scenario in ("guided-host", "guided-guest"):
+        run(
+            [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot),
+             "--scenario", scenario, "--host-fps", "24", "--guest-fps", "144", "--latency-ms", "60"],
+            marker="MULTIPLAYER PASS:",
+            timeout=65,
+        )
     run(
         [sys.executable, "tools/check_lobby_errors.py", "--godot", str(godot)],
         marker="LOBBY ERRORS PASS",

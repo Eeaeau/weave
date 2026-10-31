@@ -30,7 +30,8 @@ var network_controlled: bool = false
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	super._ready()
-	aim_arrow_offset = aim_arrow.position
+	var arrow_sprite := aim_arrow.get_node("TheAimingArrow") as Sprite3D
+	arrow_sprite.position.x = arrow_sprite.texture.get_width() * arrow_sprite.pixel_size / 2.0
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
 	var no_action = load(
@@ -58,7 +59,12 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 		take_damage(1)
 
 	update_presentation()
-	if not is_active:
+	if not is_active or is_dead():
+		return
+	var guided := get_guided_rocket()
+	if guided != null:
+		guided.set_steering(int(command.is_pressed("aim_left"))
+			- int(command.is_pressed("aim_right")))
 		return
 	if not is_nan(command.final_aim):
 		var margin := AIM_SPEED * PlayerCommand.MAX_TIMING_CORRECTION
@@ -138,9 +144,11 @@ func update_presentation() -> void:
 	selected_indicator.visible = is_active and health > 0
 	aim_arrow.visible = selected_indicator.visible and selected_weapon_idx >= 2
 	if aim_arrow.visible:
-		aim_arrow.position = aim_arrow_offset.rotated(Vector3(0, 1, 0), aim_angle)
-		aim_arrow.scale.x = 0.2 + (sin(action_charged_time * 2) + 1)
-		aim_arrow.rotation.y = aim_angle
+		var forward := Vector3(cos(aim_angle), sin(aim_angle), 0)
+		aim_arrow.global_position = _get_weapon_equip_target().global_position \
+			+ forward * aim_arrow_offset.length()
+		aim_arrow.global_basis = Basis(Vector3.BACK, aim_angle) * Basis.from_scale(
+			Vector3(0.2 + (sin(action_charged_time * 2) + 1), 1, 1))
 	_update_weapon_pose()
 	if silk_builder:
 		if is_active and selected_weapon_idx == 1:
@@ -203,6 +211,13 @@ func deactivate() -> void:
 
 func get_movement_direction() -> Vector3:
 	return PlayerCommand.from_input().movement_direction()
+
+
+func get_guided_rocket() -> Node:
+	for rocket in get_tree().get_nodes_in_group("guided_rockets"):
+		if rocket.source_hurtbox == hurtbox and not rocket.is_queued_for_deletion():
+			return rocket
+	return null
 
 
 func is_done() -> bool:

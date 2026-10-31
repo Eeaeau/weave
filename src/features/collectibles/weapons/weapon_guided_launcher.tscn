@@ -1,0 +1,25 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://src/features/collectibles/weapons/weapon_rocket_launcher.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://src/features/collectibles/weapons/guided_rocket_projectile.tscn" id="2"]
+[ext_resource type="Resource" path="res://src/features/collectibles/weapons/guided_launcher.tres" id="3"]
+
+[ext_resource type="Shader" path="res://src/features/collectibles/weapons/assets/guided_tint.gdshader" id="tint"]
+[ext_resource type="Texture2D" path="res://src/features/collectibles/weapons/assets/rocket_launcher.png" id="art"]
+
+[ext_resource type="Shader" path="res://src/features/collectibles/weapons/assets/guided_icon.gdshader" id="icon"]
+
+[sub_resource type="ShaderMaterial" id="BlueIcon"]
+shader = ExtResource("icon")
+
+[sub_resource type="ShaderMaterial" id="Blue"]
+shader = ExtResource("tint")
+shader_parameter/artwork = ExtResource("art")
+
+[node name="WeaponGuidedLauncher" instance=ExtResource("1")]
+projectile_scene = ExtResource("2")
+collectible = ExtResource("3")
+icon_material = SubResource("BlueIcon")
+
+[node name="Sprite3D" parent="." index="0"]
+material_override = SubResource("Blue")

@@ -4,6 +4,7 @@ extends CanvasLayer
 
 var show_hints := true
 var wind_waiting := false
+var _guiding_rocket := false
 
 @onready var status: Label = $Margin/Panel/Status
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
@@ -18,6 +19,13 @@ func _ready() -> void:
 	_update_status()
 	for child in weapons_container.get_children():
 		child.visible = false
+
+
+func _process(_delta: float) -> void:
+	var guiding := not get_tree().get_nodes_in_group("guided_rockets").is_empty()
+	if guiding != _guiding_rocket:
+		_guiding_rocket = guiding
+		_update_status()
 
 
 func set_show_hints(enabled: bool) -> void:
@@ -35,6 +43,9 @@ func _update_status() -> void:
 		return
 	$Margin.visible = show_hints
 	if show_hints:
+		if _guiding_rocket:
+			status.text = "Guided rocket in flight · Use aim controls to steer"
+			return
 		if wind_waiting:
 			status.text = "Wind incoming · Enter: Skip wind"
 			return
@@ -92,6 +103,9 @@ func update_weapon(weapons: Array[Weapon3D], selected_weapon_idx: int) -> void:
 			w_container.visible = true
 			var texture_rect: TextureRect = w_container.get_child(0)
 			texture_rect.texture = weapon.icon
+			texture_rect.material = weapon.icon_material
+			w_container.tooltip_text = weapon.collectible.display_name \
+				if weapon.collectible != null else weapon.name
 			var number_label: Label = texture_rect.get_child(0)
 			number_label.text = str(i + 1)
 			if i == selected_weapon_idx:

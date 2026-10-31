@@ -22,6 +22,8 @@ func _process(delta: float) -> void:
 
 
 func advance(_delta: float) -> void:
+	if not get_tree().get_nodes_in_group("guided_rockets").is_empty():
+		return
 	var active_spider: PlayerSpider3D = get_active_spider()
 	if not active_spider or not active_spider.is_active:
 		return
