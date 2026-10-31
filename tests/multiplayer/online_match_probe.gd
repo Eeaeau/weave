@@ -47,12 +47,16 @@ func _process(_delta: float) -> void:
 
 
 func _configure_match() -> void:
-	if _role != "host" or _scenario not in ["combat", "silk", "pickups"]:
+	if _role != "host" or _scenario not in ["combat", "silk", "pickups",
+			"guided-host", "guided-guest"]:
 		return
 	var arena := get_tree().current_scene as WebMatch3D
 	if arena == null:
 		return
 	var shooter: PlayerSpider3D = arena.get_node("TeamA").spiders[0]
+	if _scenario.begins_with("guided-"):
+		_configure_guided(arena)
+		return
 	if _scenario == "pickups":
 		_configure_pickups(arena)
 		return
@@ -111,9 +115,11 @@ func _check_loaded_match() -> void:
 		_disconnect_expected = true
 		driver.scripted_input = true
 		print("ONLINE_MATCH_LOADED: ", _role)
-	elif _scenario in ["turns", "combat", "silk", "pickups"]:
+	elif _scenario in ["turns", "combat", "silk", "pickups", "guided-host", "guided-guest"]:
 		_testing_turns = true
-		if _scenario == "pickups":
+		if _scenario.begins_with("guided-"):
+			_play_guided.call_deferred(arena, driver)
+		elif _scenario == "pickups":
 			_play_pickups.call_deferred(arena, driver)
 		elif _scenario == "combat":
 			_play_combat.call_deferred(arena, driver)
@@ -621,3 +627,145 @@ func _verify_disconnect() -> void:
 func _returned_to_menu() -> bool:
 	return get_tree().current_scene is MainMenu \
 		and get_tree().current_scene.get_node("OnlineLobby").visible
+
+
+func _configure_guided(arena: WebMatch3D) -> void:
+	var manager: MatchManager = arena.get_node("MatchManager")
+	for index in range(manager.teams.size()):
+		for actor_index in range(manager.teams[index].spiders.size()):
+			var actor := manager.teams[index].spiders[actor_index]
+			actor.webs.clear()
+			actor.global_position = Vector3(index * 100 + actor_index * 20, 400, 0)
+		var weapon: Weapon3D = load(
+			"res://src/features/collectibles/weapons/weapon_guided_launcher.tscn").instantiate()
+		arena.add_child(weapon)
+		manager.teams[index].spiders[0].pick_up(weapon)
+
+
+func _play_guided(arena: WebMatch3D, driver: Node) -> void:
+	driver.scripted_input = true
+	var pilot_role := _scenario.trim_prefix("guided-")
+	var team_index := 0 if pilot_role == "host" else 1
+	var manager: MatchManager = arena.get_node("MatchManager")
+	if _role == "guest":
+		var skip := COMMAND.new()
+		skip.held = 128
+		driver.submit_command(skip)
+	if not await _wait_until(_wind_finished.bind(arena)):
+		return
+	if pilot_role == "guest" and _role == "host":
+		for index in range(manager.teams[0].spiders.size()):
+			await _press_and_release(driver)
+			await get_tree().create_timer(0.15).timeout
+	if not await _wait_until(func() -> bool: return manager.active_team_idx == team_index):
+		return
+	var actor := manager.teams[team_index].spiders[0]
+	if _role == pilot_role:
+		var select := COMMAND.new()
+		select.selection = 2
+		driver.submit_command(select)
+		await get_tree().create_timer(0.15).timeout
+		await _press_and_release(driver)
+	var launched := func() -> bool: return _has_projectile() and actor.n_remaining_actions == 0
+	if not await _wait_until(launched):
+		return
+	await _exercise_guided(arena, driver, actor, pilot_role)
+
+
+func _press_and_release(driver: Node) -> void:
+	var press := COMMAND.new()
+	press.held = 64
+	driver.submit_command(press)
+	await get_tree().create_timer(0.08).timeout
+	driver.submit_command(COMMAND.new())
+
+
+func _exercise_guided(arena: WebMatch3D, driver: Node,
+		actor: PlayerSpider3D, pilot_role: String) -> void:
+	var point := actor.global_position
+	var turn: int = driver.turn_id
+	if _role == pilot_role:
+		var steer := COMMAND.new()
+		steer.held = 16
+		driver.submit_command(steer)
+	else:
+		if driver.submit_command(COMMAND.new()):
+			_fail("The other player could submit guidance during the pilot's turn")
+			return
+	if not await _wait_until(_guided_steering.bind(1)):
+		return
+	await get_tree().create_timer(0.25).timeout
+	if actor.global_position.distance_to(point) > 0.001 or driver.turn_id != turn:
+		_fail("Guidance moved the spider or handed over its turn")
+		return
+	if _role == pilot_role and not await _reject_guidance_actions(driver, actor):
+		return
+	if not await _wait_until(_guided_steering.bind(0)):
+		return
+	await _finish_guided(arena, driver, actor, point)
+
+
+func _finish_guided(arena: WebMatch3D, driver: Node, actor: PlayerSpider3D,
+		point: Vector3) -> void:
+	var transport := OnlineSession.transport
+	var counts: Dictionary = transport.sent_messages if _role == "host" \
+		else transport.received_messages
+	var before: int = counts.get("projectile", 0)
+	await get_tree().create_timer(0.25).timeout
+	if counts.get("projectile", 0) != before:
+		_fail("Holding neutral guidance streamed projectile updates")
+		return
+	if _role == "guest" and not await _recover_guided(driver):
+		return
+	if not await _wait_until(_no_projectile):
+		return
+	var manager: MatchManager = arena.get_node("MatchManager")
+	var next := func() -> bool: return manager.teams[manager.active_team_idx].active_spider_idx == 1
+	if not await _wait_until(next):
+		return
+	if actor.global_position.distance_to(point) > 0.001 or not is_equal_approx(actor.health, 1.0):
+		_fail("Piloting moved or damaged the waiting spider")
+		return
+	if _role == "host" and not await _wait_until(_outcomes_acknowledged.bind(driver)):
+		return
+	print("GUIDED ONLINE PASS: ", _role, " ", _scenario)
+	_pass()
+
+
+func _recover_guided(driver: Node) -> bool:
+	var snapshots: int = OnlineSession.transport.received_messages.get("snapshot", 0)
+	driver.receive(OnlineSession.host_id, "events", {"match": OnlineSession.match_config.match,
+		"revision": driver.revision + 2, "patch": {}})
+	if not await _wait_until(_received_count.bind("snapshot", snapshots + 1)):
+		return false
+	if not _has_projectile():
+		_fail("Recovery lost the rocket during flight")
+		return false
+	return true
+
+
+func _reject_guidance_actions(driver: Node, actor: PlayerSpider3D) -> bool:
+	var results: Array[Dictionary] = []
+	driver.command_result.connect(func(value: Dictionary) -> void: results.append(value))
+	var cheat := COMMAND.new()
+	cheat.held = 17
+	driver.submit_command(cheat)
+	var rejected := func() -> bool: return results.any(func(value: Dictionary) -> bool:
+		return value.reason == "Only steering is available during guided flight")
+	if not await _wait_until(rejected):
+		return false
+	var late_stop := COMMAND.new()
+	late_stop.final_aim = actor.aim_angle
+	driver.submit_command(late_stop)
+	if not await _wait_until(func() -> bool: return results.size() >= 2):
+		return false
+	# A normal aim-release can arrive after the host has already launched.
+	driver._poll_input(0.0)
+	return true
+
+
+func _guided_steering(value: int) -> bool:
+	for rocket in get_tree().get_nodes_in_group("guided_rockets"):
+		if rocket.get("steering") == value:
+			return true
+	return false

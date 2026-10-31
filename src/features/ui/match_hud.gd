@@ -4,7 +4,11 @@ extends CanvasLayer
 
 var show_hints := true
 var wind_waiting := false
+var _guiding_rocket := false
 
+@onready var rocket_fuel: PanelContainer = $RocketFuel
+@onready var fuel_bar: ProgressBar = $RocketFuel/Content/Bar
+@onready var fuel_label: Label = $RocketFuel/Content/Label
 @onready var status: Label = $Margin/Panel/Status
 @onready var energy_bar: ProgressBar = $LowerLeftPanel/EnergyBar
 @onready var team_label: Label = $LowerLeftPanel/TeamLabel
@@ -18,6 +22,21 @@ func _ready() -> void:
 	_update_status()
 	for child in weapons_container.get_children():
 		child.visible = false
+
+
+func _process(_delta: float) -> void:
+	var rockets := get_tree().get_nodes_in_group("guided_rockets")
+	var guiding := not rockets.is_empty()
+	rocket_fuel.visible = guiding and not rockets[0].freeze
+	if rocket_fuel.visible:
+		var rocket := rockets[0] as GuidedRocket3D
+		var remaining := maxf(0.0, rocket.flight_limit - rocket.flight_age)
+		fuel_bar.max_value = rocket.flight_limit
+		fuel_bar.value = remaining
+		fuel_label.text = "Rocket fuel - %.1f s" % remaining
+	if guiding != _guiding_rocket:
+		_guiding_rocket = guiding
+		_update_status()
 
 
 func set_show_hints(enabled: bool) -> void:
@@ -35,6 +54,9 @@ func _update_status() -> void:
 		return
 	$Margin.visible = show_hints
 	if show_hints:
+		if _guiding_rocket:
+			status.text = "Guided rocket in flight · Use aim controls to steer"
+			return
 		if wind_waiting:
 			status.text = "Wind incoming · Enter: Skip wind"
 			return
@@ -92,6 +114,9 @@ func update_weapon(weapons: Array[Weapon3D], selected_weapon_idx: int) -> void:
 			w_container.visible = true
 			var texture_rect: TextureRect = w_container.get_child(0)
 			texture_rect.texture = weapon.icon
+			texture_rect.material = weapon.icon_material
+			w_container.tooltip_text = weapon.collectible.display_name \
+				if weapon.collectible != null else weapon.name
 			var number_label: Label = texture_rect.get_child(0)
 			number_label.text = str(i + 1)
 			if i == selected_weapon_idx:

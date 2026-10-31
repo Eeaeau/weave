@@ -201,10 +201,16 @@ def main() -> int:
         ("moth_visual_smoke", "MOTH VISUAL PASS:"),
         ("insect_pickup_smoke", "INSECT PICKUP PASS:"),
         ("weapon_self_hit_smoke", "WEAPON SELF HIT PASS:"),
+        ("guided_rocket_smoke", "GUIDED ROCKET PASS:"),
+        ("guided_replication_smoke", "GUIDED REPLICATION PASS:"),
+        ("combat_layout_smoke", "COMBAT LAYOUT PASS:"),
+        ("branch_projectile_colliders_smoke", "BRANCH COLLIDERS PASS:"),
         ("xy_gameplay_smoke", "XY GAMEPLAY PASS:"),
         ("background_layers_smoke", "BACKGROUND LAYERS PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
         ("spider_free_step_smoke", "SPIDER FREE STEP PASS:"),
+        ("spider_turning_smoke", "SPIDER TURNING PASS:"),
+        ("spider_leg_reach_smoke", "SPIDER LEG REACH PASS:"),
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("menu_smoke", "MENU PASS:"),
         ("multiplayer/player_command_smoke", "PLAYER COMMAND PASS:"),
@@ -219,6 +225,7 @@ def main() -> int:
         ("wind_match_smoke", "WIND MATCH PASS:"),
         ("wind_event_smoke", "WIND EVENT PASS:"),
         ("web_catch_smoke", "WEB CATCH PASS:"),
+        ("loose_web_threads_smoke", "LOOSE THREADS PASS:"),
         ("web_anchor_authoring_smoke", "WEB ANCHOR AUTHORING PASS:"),
         ("web_edge_authoring_smoke", "WEB EDGE AUTHORING PASS:"),
         ("web_support_performance_smoke", "WEB SUPPORT PERFORMANCE PASS:"),
@@ -261,6 +268,13 @@ def main() -> int:
         marker="MULTIPLAYER PASS:",
         timeout=65,
     )
+    for scenario in ("guided-host", "guided-guest"):
+        run(
+            [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot),
+             "--scenario", scenario, "--host-fps", "24", "--guest-fps", "144", "--latency-ms", "60"],
+            marker="MULTIPLAYER PASS:",
+            timeout=65,
+        )
     run(
         [sys.executable, "tools/check_lobby_errors.py", "--godot", str(godot)],
         marker="LOBBY ERRORS PASS",

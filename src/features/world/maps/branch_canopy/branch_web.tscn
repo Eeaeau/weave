@@ -4,6 +4,106 @@
 [ext_resource type="Script" uid="uid://bxipxh5q65ina" path="res://src/features/web/web_anchor_preview_3d.gd" id="2_preview"]
 [ext_resource type="Script" uid="uid://c1ila5j2187bu" path="res://src/features/web/web_3d.gd" id="3_web"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor01"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor02"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor03"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor04"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor13"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor14"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor05"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor06"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor07"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor15"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor24"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor25"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor16"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor17"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor18"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor19"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor08"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor09"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor20"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor22"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor21"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor10"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor11"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor23"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Anchor12"]
+resource_local_to_scene = true
+size = Vector3(0.9, 0.9, 3)
+
 [node name="BranchWeb" type="Node3D" unique_id=645545693]
 
 [node name="BranchVisual" parent="." unique_id=1877940173 instance=ExtResource("1_visual")]
@@ -114,3 +214,108 @@ edges = Array[Vector2i]([Vector2i(0, 1), Vector2i(2, 0), Vector2i(3, 0), Vector2
 web_width = 0.00999999999999999
 
 [node name="CaughtItems" type="Node3D" parent="StartingWeb" unique_id=93165757]
+
+[node name="BranchProjectileColliders" type="Area3D" parent="." groups=["projectile_blockers"]]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+
+[node name="AtAnchor01" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.0126915, -0.7445376, 0)
+shape = SubResource("BoxShape3D_Anchor01")
+
+[node name="AtAnchor02" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.002066, -0.36006337, 0)
+shape = SubResource("BoxShape3D_Anchor02")
+
+[node name="AtAnchor03" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.161004, 5.1266456, 0)
+shape = SubResource("BoxShape3D_Anchor03")
+
+[node name="AtAnchor04" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.36697, 4.6419444, 0)
+shape = SubResource("BoxShape3D_Anchor04")
+
+[node name="AtAnchor13" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.53434, 9.459703, -4.7683716e-07)
+shape = SubResource("BoxShape3D_Anchor13")
+
+[node name="AtAnchor14" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.744306, 8.64956, -4.7683716e-07)
+shape = SubResource("BoxShape3D_Anchor14")
+
+[node name="AtAnchor05" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.229384, 12.701744, 0)
+shape = SubResource("BoxShape3D_Anchor05")
+
+[node name="AtAnchor06" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.971706, 10.017098, 0)
+shape = SubResource("BoxShape3D_Anchor06")
+
+[node name="AtAnchor07" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.221205, 5.9402056, 0)
+shape = SubResource("BoxShape3D_Anchor07")
+
+[node name="AtAnchor15" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.341696, -1.4986539, 0)
+shape = SubResource("BoxShape3D_Anchor15")
+
+[node name="AtAnchor24" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.970984, 1.0646248, 0)
+shape = SubResource("BoxShape3D_Anchor24")
+
+[node name="AtAnchor25" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.481712, 2.9230015, 0)
+shape = SubResource("BoxShape3D_Anchor25")
+
+[node name="AtAnchor16" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.836155, 6.6104712, 0)
+shape = SubResource("BoxShape3D_Anchor16")
+
+[node name="AtAnchor17" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.275955, 9.357466, 0)
+shape = SubResource("BoxShape3D_Anchor17")
+
+[node name="AtAnchor18" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.660347, 11.895688, 0)
+shape = SubResource("BoxShape3D_Anchor18")
+
+[node name="AtAnchor19" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.879824, 10.170576, 0)
+shape = SubResource("BoxShape3D_Anchor19")
+
+[node name="AtAnchor08" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.059196, 4.983211, 0)
+shape = SubResource("BoxShape3D_Anchor08")
+
+[node name="AtAnchor09" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36318207, 2.6387553, 0)
+shape = SubResource("BoxShape3D_Anchor09")
+
+[node name="AtAnchor20" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.002145, 6.501925, 0)
+shape = SubResource("BoxShape3D_Anchor20")
+
+[node name="AtAnchor22" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8192115, 3.7183576, 0)
+shape = SubResource("BoxShape3D_Anchor22")
+
+[node name="AtAnchor21" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.294682, -1.404819, 0)
+shape = SubResource("BoxShape3D_Anchor21")
+
+[node name="AtAnchor10" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49902058, 8.302755, 0)
+shape = SubResource("BoxShape3D_Anchor10")
+
+[node name="AtAnchor11" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.3330374, 9.319239, 0)
+shape = SubResource("BoxShape3D_Anchor11")
+
+[node name="AtAnchor23" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.358491, 11.500393, 0)
+shape = SubResource("BoxShape3D_Anchor23")
+
+[node name="AtAnchor12" type="CollisionShape3D" parent="BranchProjectileColliders"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.776896, 13.86987, 0)
+shape = SubResource("BoxShape3D_Anchor12")

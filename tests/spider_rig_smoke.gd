@@ -209,7 +209,7 @@ func _check_player_equipment() -> bool:
 	if succeeded:
 		succeeded = _check_weapon_selection(player, pebble, rocket)
 	if succeeded:
-		succeeded = _check_projectile_spawn(pebble)
+		succeeded = _check_projectile_spawn(player, pebble)
 	if succeeded:
 		succeeded = _check_weapon_aim(player, target)
 	if succeeded:
@@ -256,18 +256,18 @@ func _check_weapon_selection(
 	return true
 
 
-func _check_projectile_spawn(pebble: Weapon3D) -> bool:
+func _check_projectile_spawn(player: PlayerSpider3D, pebble: Weapon3D) -> bool:
 	var projectile_container := Node3D.new()
 	root.add_child(projectile_container)
 	var previous_scene := current_scene
 	current_scene = projectile_container
-	var expected_spawn := pebble.global_position
+	var expected_spawn := player.global_position + player.projectile_spawn_offset
 	(pebble as ProjectileWeapon3D).fire(0.0, 0.0)
 	var projectile := projectile_container.get_child(0) as Projectile3D
 	current_scene = previous_scene
 	if projectile == null or not projectile.global_position.is_equal_approx(expected_spawn):
 		projectile_container.free()
-		return _fail("Carried projectile weapons must fire from their equipment target")
+		return _fail("Carried projectiles must use the stable gameplay origin")
 	projectile_container.free()
 	return true
 
@@ -370,6 +370,8 @@ func _check_player_faces_movement() -> bool:
 		Input.action_press(direction[0])
 		spider._process(0.1)
 		Input.action_release(direction[0])
+		for frame in range(90):
+			spider._process(1.0 / 60.0)
 		var visual := spider.get_node("SpiderRig") as Node3D
 		if visual.basis.z.normalized().dot(direction[1]) < 0.999:
 			spider.free()
@@ -643,11 +645,12 @@ func _check_foot_control(rig: Node, strokes: MeshInstance3D, spec: Array) -> boo
 	var after := _ribbon_point(strokes.mesh, spec[6], spec[7] - 1)
 	var rendered_tip := strokes.to_global(_ribbon_point(strokes.mesh, spec[6], spec[7]))
 	var target_distance := rendered_tip.distance_to(foot.global_position)
-	if target_distance > 0.03:
-		return _fail(
-			"Rendered leg missed foot target for %s by %.4f"
-			% [spec[0], target_distance]
-		)
+	var last_joint := strokes.to_global(after)
+	var tip_length := float(spec[8])
+	var unreachable_gap := maxf(0.0, last_joint.distance_to(foot.global_position) - tip_length)
+	if (target_distance > unreachable_gap + 0.03
+			or rendered_tip.distance_to(last_joint) > tip_length + 0.03):
+		return _fail("Rendered toe must reach its target without stretching: " + spec[0])
 	foot.position = original_position
 	await process_frame
 	await process_frame

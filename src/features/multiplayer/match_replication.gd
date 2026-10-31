@@ -17,6 +17,7 @@ var _authority := preload("res://src/features/multiplayer/command_authority.gd")
 var _turn_key := ""
 var _sequence := 0
 var _last_held := -1
+var _guidance_input := false
 var _local_actor := -1
 var _local_aim := 0.0
 var _local_charge := 0.0
@@ -89,10 +90,11 @@ func _simulate_spiders(delta: float) -> void:
 			var start := spider.global_position
 			var id := "%d:%d" % [team_index, index]
 			var command := idle
-			if team_index * 100 + index == active_actor_id and spider.n_remaining_actions > 0:
+			if team_index * 100 + index == active_actor_id \
+					and (spider.n_remaining_actions > 0 or spider.get_guided_rocket() != null):
 				while _authority.has_pending():
 					spider.simulate(0.0, _authority.take_command())
-				if spider.n_remaining_actions > 0:
+				if spider.n_remaining_actions > 0 or spider.get_guided_rocket() != null:
 					command = _authority.take_command()
 			spider.simulate(delta, command)
 			_record_motion(id, spider, start, delta, command)
@@ -115,6 +117,18 @@ func _poll_input(delta: float) -> void:
 		command.selection = -1
 		command.cycle = 0
 		command.cancel = _last_held > 0
+	var guiding: bool = _projectiles.has_guided_rocket()
+	if guiding != _guidance_input:
+		_guidance_input = guiding
+		_last_held = -1
+	if guiding:
+		command.held &= 48
+		command.selection = -1
+		command.cycle = 0
+		command.cancel = false
+		if command.held != _last_held:
+			submit_command(command)
+		return
 	if not _host and not _predict_aim(command, delta):
 		return
 	var discrete := command.selection >= 0 or command.cycle != 0 or command.cancel
@@ -188,7 +202,11 @@ func _accept_command(sender: int, packet: Dictionary) -> void:
 			_publish_changes()
 	else:
 		var spider := _active_spider()
-		if spider != null and spider.n_remaining_actions > 0:
+		var guided: bool = _projectiles.has_guided_rocket()
+		if guided and not _valid_guidance_command(packet):
+			result.reason = "Only steering is available during guided flight"
+		elif spider != null and not spider.is_dead() \
+				and (spider.n_remaining_actions > 0 or guided):
 			result = _authority.accept(sender, packet, spider.weapons.size())
 		else:
 			result.reason = "Waiting for the action to finish"
@@ -197,10 +215,17 @@ func _accept_command(sender: int, packet: Dictionary) -> void:
 		_needs_digest = true
 	result["seq"] = packet.get("seq", -1)
 	if sender == GDSync.get_client_id():
-		command_result.emit(result)
+		_report_command_result(result)
 	else:
 		result["match"] = _match_id
 		OnlineSession.transport.send_to(sender, "command_ack", result)
+
+
+func _valid_guidance_command(packet: Dictionary) -> bool:
+	return packet.get("held") is int and (packet.held & ~48) == 0 \
+		and packet.get("select") == -1 and packet.get("cycle") == 0 \
+		and packet.get("cancel") == false and packet.get("aim") == null \
+		and packet.get("charge") == -1
 
 
 func _active_spider() -> PlayerSpider3D:
@@ -250,9 +275,10 @@ func _apply_input_state(value: Variant) -> void:
 func _record_motion(id: String, spider: PlayerSpider3D, start: Vector3,
 		delta: float, command: PlayerCommand) -> void:
 	var speed := ((spider.global_position - start) / delta * 1000.0).round() / 1000.0
+	var piloting := spider.get_guided_rocket() != null
 	var aim_speed := PlayerSpider3D.AIM_SPEED * (int(command.is_pressed("aim_left"))
-		- int(command.is_pressed("aim_right"))) if spider.is_active else 0.0
-	var charging := command.is_pressed("action") and spider.is_active
+		- int(command.is_pressed("aim_right"))) if spider.is_active and not piloting else 0.0
+	var charging := command.is_pressed("action") and spider.is_active and not piloting
 	var moving := not speed.is_zero_approx() or not is_zero_approx(aim_speed) or charging
 	var previous: Dictionary = _motions.get(id, {})
 	if previous.get(
@@ -293,7 +319,7 @@ func _present_motion() -> void:
 			+ float(motion.aim_speed) / STATE.PRECISION * elapsed
 		spider.action_charged_time = float(motion.charge) + elapsed if motion.charging else 0.0
 		if not speed.is_zero_approx():
-			spider.spider_rig.rotation.y = atan2(speed.x, -speed.y)
+			spider.face_direction(atan2(speed.x, -speed.y))
 
 
 func _apply_motions(values: Variant) -> void:
@@ -412,7 +438,7 @@ func _receive_as_guest(kind: String, payload: Dictionary) -> void:
 			_apply_events(payload)
 		"command_ack":
 			if payload.get("accepted") is bool:
-				command_result.emit(payload)
+				_report_command_result(payload)
 		"wind":
 			_receive_wind(payload)
 		"wind_skip":
@@ -603,3 +629,9 @@ func _apply_events(payload: Dictionary) -> void:
 func _send_host(kind: String, payload: Dictionary) -> void:
 	payload["match"] = _match_id
 	OnlineSession.transport.send_to(OnlineSession.host_id, kind, payload)
+
+
+func _report_command_result(result: Dictionary) -> void:
+	if not result.accepted and _projectiles.has_guided_rocket():
+		_last_held = -1
+	command_result.emit(result)

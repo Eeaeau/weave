@@ -245,7 +245,7 @@ func _check_all_feet_share_one_strand() -> bool:
 		var landing: Dictionary = controller.call("_choose_destination", foot_index)
 		if landing.is_empty():
 			_free_nodes(spider, web)
-			return _fail("All eight feet must find room on a long shared web strand")
+			return _fail("Foot %s must find reachable room on the shared strand" % foot_index)
 		var point: Vector3 = landing["point"]
 		var strand_id: String = landing["strand_id"]
 		if not controller.call("has_web_support", point):
@@ -451,8 +451,8 @@ func _make_support_web(foot_position: Vector3) -> Web3D:
 	web.valid_nodes = [
 		_add_web_node(web, foot_position + Vector3(-0.12, 0.0, 0.0)),
 		_add_web_node(web, foot_position + Vector3(0.12, 0.0, 0.0)),
-		_add_web_node(web, foot_position + Vector3(-0.12, 0.0, 0.18)),
-		_add_web_node(web, foot_position + Vector3(0.12, 0.0, 0.18)),
+		_add_web_node(web, foot_position + Vector3(-0.12, 0.0, 0.14)),
+		_add_web_node(web, foot_position + Vector3(0.12, 0.0, 0.14)),
 	]
 	web.edges = [Vector2i(0, 1), Vector2i(2, 3)]
 	return web

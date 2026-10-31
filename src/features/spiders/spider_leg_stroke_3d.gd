@@ -35,6 +35,7 @@ const LEG_SPECS := [
 var _skeleton: Skeleton3D
 var _foot_targets: Node3D
 var _leg_bone_indices: Array[PackedInt32Array] = []
+var _tip_lengths: Array[float] = []
 var _stroke_mesh := ImmediateMesh.new()
 var _material := StandardMaterial3D.new()
 
@@ -75,6 +76,7 @@ func _resolve_rig() -> bool:
 	_skeleton = resolved_skeleton
 	_foot_targets = get_node_or_null(foot_targets_path) as Node3D
 	_leg_bone_indices.clear()
+	_tip_lengths.clear()
 	if _skeleton == null or _foot_targets == null:
 		return false
 	if not _skeleton.skeleton_updated.is_connected(_on_skeleton_updated):
@@ -85,6 +87,8 @@ func _resolve_rig() -> bool:
 			_leg_bone_indices.clear()
 			return false
 		_leg_bone_indices.append(indices)
+		var solver := _skeleton.get_node("CCDIK3D_" + str(spec[3]).trim_prefix("Foot"))
+		_tip_lengths.append(float(solver.get("settings/1/end_bone/length")))
 	return true
 
 
@@ -130,7 +134,9 @@ func _collect_leg_points(leg_index: int) -> PackedVector3Array:
 	var target_name: String = LEG_SPECS[leg_index][3]
 	var foot_target := _foot_targets.get_node_or_null(target_name) as Node3D
 	if foot_target != null:
-		points.append(to_local(foot_target.global_position))
+		var end := to_global(points[-1])
+		var length := _tip_lengths[leg_index] * _skeleton.global_basis.y.length()
+		points.append(to_local(end.move_toward(foot_target.global_position, length)))
 	return points
 
 

@@ -2,6 +2,7 @@ class_name Weapon3D extends Collectible3D
 # This class is mostly just used as a type/interface for weapons
 
 @export var icon: Texture
+@export var icon_material: ShaderMaterial
 
 
 func fire(direction: float, power: float) -> void:
