@@ -39,6 +39,7 @@ var _excluded_items: Array = []
 
 
 func _ready() -> void:
+	add_to_group("wind_events")
 	$DebugContacts.visible = show_debug_contact_markers
 
 

@@ -225,6 +225,7 @@ def main() -> int:
         ("wind_match_smoke", "WIND MATCH PASS:"),
         ("wind_event_smoke", "WIND EVENT PASS:"),
         ("web_catch_smoke", "WEB CATCH PASS:"),
+        ("loose_web_threads_smoke", "LOOSE THREADS PASS:"),
         ("web_anchor_authoring_smoke", "WEB ANCHOR AUTHORING PASS:"),
         ("web_edge_authoring_smoke", "WEB EDGE AUTHORING PASS:"),
         ("web_support_performance_smoke", "WEB SUPPORT PERFORMANCE PASS:"),

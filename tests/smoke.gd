@@ -154,6 +154,8 @@ func _check_sprite_visuals(match_scene: Node3D) -> bool:
 
 
 func _is_web_mesh(mesh: Node) -> bool:
+	if mesh.get_script() == preload("res://src/features/web/loose_web_threads_3d.gd"):
+		return true
 	var ancestor := mesh.get_parent()
 	while ancestor != null:
 		if ancestor is WebPolygon3D:
