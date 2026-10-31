@@ -204,6 +204,7 @@ def main() -> int:
         ("guided_rocket_smoke", "GUIDED ROCKET PASS:"),
         ("guided_replication_smoke", "GUIDED REPLICATION PASS:"),
         ("combat_layout_smoke", "COMBAT LAYOUT PASS:"),
+        ("branch_projectile_colliders_smoke", "BRANCH COLLIDERS PASS:"),
         ("xy_gameplay_smoke", "XY GAMEPLAY PASS:"),
         ("background_layers_smoke", "BACKGROUND LAYERS PASS:"),
         ("spider_rig_smoke", "SPIDER RIG PASS:"),
