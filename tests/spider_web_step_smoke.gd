@@ -234,7 +234,7 @@ func _check_all_feet_share_one_strand() -> bool:
 	controller.set_process(false)
 	await process_frame
 	_freeze_spider_animation(spider)
-	var web := _make_line_web(Vector3(0.0, 0.5, -5.0), Vector3(0.0, 0.5, 5.0))
+	var web := _make_line_web(Vector3(0.0, 0.0, -5.0), Vector3(0.0, 0.0, 5.0))
 	root.add_child(web)
 	await process_frame
 	controller.set("support_web", web)

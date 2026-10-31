@@ -522,7 +522,7 @@ use_external_skeleton = true
 external_skeleton = NodePath("../ImportedRig/RIG_spider/Skeleton3D")
 
 [node name="BodyOffset" type="Node3D" parent="BoneAttachment3D" unique_id=786587160 node_paths=PackedStringArray("left_eye", "right_eye", "look_at_pos", "left_eye_center", "right_eye_center")]
-transform = Transform3D(0.7865238, 0, 0, 0, 1, 0, 0, 0, 0.7865238, 0, 0, 0)
+transform = Transform3D(0.7865238, 0, 0, 0, 1, 0, 0, 0, 0.7865238, 0, 0.5, 0)
 script = ExtResource("3_6mje3")
 left_eye = NodePath("LeftEye")
 right_eye = NodePath("RightEye")

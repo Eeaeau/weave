@@ -56,6 +56,8 @@ func _run() -> void:
 			previous = _surfaces.duplicate(true)
 		if not passed:
 			break
+	if passed:
+		passed = await _check_web_contact(arena, player, gait, skeleton, strokes)
 	await process_frame
 	arena.queue_free()
 	await process_frame
@@ -99,5 +101,36 @@ func _walking_depth(player: PlayerSpider3D, gait: SpiderLegController3D,
 		for vertex in _surfaces[surface]:
 			if vertex.dot(normal) >= body_depth - 0.005:
 				push_error("SPIDER POSE STABILITY FAIL: a walking leg draws over the body/eyes")
+				return false
+	return true
+
+
+func _check_web_contact(arena: WebMatch3D, player: PlayerSpider3D,
+		gait: SpiderLegController3D, skeleton: Skeleton3D, strokes: SpiderLegStroke3D) -> bool:
+	player.select_weapon(0)
+	var web: Web3D = arena.catch_webs[0]
+	gait.targeting_mode = SpiderLegController3D.TargetingMode.WEB
+	gait.support_web = web
+	var origin := Vector3.ZERO
+	for vertex in web.find_faces()[0]:
+		origin += web.valid_nodes[vertex].global_position / 3.0
+	for tick in range(540):
+		if tick < 360:
+			var phase := float(tick) / 60.0
+			player.global_position = origin + Vector3(sin(phase), cos(phase), 0.0) * 0.7
+			player.face_direction(phase)
+		player.advance_visual_facing(1.0 / 60.0)
+		player.update_presentation()
+		gait.advance(1.0 / 60.0)
+		await skeleton.skeleton_updated
+	for foot in [6, 7]:
+		for surface in range(strokes.LEG_SPECS.size()):
+			if strokes.LEG_SPECS[surface][3] != gait.FOOT_NAMES[foot]:
+				continue
+			var vertices := _surfaces[surface]
+			var tip := (vertices[-1] + vertices[-2]) * 0.5
+			var target: Node3D = gait.get_parent().get_node("FootTargets/" + gait.FOOT_NAMES[foot])
+			if tip.distance_to(target.global_position) > 0.03 or not gait.has_web_support(tip):
+				push_error("SPIDER POSE STABILITY FAIL: a rear toe cannot reach its web strand")
 				return false
 	return true

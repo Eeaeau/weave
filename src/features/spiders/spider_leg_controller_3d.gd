@@ -39,7 +39,6 @@ const STEP_GROUPS := [[0, 3, 4, 7], [1, 2, 5, 6]]
 @export_range(0.0, 1.0, 0.01) var step_height := 0.2
 @export_range(0.0, 1.0, 0.01) var step_lead := 0.2
 @export_range(0.01, 0.5, 0.01) var support_tolerance := 0.12
-@export_range(0.0, 1.0, 0.01) var reach_extension := 0.35
 @export_range(1.0, 20.0, 0.5) var foot_recovery_speed := 8.0
 @export_range(0.5, 1.0, 0.01) var maximum_reach_ratio := 0.98
 @export_range(1.0, 20.0, 0.5) var joint_turn_speed := 8.0
@@ -192,6 +191,7 @@ func advance(delta: float) -> void:
 		_weapon_carry.advance(delta)
 	_advance_gait(delta)
 	_limit_foot_reach()
+	_update_walking_lifts()
 
 
 func _advance_gait(delta: float) -> void:
@@ -230,7 +230,8 @@ func _start_group(group_index: int, only_dangling: bool = false) -> bool:
 		if only_dangling and not _feet[foot_index].dangling:
 			continue
 		var old_anchor := _rig.to_global(_visual_pose.anchors[foot_index])
-		var walking_gap := old_anchor - _feet[foot_index].marker.global_position
+		var planted := _rig.to_global(_feet[foot_index].planted_anchor)
+		var walking_gap := planted - _feet[foot_index].marker.global_position
 		walking_gap -= _depth_normal() * walking_gap.dot(_depth_normal())
 		var pose_gap := _pose_rest_position(foot_index) - old_anchor
 		pose_gap -= _depth_normal() * pose_gap.dot(_depth_normal())
@@ -249,6 +250,12 @@ func _start_group(group_index: int, only_dangling: bool = false) -> bool:
 			_release_foot(foot_index)
 			continue
 		var destination: Vector3 = landing["point"]
+		if (not _feet[foot_index].dangling
+				and destination.distance_to(_feet[foot_index].marker.global_position)
+				< minf(0.06, step_distance * 0.25)):
+			_feet[foot_index].planted_anchor = _rig.to_local(destination)
+			_visual_pose.anchors[foot_index] = _pose_rest_local(foot_index)
+			continue
 		if (walking_gap.length() <= step_distance
 				and pose_gap.length() <= idle_pose_step_distance
 				and not _feet[foot_index].dangling):
@@ -382,7 +389,7 @@ func _choose_web_destination(foot_index: int) -> Dictionary:
 	var desired := _rest_destination(foot_index)
 	var preferred_strand: String = _feet[foot_index].strand_id
 	var maximum_reach := _max_leg_reach(foot_index)
-	var lift_position := _lift_position(foot_index)
+	var lift_position := get_leg_origin(foot_index)
 	var reach_squared := maximum_reach * maximum_reach
 	var best_score := INF
 	var best_destination: Dictionary = {}
@@ -431,7 +438,7 @@ func _best_web_target_on_segment(
 		if sample == 6 and found:
 			break
 		var candidate := start.lerp(end, candidates[sample])
-		if _lift_position(foot_index).distance_to(candidate) > maximum_reach:
+		if get_leg_origin(foot_index).distance_to(candidate) > maximum_reach:
 			continue
 		var score := _planar(candidate).distance_to(_planar(desired))
 		score += absf((candidate - desired).dot(_depth_normal())) * 0.5
@@ -472,7 +479,7 @@ func _closest_point_on_segment(point: Vector3, start: Vector3, end: Vector3) -> 
 
 
 func _max_leg_reach(foot_index: int) -> float:
-	return _lift_position(foot_index).distance_to(_pose_rest_position(foot_index)) + reach_extension
+	return get_leg_reach(foot_index)
 
 
 func _has_shared_strand_clearance(
@@ -598,6 +605,7 @@ func _animate_step(delta: float) -> void:
 			else:
 				_feet[foot_index].dangling = false
 				_feet[foot_index].strand_id = active_step.get("strand_id", "")
+				_feet[foot_index].planted_anchor = _rig.to_local(destination)
 				_visual_pose.anchors[foot_index] = active_step["pose_anchor"]
 		_steps.clear()
 
@@ -636,6 +644,27 @@ func _limit_foot_reach() -> void:
 			foot.marker.global_position = origin + offset.normalized() * maximum
 			foot.dangling = true
 			foot.strand_id = ""
+
+
+func _update_walking_lifts() -> void:
+	for index in range(_feet.size()):
+		var foot := _feet[index]
+		if foot.carried:
+			continue
+		var hip := get_leg_origin(index)
+		var offset := foot.marker.global_position - hip
+		var distance := maxf(offset.length(), 0.001)
+		var direction := offset / distance
+		var upper := foot.upper_reach * maximum_reach_ratio
+		var lower := (foot.bone_reach - foot.upper_reach) * maximum_reach_ratio
+		lower = minf(lower, upper + distance * 0.9)
+		var along := (upper * upper - lower * lower + distance * distance) / (2.0 * distance)
+		var height := sqrt(maxf(0.0, upper * upper - along * along))
+		var pole := _rig.to_global(foot.lift_rest.origin) - hip
+		pole -= direction * pole.dot(direction)
+		if pole.length_squared() < 0.000001:
+			pole = direction.cross(_depth_normal())
+		foot.lift_marker.global_position = hip + direction * along + pole.normalized() * height
 
 
 func get_leg_origin(foot_index: int) -> Vector3:
@@ -678,6 +707,7 @@ func set_carried_feet(targets: Dictionary) -> void:
 class FootState:
 	var marker: Marker3D
 	var rest_offset: Vector3
+	var planted_anchor: Vector3
 	var bone_reach := 0.0
 	var hip_bone := -1
 	var solver: CCDIK3D
@@ -696,6 +726,7 @@ class FootState:
 	func _init(foot_marker: Marker3D, offset: Vector3, height: float) -> void:
 		marker = foot_marker
 		rest_offset = offset
+		planted_anchor = offset
 		ground_height = height
 
 

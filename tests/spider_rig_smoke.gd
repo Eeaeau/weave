@@ -603,6 +603,7 @@ func _eye_player(rig: Node) -> AnimationPlayer:
 
 
 func _check_ik_strokes(rig: Node) -> bool:
+	rig.get_node("LegController").set_process(false)
 	var strokes := rig.get_node("LegStrokes") as MeshInstance3D
 	return await _check_leg_stroke(rig, strokes, 0)
 
@@ -622,7 +623,7 @@ func _check_lift_control(rig: Node, strokes: MeshInstance3D, spec: Array) -> boo
 	var lift := rig.get_node("LiftTargets/" + spec[2]) as Marker3D
 	var original_position := lift.position
 	var before := _ribbon_point(strokes.mesh, spec[6], 3)
-	lift.position += Vector3.UP * 0.2
+	lift.position += Vector3(-lift.position.z, 0.0, lift.position.x).normalized() * 0.2
 	await process_frame
 	await process_frame
 	var after := _ribbon_point(strokes.mesh, spec[6], 3)
