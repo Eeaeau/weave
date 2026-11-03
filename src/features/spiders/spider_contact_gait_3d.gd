@@ -7,6 +7,11 @@ extends SpiderLegController3D
 @export var foot_swing_speed := 2.8
 @export var body_footprint := Rect2(-1.91, -2.08, 3.32, 3.64)
 @export var landing_adjustment := 0.32
+@export_group("Front and rear placement")
+@export_range(0.25, 1.0, 0.05) var end_leg_stance_width := 0.65
+@export_range(0.6, 1.0, 0.02) var end_leg_stance_reach := 0.9
+@export_range(0.0, 1.0, 0.05) var end_leg_side_lead := 0.25
+@export_range(0.0, 1.0, 0.05) var push_step_lead := 0.35
 
 var _clock := 0.0
 var _next_lift := 0.0
@@ -287,12 +292,25 @@ func _inside_body(candidate: Vector3) -> bool:
 
 func _rest_destination(index: int) -> Vector3:
 	var destination := _pose_rest_position(index)
+	var hip := get_leg_origin(index)
+	var side := _rig.global_basis.x.normalized()
+	var outward := _rig.global_basis.z.normalized() * (1.0 if index < 2 else -1.0)
+	var end_leg := index < 2 or index >= 6
+	if end_leg:
+		var offset := destination - hip
+		destination -= side * offset.dot(side) * (1.0 - end_leg_stance_width)
+		destination -= outward * offset.dot(outward) * (1.0 - end_leg_stance_reach)
 	if _cycle.rig_moved:
 		var lead := minimum_stride * 0.5 + _travel_speed * step_duration
-		destination += _cycle.travel_direction * lead
+		var direction: Vector3 = _cycle.travel_direction
+		if end_leg:
+			direction -= side * direction.dot(side) * (1.0 - end_leg_side_lead)
+			var axial := direction.dot(outward)
+			if axial < 0.0:
+				direction -= outward * axial * (1.0 - push_step_lead)
+		destination += direction * lead
 	var normal := _depth_normal()
 	destination += normal * (_feet[index].ground_height - destination.dot(normal))
-	var hip := get_leg_origin(index)
 	var depth := hip.dot(normal) - _feet[index].ground_height
 	var plane_reach := sqrt(maxf(0.0, pow(get_leg_reach(index) * 0.95, 2.0) - depth * depth))
 	var center := hip - normal * depth
