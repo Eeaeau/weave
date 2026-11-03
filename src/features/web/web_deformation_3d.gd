@@ -22,6 +22,7 @@ const MAX_CONTACTS := 64
 var model: WebSpringModel3D
 var _web: Web3D
 var _segments: Array[Dictionary] = []
+var _strand_segments: Dictionary = {}
 var _groups: Dictionary = {}
 var _influences: Dictionary = {}
 var _sprite_materials: Dictionary = {}
@@ -157,6 +158,12 @@ func advance_visuals(delta: float) -> void:
 
 func _rebuild() -> void:
 	_segments = _web.get_support_segments()
+	_strand_segments.clear()
+	for index in range(_segments.size()):
+		var id: String = _segments[index].strand_id
+		if not _strand_segments.has(id):
+			_strand_segments[id] = []
+		_strand_segments[id].append(index)
 	model.setup(_web)
 	_influences.clear()
 	_surface.clear_surfaces()
@@ -200,12 +207,19 @@ func _update_contact(
 	var anchor := Vector3.ZERO
 	var parameter := 0.0
 	var tip: Vector3 = group.tips.get(index, foot.marker.global_position)
+	var state: Dictionary = group.contacts.get(index, {})
 	if attached and group.tips.has(index):
 		var nearest := maximum_contact_gap
-		for segment_index in range(_segments.size()):
+		var strand_id: String = foot.strand_id
+		if strand_id.is_empty():
+			strand_id = foot.support.get("strand_id", "")
+		if strand_id.is_empty() and not state.is_empty() and state.attached:
+			strand_id = _segments[state.segment].strand_id
+		var candidates: Array = _strand_segments.get(strand_id, [])
+		if strand_id.is_empty():
+			candidates = range(_segments.size())
+		for segment_index: int in candidates:
 			var segment := _segments[segment_index]
-			if not foot.strand_id.is_empty() and segment.strand_id != foot.strand_id:
-				continue
 			var line: Vector3 = segment.end - segment.start
 			var along: float = (foot.marker.global_position - segment.start).dot(line)
 			var t := clampf(
@@ -220,7 +234,6 @@ func _update_contact(
 				found = segment_index
 				anchor = point
 				parameter = t
-	var state: Dictionary = group.contacts.get(index, {})
 	if found >= 0:
 		if state.is_empty() or state.segment != found:
 			state = {
@@ -282,7 +295,7 @@ func _redraw() -> void:
 	for index in range(model._offsets.size()):
 		_spring_data[index * 4] = model._offsets[index].x
 		_spring_data[index * 4 + 1] = model._offsets[index].y
-	_spring_image.set_data(maxi(model._points.size(), 1), 1, false,
+	_spring_image.set_data(model.field_size.x, model.field_size.y, false,
 		Image.FORMAT_RGBAF, _spring_data.to_byte_array())
 	_spring_texture.update(_spring_image)
 	_material.set_shader_parameter("contact_count", count)
@@ -297,12 +310,13 @@ func _build_mesh() -> void:
 		return
 	_spring_data.resize(maxi(model._points.size(), 1) * 4)
 	_spring_data.fill(0.0)
-	_spring_image = Image.create_from_data(maxi(model._points.size(), 1), 1, false,
+	_spring_image = Image.create_from_data(model.field_size.x, model.field_size.y, false,
 		Image.FORMAT_RGBAF, _spring_data.to_byte_array())
 	_spring_texture = ImageTexture.create_from_image(_spring_image)
 	_material.set_shader_parameter("spring_offsets", _spring_texture)
 	_material.set_shader_parameter("gravity_direction", model.load_direction.normalized())
 	_material.set_shader_parameter("depth_direction", model._normal)
+	_material.set_shader_parameter("field_size", model.field_size)
 	var vertices := PackedVector3Array()
 	var texture_coordinates := PackedVector2Array()
 	var spring_coordinates := PackedVector2Array()
@@ -313,24 +327,21 @@ func _build_mesh() -> void:
 	var previous_uv2 := Vector2.ZERO
 	for segment_index in range(_segments.size()):
 		var segment := _segments[segment_index]
-		var parameters: Array = model._lines[segment_index].parameters.duplicate()
-		var count := maxi(2, ceili(segment.start.distance_to(segment.end) / 0.08))
+		var parameters: Array = []
+		var count := maxi(2, ceili(segment.start.distance_to(segment.end) / 0.12))
 		for sample in range(count + 1):
 			parameters.append(float(sample) / count)
 		parameters.sort()
 		_mesh_parameters.append(parameters)
 		var direction: Vector3 = segment.end - segment.start
 		var side := direction.cross(normal).normalized() * _web.web_width
-		var line: Dictionary = model._lines[segment_index]
 		for index in range(parameters.size()):
 			var t: float = parameters[index]
 			var point: Vector3 = segment.start.lerp(segment.end, t)
-			var after: int = clampi(line.parameters.bsearch(t), 1, line.nodes.size() - 1)
-			var before_t: float = line.parameters[after - 1]
-			var after_t: float = line.parameters[after]
-			var fraction := clampf(inverse_lerp(before_t, after_t, t), 0.0, 1.0)
-			var uv := Vector2(segment_index + t * 0.999, line.nodes[after - 1])
-			var uv2 := Vector2(line.nodes[after], fraction)
+			var uv := Vector2(segment_index + t * 0.999, model.anchor_factor(point))
+			var relative := point - model._origin
+			var uv2 := Vector2(relative.dot(model._axis_u), relative.dot(model._axis_v))
+			uv2 /= model.spacing
 			if index == 0 and not vertices.is_empty():
 				vertices.append(previous_vertex)
 				texture_coordinates.append(previous_uv)

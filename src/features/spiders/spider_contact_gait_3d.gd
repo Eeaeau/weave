@@ -323,7 +323,7 @@ func _find_landing_near(index: int, desired: Vector3, radius: float) -> Dictiona
 	var best_error := radius * radius
 	var desired_plane := _planar(desired)
 	var best_landing: Dictionary = {}
-	for segment in _cycle.support_segments:
+	for segment in _segments_near(desired, radius):
 		var start: Vector3 = segment.start
 		var finish: Vector3 = segment.end
 		var nearest := _closest_planar_parameter(desired, start, finish)
@@ -341,6 +341,12 @@ func _find_landing_near(index: int, desired: Vector3, radius: float) -> Dictiona
 			best_error = error
 			best_landing = { "point": point, "strand_id": segment.strand_id }
 	return best_landing
+
+
+func _segments_near(point: Vector3, radius: float) -> Array[Dictionary]:
+	if not is_instance_valid(support_web):
+		return []
+	return support_web.get_support_segments_near(point, radius)
 
 
 func _choose_destination(index: int) -> Dictionary:
