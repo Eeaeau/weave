@@ -31,6 +31,16 @@ func _run() -> void:
 	root.add_child(stage)
 	current_scene = stage
 	var rocket = ROCKET.instantiate()
+	var standard_scene := preload("res://src/features/collectibles/weapons/rocket_projectile.tscn")
+	var standard := standard_scene.instantiate()
+	assert(is_equal_approx(rocket.explosion_damage, standard.explosion_damage * 0.75),
+		"Guided accuracy must trade off splash damage")
+	var guided_shape := rocket.get_node("ExplosionHitbox/CollisionShape3D").shape as SphereShape3D
+	var standard_hitbox := standard.get_node("ExplosionHitbox/CollisionShape3D")
+	var standard_shape := standard_hitbox.shape as SphereShape3D
+	assert(is_equal_approx(guided_shape.radius, standard_shape.radius * 0.75),
+		"Guided accuracy must trade off blast radius")
+	standard.free()
 	stage.add_child(rocket)
 	rocket.set_process(false)
 	rocket.global_position = point
