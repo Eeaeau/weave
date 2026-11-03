@@ -2,7 +2,7 @@ class_name PlayerSpider3D
 extends BaseSpider3D
 
 const AIM_SPEED: float = 3.0
-const MOVE_SPEED: float = 2.0
+const MOVE_SPEED: float = 0.95
 const SILK_CAPACITY: int = 5
 const STARTING_SILK: int = 3
 
@@ -22,6 +22,7 @@ var selected_weapon_idx: int = 0
 var health: float = 1.0
 var silk_builder: SilkBuildAction3D
 var network_controlled: bool = false
+var _movement_velocity := Vector3.ZERO
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -65,9 +66,11 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 
 	update_presentation()
 	if not is_active or is_dead():
+		_movement_velocity = Vector3.ZERO
 		return
 	var guided := get_guided_rocket()
 	if guided != null:
+		_movement_velocity = Vector3.ZERO
 		guided.set_steering(int(command.is_pressed("aim_left"))
 			- int(command.is_pressed("aim_right")))
 		return
@@ -84,7 +87,18 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 	var movement_direction := command.movement_direction()
 	if not movement_direction.is_zero_approx():
 		face_direction(atan2(movement_direction.x, -movement_direction.y))
-	var velocity = movement_direction * MOVE_SPEED
+	var desired_velocity := movement_direction * MOVE_SPEED
+	var acceleration := 6.0
+	if (desired_velocity.is_zero_approx()
+			or _movement_velocity.length() > desired_velocity.length() + 0.001):
+		acceleration = 10.0
+	if _movement_velocity.dot(desired_velocity) < 0.0:
+		acceleration = 12.0
+	_movement_velocity = _movement_velocity.move_toward(
+		desired_velocity,
+		acceleration * maxf(delta, 0.0),
+	)
+	var velocity := _movement_velocity
 	if velocity.length() > 0:
 		if remaining_movement > 0:
 			var to_move = velocity * delta
@@ -99,6 +113,8 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 			if is_on_web(new_position):
 				remaining_movement -= to_move.length()
 				global_position += to_move
+			else:
+				_movement_velocity = Vector3.ZERO
 
 	if command.is_pressed("aim_left"):
 		aim_angle += AIM_SPEED * delta

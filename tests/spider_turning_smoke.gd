@@ -26,7 +26,9 @@ func _run() -> void:
 	var before := spider.global_position
 	var facing := spider.spider_rig.rotation.y
 	spider.simulate(1.0 / 60.0, command)
-	var immediate := spider.global_position.is_equal_approx(before + Vector3.RIGHT / 30.0)
+	var displacement := spider.global_position - before
+	var immediate := displacement.x > 0.0001 \
+		and displacement.length() <= PlayerSpider3D.MOVE_SPEED / 60.0 + 0.00001
 	if not immediate or absf(angle_difference(facing, spider.spider_rig.rotation.y)) > 0.1:
 		_fail("Movement was delayed" if not immediate else "Visual rig snapped on input")
 		return
@@ -38,8 +40,12 @@ func _run() -> void:
 		spider.advance_visual_facing(1.0 / 60.0)
 		spider.get_node("SpiderRig/LegController").advance(1.0 / 60.0)
 		var direction := Vector3.LEFT if command.held == 1 else Vector3.RIGHT
-		if not spider.global_position.is_equal_approx(before + direction / 30.0):
-			_fail("Rapid reversals delayed movement")
+		var travel := spider.global_position - before
+		if travel.length() > PlayerSpider3D.MOVE_SPEED / 60.0 + 0.00001:
+			_fail("Rapid reversals exceeded the accepted walking speed")
+			return
+		if tick % 2 == 1 and travel.dot(direction) <= 0.0:
+			_fail("Repeated input did not reverse movement promptly")
 			return
 		if absf(angle_difference(facing, spider.spider_rig.rotation.y)) > 0.051:
 			_fail("Rapid reversals exceeded the visual turn speed")
@@ -58,13 +64,12 @@ func _run() -> void:
 	arena.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout
+	if short_turn and _check_free_step_reversals():
+		print("SPIDER TURNING PASS: responsive reversals, gradual visual turn and settle")
+		quit(0)
+		return
 	if not short_turn:
 		_fail("Turning across the angle boundary took the long route")
-		return
-	if not _check_free_step_reversals():
-		return
-	print("SPIDER TURNING PASS: responsive reversals, gradual visual turn and settle")
-	quit(0)
 
 
 func _fail(reason: String) -> void:

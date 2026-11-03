@@ -32,6 +32,8 @@ func _run() -> void:
 	if not await _check_match_spawns():
 		quit(1)
 		return
+	await process_frame
+	await create_timer(0.2).timeout
 	print("SILK BUILD PASS: personal silk, feeding, strand actions, and anchor cycling")
 	quit(0)
 

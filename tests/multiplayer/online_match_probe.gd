@@ -77,7 +77,9 @@ func _configure_match() -> void:
 	var weapon := codec.create_item(3) as Weapon3D
 	arena.add_child(weapon)
 	shooter.pick_up(weapon)
-	target.hurtbox.hurt.connect(func(_amount: float) -> void: _damage_events += 1)
+	target.hurtbox.hurt.connect(func(amount: float) -> void:
+		if amount > 0.0:
+			_damage_events += 1)
 
 
 func _check_loaded_match() -> void:
@@ -235,7 +237,7 @@ func _fire_rocket(arena: WebMatch3D, driver: Node, target: PlayerSpider3D) -> bo
 		return false
 	projectile.hit(target.hurtbox)
 	if not is_equal_approx(target.health, 0.75) or _damage_events != 1:
-		_fail("Host collision did not apply direct damage exactly once")
+		_fail("Host collision damage: health=%s positive hits=%s" % [target.health, _damage_events])
 		return false
 	return true
 
@@ -533,7 +535,10 @@ func _verify_pickups(arena: WebMatch3D, driver: Node,
 	await get_tree().create_timer(0.8).timeout
 	if _role == "host":
 		if driver.acknowledged_revision < driver.revision:
-			_fail("Pickup results were sent without a matching state digest acknowledgement")
+			var revisions := [driver.acknowledged_revision, driver.revision,
+				driver.last_digest_revision, OnlineSession.transport.sent_messages]
+			var message := "Pickup digests: ack=%s current=%s barrier=%s messages=%s"
+			_fail(message % revisions)
 			return
 		var counts: Dictionary = OnlineSession.transport.sent_messages
 		if counts.get("wind", 0) != 1 or counts.get("wind_contact", 0) != 3:

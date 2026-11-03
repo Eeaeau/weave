@@ -24,7 +24,7 @@ func _run() -> void:
 	var strokes: SpiderLegStroke3D = player.get_node("SpiderRig/LegStrokes")
 	var skeleton: Skeleton3D = player.get_node("SpiderRig/ImportedRig/RIG_spider/Skeleton3D")
 	skeleton.process_mode = Node.PROCESS_MODE_ALWAYS
-	skeleton.skeleton_updated.connect(func(): _capture(strokes))
+	strokes.pose_drawn.connect(func(): _capture(strokes))
 	var passed := true
 	for armed in [false, true]:
 		if armed:
@@ -37,7 +37,7 @@ func _run() -> void:
 		for warmup in range(60):
 			player.update_presentation()
 			gait.advance(1.0 / 60.0)
-			await skeleton.skeleton_updated
+			await strokes.pose_drawn
 		var previous := _surfaces.duplicate(true)
 		for tick in range(360):
 			var angle := tick * 0.025 if tick < 240 else (PI / 2.0 if tick % 8 < 4 else -PI / 2.0)
@@ -46,7 +46,7 @@ func _run() -> void:
 			player.advance_visual_facing(1.0 / 60.0)
 			player.update_presentation()
 			gait.advance(1.0 / 60.0)
-			await skeleton.skeleton_updated
+			await strokes.pose_drawn
 			if not _stable(previous, player.global_basis.y.normalized()):
 				passed = false
 				break
@@ -122,7 +122,7 @@ func _check_web_contact(arena: WebMatch3D, player: PlayerSpider3D,
 		player.advance_visual_facing(1.0 / 60.0)
 		player.update_presentation()
 		gait.advance(1.0 / 60.0)
-		await skeleton.skeleton_updated
+		await strokes.pose_drawn
 	for foot in [6, 7]:
 		for surface in range(strokes.LEG_SPECS.size()):
 			if strokes.LEG_SPECS[surface][3] != gait.FOOT_NAMES[foot]:

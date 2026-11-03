@@ -27,6 +27,8 @@ func _run() -> void:
 	if not await _check_dense_web_cases():
 		quit(1)
 		return
+	await process_frame
+	await create_timer(0.2).timeout
 	print("SPIDER WEB STEP PASS: visible support, thresholds, and strand replacement")
 	quit(0)
 
@@ -120,6 +122,8 @@ func _check_controller_support_refresh() -> bool:
 
 func _check_web_step_threshold_and_replacement() -> bool:
 	var spider := SPIDER_SCENE.instantiate() as BaseSpider3D
+	spider.get_node("SpiderRig/LegController").set_script(
+		load("res://src/features/spiders/spider_leg_controller_3d.gd"))
 	root.add_child(spider)
 	var controller := spider.get_node("SpiderRig/LegController") as Node
 	controller.set_process(false)
@@ -321,6 +325,19 @@ func _check_dense_web_landings() -> bool:
 	print("DENSE WEB ADVANCE BENCH: 60 frames, %.2f ms/frame" % (
 		float(Time.get_ticks_usec() - start) / 60.0 / 1000.0
 	))
+	var previous_position := spider.global_position
+	spider.global_position += Vector3(100, 0, 100)
+	start = Time.get_ticks_usec()
+	for query in range(1000):
+		if not controller.call("_choose_web_destination", 0).is_empty():
+			_free_nodes(spider, web)
+			return _fail("A distant web must not produce unreachable landings")
+	var distant_ms := float(Time.get_ticks_usec() - start) / 1000.0
+	print("DISTANT WEB BENCH: 1000 unreachable queries, %.2f ms" % distant_ms)
+	if distant_ms > 200.0:
+		_free_nodes(spider, web)
+		return _fail("Unreachable web searches must not stall frame processing")
+	spider.global_position = previous_position
 	var passed := _check_dense_web_support_invalidation(controller, web)
 	_free_nodes(spider, web)
 	return passed

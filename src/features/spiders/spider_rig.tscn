@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://ds762u7onoc57" path="res://src/features/spiders/assets/spider_rig.blend" id="1_rig"]
 [ext_resource type="Script" uid="uid://dt5g3hfdicxts" path="res://src/features/spiders/spider_leg_stroke_3d.gd" id="2_strokes"]
 [ext_resource type="Script" uid="uid://7mv2mpgfki4d" path="res://src/features/spiders/scripts/spider_eyes.gd" id="3_6mje3"]
-[ext_resource type="Script" path="res://src/features/spiders/spider_leg_controller_3d.gd" id="6_gait"]
+[ext_resource type="Script" path="res://src/features/spiders/spider_contact_gait_3d.gd" id="6_gait"]
 [ext_resource type="Texture2D" uid="uid://b1mvhdg4qhbur" path="res://src/features/spiders/assets/body/spider_body.png" id="3_xagw3"]
 [ext_resource type="Texture2D" uid="uid://dq1q7xnd4lige" path="res://src/features/spiders/assets/body/spider_pupile1.png" id="4_v4ffn"]
 [ext_resource type="Texture2D" uid="uid://dxmuc6viet353" path="res://src/features/spiders/assets/body/spider_pupile2.png" id="5_6mje3"]
@@ -109,6 +109,7 @@ _data = {
 
 [node name="LegController" type="Node3D" parent="."]
 script = ExtResource("6_gait")
+step_duration = 0.36
 
 [node name="WeaponCarry" type="Node" parent="."]
 script = ExtResource("7_carry")
@@ -117,7 +118,7 @@ script = ExtResource("7_carry")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8090404, 0)
 
 [node name="CCDIK3D_FrontLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false
@@ -158,7 +159,7 @@ settings/1/joints/4/rotation_axis = 3
 settings/1/joints/4/limitation = null
 
 [node name="CCDIK3D_FrontRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false
@@ -199,7 +200,7 @@ settings/1/joints/4/rotation_axis = 3
 settings/1/joints/4/limitation = null
 
 [node name="CCDIK3D_MidFrontLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false
@@ -240,7 +241,7 @@ settings/1/joints/4/rotation_axis = 3
 settings/1/joints/4/limitation = null
 
 [node name="CCDIK3D_MidFrontRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false
@@ -281,7 +282,7 @@ settings/1/joints/4/rotation_axis = 3
 settings/1/joints/4/limitation = null
 
 [node name="CCDIK3D_MidBackLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false
@@ -322,7 +323,7 @@ settings/1/joints/4/rotation_axis = 3
 settings/1/joints/4/limitation = null
 
 [node name="CCDIK3D_MidBackRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false
@@ -363,7 +364,7 @@ settings/1/joints/4/rotation_axis = 3
 settings/1/joints/4/limitation = null
 
 [node name="CCDIK3D_BackLeft" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false
@@ -402,7 +403,7 @@ settings/1/joints/3/rotation_axis = 3
 settings/1/joints/3/limitation = null
 
 [node name="CCDIK3D_BackRight" type="CCDIK3D" parent="ImportedRig/RIG_spider/Skeleton3D"]
-max_iterations = 24
+max_iterations = 8
 min_distance = 0.005
 angular_delta_limit = 0.08726646259971647
 deterministic = false

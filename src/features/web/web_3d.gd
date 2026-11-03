@@ -17,6 +17,7 @@ const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn"
 
 ## Direct Marker3D children of this container become available web vertices.
 @export_node_path("Node3D") var anchor_container_path: NodePath
+@export var deformation_enabled := true
 # ============================================================
 # Edges
 # ============================================================
@@ -96,10 +97,7 @@ var _catch_regions: Dictionary = {}
 var polygon_container: Node3D
 var triangles: Array = []
 var stand_alone_edges: Array = []
-
-# ============================================================
-# Lifecycle
-# ============================================================
+var _deformation: Node
 
 
 func _ready() -> void:
@@ -125,6 +123,21 @@ func _process(_delta: float) -> void:
 		return
 	if _nodes_moved():
 		rebuild()
+
+
+func get_deformation() -> Node:
+	if Engine.is_editor_hint() or not deformation_enabled:
+		return null
+	if not is_instance_valid(_deformation):
+		_deformation = load("res://src/features/web/web_deformation_3d.gd").new()
+		_deformation.name = "WebDeformation"
+		add_child(_deformation)
+		_deformation.setup(self)
+	return _deformation
+
+# ============================================================
+# Lifecycle
+# ============================================================
 
 
 func _discover_anchor_nodes() -> bool:

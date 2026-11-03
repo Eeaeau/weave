@@ -1,4 +1,7 @@
 extends SceneTree
+
+const GROUPED_GAIT := preload("res://src/features/spiders/spider_leg_controller_3d.gd")
+
 ## Exercise the real spider rig's world-planted, alternating free-step targets.
 
 const SPIDER_SCENE := preload("res://src/features/spiders/base_spider.tscn")
@@ -20,6 +23,8 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var controller := spider.get_node_or_null("SpiderRig/LegController") as Node3D
 	if controller == null:
@@ -130,6 +135,8 @@ func _check_preview() -> bool:
 
 func _check_idle_pose_steps() -> bool:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
@@ -162,6 +169,8 @@ func _check_idle_pose_steps() -> bool:
 
 func _check_turning() -> bool:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
@@ -191,6 +200,8 @@ func _check_turning() -> bool:
 
 func _check_emergency_release() -> bool:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
@@ -264,6 +275,8 @@ func _fail(message: String) -> bool:
 
 func _check_short_step_arc() -> bool:
 	var spider := SPIDER_SCENE.instantiate() as BaseSpider3D
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var gait: SpiderLegController3D = spider.get_node("SpiderRig/LegController")
 	gait.set_process(false)

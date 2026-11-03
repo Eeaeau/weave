@@ -32,6 +32,8 @@ To edit a branch, open `src/features/world/maps/branch_canopy/branch_web.tscn`. 
 
 Planned work is tracked in [GitHub Issues](https://github.com/Eeaeau/weave/issues) and the [project board](https://github.com/users/Eeaeau/projects/3/views/2).
 
+For movement and web tuning, run `src/features/spiders/examples/locomotion_tuning.tscn` with F6 in Godot. It compares the old grouped gait with the current contact gait, using the same components as the game. Space switches automatic/manual movement, WASD moves, E equips a launcher, F2 shows contacts, F3 switches web/free targeting, F4 toggles local strand pull, and F5 toggles global sag/depth sway. The sliders are temporary adjustments; the accepted defaults live on the spider and web deformation components. Deformation is cosmetic and leaves gameplay collision geometry unchanged.
+
 ## Online play
 
 Choose **Play > Online > Host Lobby** and share the six-character code. Your friend chooses **Join Lobby** and enters it. Both players select **Ready** to start the three-second countdown; select **Unready** to cancel it. The host chooses the map and item drop count. If either player disconnects, the online match ends.
