@@ -240,7 +240,7 @@ func _add_sliders(canvas: CanvasLayer) -> void:
 	)
 	_slider(
 		canvas,
-		"Body surge",
+		"Body settle",
 		3,
 		0.0,
 		0.04,
