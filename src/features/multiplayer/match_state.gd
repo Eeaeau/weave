@@ -2,13 +2,14 @@ class_name MatchState
 extends RefCounted
 
 const PRECISION := 100000.0
-const INVENTORY_TYPES := [0, 1, 2, 3]
+const INVENTORY_TYPES := [0, 1, 2, 3, 7]
 const ENTRY_PATHS := [
 	"res://src/features/wind/entries/pebble.tres",
 	"res://src/features/wind/entries/rocket_launcher.tres",
 	"res://src/features/wind/entries/silk_moth.tres",
 	"res://src/features/wind/entries/twig_cutter.tres",
 	"res://src/features/wind/entries/health_beetle.tres",
+	"res://src/features/wind/entries/guided_launcher.tres",
 ]
 
 var scenes: Array[PackedScene] = [

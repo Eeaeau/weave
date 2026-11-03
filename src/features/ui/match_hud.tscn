@@ -175,3 +175,31 @@ offset_right = 61.0
 offset_bottom = 63.0
 text = "5"
 horizontal_alignment = 2
+
+[node name="RocketFuel" type="PanelContainer" parent="."]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -140.0
+offset_top = 16.0
+offset_right = 140.0
+offset_bottom = 86.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Content" type="VBoxContainer" parent="RocketFuel"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="RocketFuel/Content"]
+layout_mode = 2
+text = "Rocket fuel"
+horizontal_alignment = 1
+
+[node name="Bar" type="ProgressBar" parent="RocketFuel/Content"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+max_value = 8.0
+step = 0.01
+show_percentage = false
+mouse_filter = 2

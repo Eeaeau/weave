@@ -22,4 +22,4 @@ func move_spider(direction: Vector3, delta: float) -> void:
 		return
 	direction = direction.normalized()
 	spider.position += direction * move_speed * delta
-	spider_rig.rotation.y = atan2(direction.x, direction.z)
+	spider.face_direction(atan2(direction.x, direction.z))

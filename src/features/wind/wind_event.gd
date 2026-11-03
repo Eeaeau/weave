@@ -23,6 +23,7 @@ signal group_planned(round_number: int, descriptions: Array)
 	preload("res://src/features/wind/entries/silk_moth.tres"),
 	preload("res://src/features/wind/entries/twig_cutter.tres"),
 	preload("res://src/features/wind/entries/health_beetle.tres"),
+	preload("res://src/features/wind/entries/guided_launcher.tres"),
 ]
 
 var is_active: bool = false
@@ -38,6 +39,7 @@ var _excluded_items: Array = []
 
 
 func _ready() -> void:
+	add_to_group("wind_events")
 	$DebugContacts.visible = show_debug_contact_markers
 
 

@@ -29,7 +29,7 @@ func _run() -> void:
 	if not await _check_direct_hit(PEBBLE_PROJECTILE):
 		quit(1)
 		return
-	if not await _check_direct_hit(ROCKET_PROJECTILE):
+	if not await _check_rocket_depth_hits():
 		quit(1)
 		return
 	if not await _check_rocket_hits_web_anchor():
@@ -119,8 +119,9 @@ func _check_rocket_range() -> bool:
 	return true
 
 
-func _check_direct_hit(projectile_scene: PackedScene) -> bool:
+func _check_direct_hit(projectile_scene: PackedScene, depth: float = 0.0) -> bool:
 	var spider := PLAYER_SCENE.instantiate() as PlayerSpider3D
+	spider.rotation.x = PI / 2.0
 	root.add_child(spider)
 	spider.set_process(false)
 	var projectile := projectile_scene.instantiate() as Projectile3D
@@ -128,7 +129,7 @@ func _check_direct_hit(projectile_scene: PackedScene) -> bool:
 	var direct_damage := projectile.damage
 	root.add_child(projectile)
 	projectile.set_process(false)
-	projectile.global_position = spider.global_position
+	projectile.global_position = spider.global_position + Vector3(0, 0, depth)
 	await physics_frame
 	await physics_frame
 	var collided := projectile.freeze if is_instance_valid(projectile) else true
@@ -159,7 +160,7 @@ func _check_rocket_hits_web_anchor() -> bool:
 	var rocket := ROCKET_PROJECTILE.instantiate() as Projectile3D
 	root.add_child(rocket)
 	rocket.set_process(false)
-	rocket.global_position = anchor.global_position
+	rocket.global_position = anchor.global_position + Vector3(0, 0, 1.0)
 	await physics_frame
 	await physics_frame
 	var health_after := 0.0
@@ -223,3 +224,9 @@ func _stop_audio(node: Node) -> void:
 func _fail(message: String) -> bool:
 	push_error("WEAPON SELF HIT FAIL: " + message)
 	return false
+
+
+func _check_rocket_depth_hits() -> bool:
+	if not await _check_direct_hit(ROCKET_PROJECTILE, -1.0):
+		return false
+	return await _check_direct_hit(ROCKET_PROJECTILE, 1.0)

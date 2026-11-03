@@ -6,7 +6,8 @@ extends Node3D
 const PREVIEW_TEXTURE := preload("res://src/features/web/assets/editor_anchor_marker.svg")
 const WEB_ANCHOR_LAYER := 1 << 4
 
-@export_range(0.1, 1.0, 0.05) var projectile_hit_radius: float = 0.3
+@export_range(0.1, 1.0, 0.05) var projectile_hit_radius: float = 0.45
+@export_range(1.0, 8.0, 0.5) var projectile_hit_depth: float = 3.0
 @export var preview_color: Color = Color(0.26, 0.91, 0.94):
 	set(value):
 		preview_color = value
@@ -53,10 +54,12 @@ func _ensure_projectile_hitbox(anchor: Marker3D) -> void:
 	hitbox.monitoring = false
 	anchor.add_child(hitbox)
 	var collider := CollisionShape3D.new()
-	var shape := SphereShape3D.new()
+	var shape := CapsuleShape3D.new()
 	shape.radius = projectile_hit_radius
+	shape.height = maxf(projectile_hit_depth, projectile_hit_radius * 2.0)
 	collider.shape = shape
 	hitbox.add_child(collider)
+	collider.global_basis = Basis(Vector3.RIGHT, PI / 2.0)
 
 
 func _ensure_preview(anchor: Marker3D) -> void:

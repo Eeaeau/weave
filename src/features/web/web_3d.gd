@@ -4,6 +4,7 @@ extends Node3D
 
 signal geometry_changed
 
+const LOOSE_THREADS := preload("res://src/features/web/loose_web_threads_3d.gd")
 const EDGE_MAX_HEALTH := 100.0
 const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn")
 
@@ -16,6 +17,7 @@ const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn"
 
 ## Direct Marker3D children of this container become available web vertices.
 @export_node_path("Node3D") var anchor_container_path: NodePath
+@export var deformation_enabled := true
 # ============================================================
 # Edges
 # ============================================================
@@ -75,7 +77,11 @@ var line_color: Color = Color.WHITE:
 		line_color = value
 		if is_inside_tree():
 			rebuild()
+@export_group("Broken threads")
+@export_range(0.1, 3.0, 0.05) var broken_thread_length := 0.65
+@export_range(0.0, 0.3, 0.005) var broken_thread_sway := 0.04
 
+var _loose_threads: MeshInstance3D
 ## Runtime list of vertices, discovered from the anchor container when configured.
 var valid_nodes: Array[Node3D] = []:
 	set(value):
@@ -91,10 +97,7 @@ var _catch_regions: Dictionary = {}
 var polygon_container: Node3D
 var triangles: Array = []
 var stand_alone_edges: Array = []
-
-# ============================================================
-# Lifecycle
-# ============================================================
+var _deformation: Node
 
 
 func _ready() -> void:
@@ -120,6 +123,21 @@ func _process(_delta: float) -> void:
 		return
 	if _nodes_moved():
 		rebuild()
+
+
+func get_deformation() -> Node:
+	if Engine.is_editor_hint() or not deformation_enabled:
+		return null
+	if not is_instance_valid(_deformation):
+		_deformation = load("res://src/features/web/web_deformation_3d.gd").new()
+		_deformation.name = "WebDeformation"
+		add_child(_deformation)
+		_deformation.setup(self)
+	return _deformation
+
+# ============================================================
+# Lifecycle
+# ============================================================
 
 
 func _discover_anchor_nodes() -> bool:
@@ -203,6 +221,7 @@ func rebuild() -> void:
 		return
 
 	_synchronize_edge_health()
+	_synchronize_loose_threads()
 
 	_clear_polygons()
 	_catch_regions.clear()
@@ -904,3 +923,26 @@ func _face_key(node_indices: Array[int]) -> String:
 	var ordered := node_indices.duplicate()
 	ordered.sort()
 	return "%d:%d:%d" % [ordered[0], ordered[1], ordered[2]]
+
+
+func _synchronize_loose_threads() -> void:
+	if Engine.is_editor_hint():
+		return
+	if not is_instance_valid(_loose_threads):
+		_loose_threads = LOOSE_THREADS.new()
+		_loose_threads.name = "LooseThreads"
+		add_child(_loose_threads)
+	_loose_threads.set("thread_width", web_width)
+	_loose_threads.set("thread_color", line_color)
+	_loose_threads.set("thread_length", broken_thread_length)
+	_loose_threads.set("sway_strength", broken_thread_sway)
+	var connections: Dictionary = {}
+	for edge in edges:
+		if (edge.x < 0 or edge.y < 0 or edge.x >= valid_nodes.size()
+				or edge.y >= valid_nodes.size()):
+			continue
+		var a := valid_nodes[edge.x]
+		var b := valid_nodes[edge.y]
+		if is_instance_valid(a) and is_instance_valid(b):
+			connections[_edge_key(edge.x, edge.y)] = { "a": a, "b": b }
+	_loose_threads.call("synchronize", connections)

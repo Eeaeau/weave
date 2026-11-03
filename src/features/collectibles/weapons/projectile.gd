@@ -122,7 +122,8 @@ func explode() -> void:
 func _hitbox_entered(area: Area3D) -> void:
 	if network_replica:
 		return
-	if area.is_in_group("web_anchor_hitboxes"):
+	if (area.is_in_group("web_anchor_hitboxes")
+			or area.is_in_group("projectile_blockers")):
 		if (is_instance_valid(source_hurtbox)
 				and global_position.distance_to(_launch_position) < launch_ally_grace_distance):
 			return

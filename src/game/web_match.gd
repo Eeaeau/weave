@@ -39,6 +39,17 @@ func _ready() -> void:
 		_attach_multiplayer.call_deferred()
 
 
+func _exit_tree() -> void:
+	_stop_audio(self)
+
+
+func _stop_audio(node: Node) -> void:
+	if node is AudioStreamPlayer:
+		node.stop()
+	for child in node.get_children():
+		_stop_audio(child)
+
+
 func _attach_multiplayer() -> void:
 	if not get_node("/root/OnlineSession").is_match_active():
 		return

@@ -7,8 +7,8 @@
 [ext_resource type="Script" uid="uid://dmwaqsvei8rvr" path="res://src/features/systems/hurtbox.gd" id="5_vlacf"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6q6db"]
-radius = 0.38
-height = 0.85
+radius = 0.55
+height = 3.0
 
 [node name="PlayerSpider" unique_id=257841478 node_paths=PackedStringArray("webs") instance=ExtResource("1")]
 script = ExtResource("2")
@@ -25,7 +25,7 @@ texture = ExtResource("3_gntsc")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36917466, 0, 0.0024330616)
 
 [node name="TheAimingArrow" type="Sprite3D" parent="AimingArrow" index="0" unique_id=367122176]
-transform = Transform3D(1, 0, 0, 0, -4.371141e-08, 1.0000005, 0, -1.0000005, -4.371141e-08, 0.2735563, 0, 0.00019228458)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 texture = ExtResource("3_uju3x")
 
 [node name="Hurtbox3D" type="Area3D" parent="." index="3" unique_id=1338872525]
