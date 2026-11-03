@@ -63,8 +63,8 @@ func _configure_match() -> void:
 	if _scenario == "silk":
 		var web := arena.get_node("TeamA").home_web as Web3D
 		web.edges = [Vector2i(0, 1)]
-		for spider in arena.get_node("TeamA").spiders:
-			spider.webs.clear()
+		for spider: PlayerSpider3D in arena.get_node("TeamA").spiders:
+			spider.webs = []
 		shooter.webs.append(web)
 		shooter.global_position = web.valid_nodes[0].global_position
 		return
