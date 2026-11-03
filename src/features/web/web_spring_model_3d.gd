@@ -1,8 +1,9 @@
 class_name WebSpringModel3D
 extends RefCounted
+## Bounded displacement field; decorative strands never become spring particles.
 
-const FIELD_SPACING := 0.15
-const SPRING_SPACING := 0.4
+const MINIMUM_SPACING := 0.75
+const MAX_AXIS_SAMPLES := 24
 
 var effect_enabled := true
 var weight := 3.0
@@ -13,18 +14,18 @@ var depth_sway := 0.035
 var load_direction := Vector3.DOWN
 var peak_sag := 0.0
 var peak_depth := 0.0
-var _points: Array[Vector3] = []
-var _offsets: Array[Vector2] = []
-var _velocities: Array[Vector2] = []
-var _masses: Array[float] = []
-var _stiffnesses: Array[float] = []
-var _pinned: Dictionary = {}
-var _edges: Array[Dictionary] = []
-var _lines: Array[Dictionary] = []
+var field_size := Vector2i.ONE
+var spacing := MINIMUM_SPACING
+var _points := PackedVector3Array()
+var _offsets := PackedVector2Array()
+var _velocities := PackedVector2Array()
+var _stiffnesses := PackedFloat32Array()
+var _anchor_strength := PackedFloat32Array()
+var _active := PackedByteArray()
+var _edges: Array[Vector2i] = []
 var _segments: Array[Dictionary] = []
+var _anchors := PackedVector3Array()
 var _normal := Vector3.FORWARD
-var _field_bindings: Dictionary = {}
-var _field_samples: Dictionary = {}
 var _axis_u := Vector3.RIGHT
 var _axis_v := Vector3.UP
 var _origin := Vector3.ZERO
@@ -35,108 +36,136 @@ func setup(web: Web3D) -> void:
 	_normal = web.global_basis.y.normalized()
 	_axis_u = web.global_basis.x.normalized()
 	_axis_v = web.global_basis.z.normalized()
-	for values in [_points, _offsets, _velocities, _masses, _stiffnesses, _edges, _lines]:
-		values.clear()
-	_pinned.clear()
-	_field_bindings.clear()
-	_field_samples.clear()
+	_anchors.clear()
+	var connected: Dictionary = {}
+	for edge in web.edges:
+		connected[edge.x] = true
+		connected[edge.y] = true
+	for index: int in connected:
+		if index >= 0 and index < web.valid_nodes.size():
+			var anchor := web.valid_nodes[index]
+			if is_instance_valid(anchor):
+				_anchors.append(anchor.global_position)
+	_edges.clear()
 	peak_sag = 0.0
 	peak_depth = 0.0
-	var endpoints: Dictionary = {}
+	if _segments.is_empty():
+		_origin = web.global_position
+		field_size = Vector2i.ONE
+		_resize(1)
+		return
+	var minimum := Vector2(INF, INF)
+	var maximum := Vector2(-INF, -INF)
 	for segment in _segments:
-		endpoints[segment.start.snapped(Vector3.ONE * 0.0001)] = segment.start
-		endpoints[segment.end.snapped(Vector3.ONE * 0.0001)] = segment.end
-	var indices: Dictionary = {}
-	for segment in _segments:
-		var parameters: Array[float] = []
-		var span: Vector3 = segment.end - segment.start
-		var subdivisions := maxi(1, ceili(span.length() / SPRING_SPACING))
-		for sample in range(subdivisions + 1):
-			parameters.append(float(sample) / subdivisions)
-		var line: Vector3 = segment.end - segment.start
-		for endpoint: Vector3 in endpoints.values():
-			var t := clampf(
-				(endpoint - segment.start).dot(line) / maxf(line.length_squared(), 0.000001),
-				0.0,
-				1.0,
-			)
-			if segment.start.lerp(segment.end, t).distance_to(endpoint) < 0.0001:
-				parameters.append(t)
-		parameters.sort()
-		var nodes: Array[int] = []
-		var unique_parameters: Array[float] = []
-		for t in parameters:
-			if not unique_parameters.is_empty() and t - unique_parameters[-1] < 0.00001:
-				continue
-			unique_parameters.append(t)
-			var point: Vector3 = segment.start.lerp(segment.end, t)
-			var key := point.snapped(Vector3.ONE * 0.0001)
-			if not indices.has(key):
-				indices[key] = _points.size()
-				_points.append(point)
-			nodes.append(indices[key])
-		_lines.append({ "nodes": nodes, "parameters": unique_parameters })
-		for index in range(1, nodes.size()):
-			if nodes[index - 1] == nodes[index]:
-				continue
-			var start := _points[nodes[index - 1]]
-			var length := maxf(start.distance_to(_points[nodes[index]]), 0.001)
-			_edges.append({ "a": nodes[index - 1], "b": nodes[index], "length": length })
-	_origin = _points[0] if not _points.is_empty() else Vector3.ZERO
+		for point: Vector3 in [segment.start, segment.end]:
+			var projected := Vector2(point.dot(_axis_u), point.dot(_axis_v))
+			minimum = minimum.min(projected)
+			maximum = maximum.max(projected)
+	var extent := maximum - minimum
+	spacing = maxf(MINIMUM_SPACING, maxf(extent.x, extent.y) / (MAX_AXIS_SAMPLES - 3))
+	field_size = Vector2i(ceili(extent.x / spacing) + 3, ceili(extent.y / spacing) + 3)
+	field_size = field_size.min(Vector2i(MAX_AXIS_SAMPLES, MAX_AXIS_SAMPLES))
+	var plane_depth: float = _segments[0].start.dot(_normal)
+	_origin = (_axis_u * (minimum.x - spacing) + _axis_v * (minimum.y - spacing)
+		+ _normal * plane_depth)
+	_resize(field_size.x * field_size.y)
+	var faces: Array[PackedVector2Array] = []
+	for face in web.find_faces():
+		var outline := PackedVector2Array()
+		for vertex in face:
+			outline.append(_project(web.valid_nodes[vertex].global_position))
+		faces.append(outline)
 	for index in range(_points.size()):
-		_offsets.append(Vector2.ZERO)
-		_velocities.append(Vector2.ZERO)
-		_masses.append(0.04)
-		_stiffnesses.append(0.0)
-		for anchor in web.valid_nodes:
-			if _points[index].distance_to(anchor.global_position) < 0.0001:
-				_pinned[index] = true
-	for edge in _edges:
-		for index in [edge.a, edge.b]:
-			_masses[index] += edge.length * 0.5
-			_stiffnesses[index] += 1.0 / edge.length
+		var cell := Vector2i(index % field_size.x, index / field_size.x)
+		var point := _origin + (_axis_u * cell.x + _axis_v * cell.y) * spacing
+		_points[index] = point
+		_active[index] = int(_covers(point, faces))
+		for anchor in _anchors:
+			var distance := point.distance_to(anchor) / (spacing * 1.5)
+			_anchor_strength[index] += 4.0 * (1.0 - smoothstep(0.0, 1.0, distance))
+		_stiffnesses[index] = _anchor_strength[index]
+	for row in range(field_size.y):
+		for column in range(field_size.x):
+			var index := row * field_size.x + column
+			if column + 1 < field_size.x:
+				_connect(index, index + 1)
+			if row + 1 < field_size.y:
+				_connect(index, index + field_size.x)
+
+
+func _resize(count: int) -> void:
+	_points.resize(count)
+	_points.fill(Vector3.ZERO)
+	_offsets.resize(count)
+	_offsets.fill(Vector2.ZERO)
+	_velocities.resize(count)
+	_velocities.fill(Vector2.ZERO)
+	_stiffnesses.resize(count)
+	_stiffnesses.fill(0.0)
+	_anchor_strength.resize(count)
+	_anchor_strength.fill(0.0)
+	_active.resize(count)
+	_active.fill(0)
+
+
+func _project(point: Vector3) -> Vector2:
+	var offset := point - _origin
+	return Vector2(offset.dot(_axis_u), offset.dot(_axis_v))
+
+
+func _covers(point: Vector3, faces: Array[PackedVector2Array]) -> bool:
+	var projected := _project(point)
+	for face in faces:
+		if Geometry2D.is_point_in_polygon(projected, face):
+			return true
+	var limit := spacing * spacing
+	for segment in _segments:
+		var line: Vector3 = segment.end - segment.start
+		var start: Vector3 = segment.start
+		var along := (point - start).dot(line) / maxf(line.length_squared(), 0.000001)
+		var closest: Vector3 = segment.start + line * clampf(along, 0.0, 1.0)
+		if point.distance_squared_to(closest) <= limit:
+			return true
+	return false
+
+
+func _connect(start: int, finish: int) -> void:
+	if _active[start] == 0 or _active[finish] == 0:
+		return
+	_edges.append(Vector2i(start, finish))
+	_stiffnesses[start] += 1.0
+	_stiffnesses[finish] += 1.0
 
 
 func advance(delta: float, contacts: Array[Dictionary]) -> void:
-	_field_samples.clear()
 	if not effect_enabled:
 		_offsets.fill(Vector2.ZERO)
 		_velocities.fill(Vector2.ZERO)
 		return
-	var loads: Array[Vector2] = []
+	var loads := PackedVector2Array()
 	loads.resize(_points.size())
 	loads.fill(Vector2.ZERO)
+	var mass := maxf(0.25, spacing * spacing)
 	for contact in contacts:
-		if _points.is_empty():
-			break
-		var point: Vector3 = contact.point
-		var closest := 0
-		for index in range(1, _points.size()):
-			var distance := _points[index].distance_squared_to(point)
-			if distance < _points[closest].distance_squared_to(point):
-				closest = index
-		var share: float = contact.get("weight", 1.0)
-		loads[closest].x += weight * 2.5 * share
-		if contact.get("impact", false) and not _pinned.has(closest):
-			var impulse: float = contact.get("side", 1.0) * depth_sway * 6.0 * weight * share
-			_velocities[closest].y += impulse / _masses[closest]
-	var elapsed := minf(delta, 0.05)
-	var fastest := 1.0
-	for index in range(_points.size()):
-		fastest = maxf(fastest, sqrt(tension * _stiffnesses[index] / _masses[index]))
-	var steps := maxi(1, ceili(elapsed / minf(0.003, 0.3 / fastest)))
+		_deposit(contact, loads, mass)
+	var drag := PackedFloat32Array()
+	drag.resize(_points.size())
+	for index in range(drag.size()):
+		drag[index] = 2.0 * damping * sqrt(tension * _stiffnesses[index] * mass)
+	var elapsed := clampf(delta, 0.0, 0.05)
+	var steps := maxi(1, ceili(elapsed * 120.0))
 	var dt := elapsed / steps
 	for iteration in range(steps):
 		var forces := loads.duplicate()
 		for edge in _edges:
-			var force: Vector2 = tension * (_offsets[edge.b] - _offsets[edge.a]) / edge.length
-			forces[edge.a] += force
-			forces[edge.b] -= force
+			var force := tension * (_offsets[edge.y] - _offsets[edge.x])
+			forces[edge.x] += force
+			forces[edge.y] -= force
 		for index in range(_points.size()):
-			if _pinned.has(index):
+			if _active[index] == 0:
 				continue
-			var drag := 2.0 * damping * sqrt(tension * _stiffnesses[index] * _masses[index])
-			_velocities[index] += (forces[index] - drag * _velocities[index]) / _masses[index] * dt
+			var force := forces[index] - tension * _anchor_strength[index] * _offsets[index]
+			_velocities[index] += (force - drag[index] * _velocities[index]) / mass * dt
 			_offsets[index] += _velocities[index] * dt
 			if absf(_offsets[index].x) > maximum_sag:
 				_offsets[index].x = clampf(_offsets[index].x, -maximum_sag, maximum_sag)
@@ -148,74 +177,56 @@ func advance(delta: float, contacts: Array[Dictionary]) -> void:
 			peak_depth = maxf(peak_depth, absf(_offsets[index].y))
 
 
-func segment_offset(segment_index: int, t: float) -> Vector3:
-	if not effect_enabled or segment_index < 0 or segment_index >= _lines.size():
-		return Vector3.ZERO
-	var line: Dictionary = _lines[segment_index]
-	var after: int = clampi(line.parameters.bsearch(t), 1, line.nodes.size() - 1)
-	var fraction := clampf(
-		inverse_lerp(line.parameters[after - 1], line.parameters[after], t),
-		0.0,
-		1.0,
-	)
-	var offset := _offsets[line.nodes[after - 1]].lerp(_offsets[line.nodes[after]], fraction)
-	return _world_offset(offset)
+func _deposit(contact: Dictionary, loads: PackedVector2Array, mass: float) -> void:
+	var coordinates := _project(contact.point) / spacing
+	if (coordinates.x < 0 or coordinates.y < 0
+			or coordinates.x > field_size.x - 1 or coordinates.y > field_size.y - 1):
+		return
+	var cell := Vector2i(floori(coordinates.x), floori(coordinates.y))
+	var fraction := coordinates - Vector2(cell)
+	var share: float = contact.get("weight", 1.0)
+	for offset: Vector2i in [Vector2i.ZERO, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.ONE]:
+		var sample := (cell + offset).min(field_size - Vector2i.ONE)
+		var index := sample.y * field_size.x + sample.x
+		if _active[index] == 0:
+			continue
+		var blend := (1.0 - fraction.x if offset.x == 0 else fraction.x)
+		blend *= 1.0 - fraction.y if offset.y == 0 else fraction.y
+		loads[index].x += weight * 2.5 * share * blend
+		if contact.get("impact", false):
+			var impulse: float = contact.get("side", 1.0) * depth_sway * 6.0 * weight * share
+			_velocities[index].y += impulse * blend / mass
+
+
+func anchor_factor(point: Vector3) -> float:
+	point -= _normal * (point - _origin).dot(_normal)
+	var distance_squared := INF
+	for anchor in _anchors:
+		distance_squared = minf(distance_squared, point.distance_squared_to(anchor))
+	return smoothstep(0.0, spacing * 1.5, sqrt(distance_squared))
 
 
 func displacement_at(point: Vector3) -> Vector3:
-	if not effect_enabled or _points.is_empty():
+	if not effect_enabled or _segments.is_empty():
 		return Vector3.ZERO
-	point -= _normal * (point - _origin).dot(_normal)
-	for index in _pinned:
-		if point.distance_squared_to(_points[index]) < 0.00000001:
-			return Vector3.ZERO
-	var offset := point - _origin
-	var coordinates := Vector2(offset.dot(_axis_u), offset.dot(_axis_v)) / FIELD_SPACING
+	var maximum := Vector2(field_size - Vector2i.ONE)
+	var coordinates := (_project(point) / spacing).clamp(Vector2.ZERO, maximum)
 	var cell := Vector2i(floori(coordinates.x), floori(coordinates.y))
+	var finish := (cell + Vector2i.ONE).min(field_size - Vector2i.ONE)
 	var fraction := coordinates - Vector2(cell)
-	var top := _sample_field(cell).lerp(_sample_field(cell + Vector2i.RIGHT), fraction.x)
-	var bottom_left := _sample_field(cell + Vector2i.DOWN)
-	var bottom := bottom_left.lerp(_sample_field(cell + Vector2i.ONE), fraction.x)
-	return top.lerp(bottom, fraction.y)
+	var top := _offsets[cell.y * field_size.x + cell.x].lerp(
+		_offsets[cell.y * field_size.x + finish.x], fraction.x)
+	var bottom := _offsets[finish.y * field_size.x + cell.x].lerp(
+		_offsets[finish.y * field_size.x + finish.x], fraction.x)
+	var offset := top.lerp(bottom, fraction.y) * anchor_factor(point)
+	return load_direction.normalized() * offset.x + _normal * offset.y
 
 
-func _sample_field(cell: Vector2i) -> Vector3:
-	if _field_samples.has(cell):
-		return _field_samples[cell]
-	if not _field_bindings.has(cell):
-		var position_in_plane := _origin + (_axis_u * cell.x + _axis_v * cell.y) * FIELD_SPACING
-		var indices: Array[int] = []
-		var distances: Array[float] = []
-		for index in range(_points.size()):
-			var distance := position_in_plane.distance_squared_to(_points[index])
-			var slot := distances.bsearch(distance)
-			if slot < 4:
-				indices.insert(slot, index)
-				distances.insert(slot, distance)
-				if indices.size() > 4:
-					indices.pop_back()
-					distances.pop_back()
-		var weights: Array[float] = []
-		var total := 0.0
-		for distance in distances:
-			var influence := 1.0 / pow(0.02 + distance, 2.0)
-			weights.append(influence)
-			total += influence
-		for index in range(weights.size()):
-			weights[index] /= total
-		_field_bindings[cell] = { "indices": indices, "weights": weights }
-	var binding: Dictionary = _field_bindings[cell]
-	var result := Vector2.ZERO
-	for slot in range(binding.indices.size()):
-		result += _offsets[binding.indices[slot]] * binding.weights[slot]
-	var world := _world_offset(result)
-	_field_samples[cell] = world
-	return world
+func segment_offset(segment_index: int, t: float) -> Vector3:
+	if segment_index < 0 or segment_index >= _segments.size():
+		return Vector3.ZERO
+	return displacement_at(_segments[segment_index].start.lerp(_segments[segment_index].end, t))
 
 
 func segment_count() -> int:
 	return _segments.size()
-
-
-func _world_offset(offset: Vector2) -> Vector3:
-	return load_direction.normalized() * offset.x + _normal * offset.y

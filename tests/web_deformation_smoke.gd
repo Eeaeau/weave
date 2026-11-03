@@ -7,10 +7,6 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var model_path := "res://src/features/web/web_spring_model_3d.gd"
-	if not ResourceLoader.exists(model_path):
-		_fail("The game needs a reusable spring model")
-		return
 	var web := Web3D.new()
 	web.rotation.x = PI / 2.0
 	web.rings = 2
@@ -23,8 +19,14 @@ func _run() -> void:
 	web.edges = [Vector2i(0, 1), Vector2i(1, 2), Vector2i(2, 0)]
 	root.add_child(web)
 	await process_frame
-	var model = load(model_path).new()
+	var model := WebSpringModel3D.new()
 	model.setup(web)
+	var coarse_points: int = model._points.size()
+	web.curve_segments = 24
+	model.setup(web)
+	if model._points.size() != coarse_points or model._points.size() > 24 * 24:
+		_fail("Decorative curve detail must not increase global simulation resolution")
+		return
 	model.maximum_sag = 1.0
 	var loads: Array[Dictionary] = [{ "point": Vector3.ZERO, "weight": 0.25 }]
 	for frame in range(600):
@@ -54,6 +56,9 @@ func _run() -> void:
 	if model.segment_count() != web.get_support_segments().size():
 		_fail("A rebuilt graph must discard removed strands")
 		return
+	web.scale *= 100.0
+	model.setup(web)
+	assert(model._points.size() <= 24 * 24, "A growing map must retain a bounded simulation")
 	web.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout

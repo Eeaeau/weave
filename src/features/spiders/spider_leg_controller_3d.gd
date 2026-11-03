@@ -367,7 +367,7 @@ func _find_support(world_point: Vector3) -> Dictionary:
 		return {}
 	var closest_support: Dictionary = {}
 	var closest_distance := support_tolerance
-	for segment in _cycle.support_segments:
+	for segment in _segments_near(world_point, support_tolerance):
 		var point := _closest_point_on_segment(
 			world_point,
 			segment["start"],
@@ -393,7 +393,7 @@ func _choose_web_destination(foot_index: int) -> Dictionary:
 	var reach_squared := maximum_reach * maximum_reach
 	var best_score := INF
 	var best_destination: Dictionary = {}
-	for segment in _cycle.support_segments:
+	for segment in _segments_near(lift_position, maximum_reach):
 		# No point on a segment outside the reach sphere can become a landing.
 		if lift_position.distance_squared_to(_closest_point_on_segment(
 			lift_position, segment["start"], segment["end"]
@@ -412,6 +412,10 @@ func _choose_web_destination(foot_index: int) -> Dictionary:
 			best_destination = candidate
 	best_destination.erase("score")
 	return best_destination
+
+
+func _segments_near(_point: Vector3, _radius: float) -> Array[Dictionary]:
+	return _cycle.support_segments
 
 
 func _best_web_target_on_segment(

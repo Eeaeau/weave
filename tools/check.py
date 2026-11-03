@@ -216,6 +216,8 @@ def main() -> int:
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("spider_contact_gait_smoke", "CONTACT GAIT PASS:"),
         ("web_deformation_smoke", "WEB DEFORMATION PASS:"),
+        ("web_shader_field_smoke", "WEB SHADER FIELD PASS:"),
+        ("web_support_query_smoke", "WEB SUPPORT QUERY PASS:"),
         ("web_deformation_integration_smoke", "WEB DEFORMATION INTEGRATION PASS:"),
         ("menu_smoke", "MENU PASS:"),
         ("multiplayer/player_command_smoke", "PLAYER COMMAND PASS:"),

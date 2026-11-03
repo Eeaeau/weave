@@ -3,7 +3,7 @@ extends Node3D
 ## Shared spider identity backed by the armature-driven visual rig.
 
 @export_range(0.5, 12.0, 0.1) var visual_turn_speed := 2.1
-@export_range(0.0, 0.04, 0.0025) var body_surge := 0.015
+@export_range(0.0, 0.04, 0.001) var body_surge := 0.006
 @export var team_name: String = "Team"
 
 var _desired_facing := NAN
@@ -56,7 +56,8 @@ func _advance_body_motion(delta: float) -> void:
 	var speed := movement.length() / maxf(delta, 0.001)
 	if contacts > 0 and speed > 0.05:
 		var impulse := body_surge * 24.0 * contacts * minf(speed / 0.8, 1.0)
-		_body_velocity += movement.normalized() * impulse
+		var settle := movement.normalized() * 0.15 - global_basis.y.normalized() * 0.5
+		_body_velocity += settle * impulse
 		_body_velocity = _body_velocity.limit_length(body_surge * 32.0)
 	if body_surge <= 0.0:
 		_body_offset = Vector3.ZERO

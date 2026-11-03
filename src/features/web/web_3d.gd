@@ -5,6 +5,7 @@ extends Node3D
 signal geometry_changed
 
 const LOOSE_THREADS := preload("res://src/features/web/loose_web_threads_3d.gd")
+const SUPPORT_QUERY := preload("res://src/features/web/web_support_query_3d.gd")
 const EDGE_MAX_HEALTH := 100.0
 const HEALTH_BAR_SCENE := preload("res://src/features/health/health_bar_3d.tscn")
 
@@ -98,6 +99,7 @@ var polygon_container: Node3D
 var triangles: Array = []
 var stand_alone_edges: Array = []
 var _deformation: Node
+var _support_query: SUPPORT_QUERY
 
 
 func _ready() -> void:
@@ -219,6 +221,7 @@ func rebuild() -> void:
 
 	if not is_inside_tree():
 		return
+	_support_query = null
 
 	_synchronize_edge_health()
 	_synchronize_loose_threads()
@@ -343,6 +346,12 @@ func get_support_segments() -> Array[Dictionary]:
 				"strand_id": "%d:%s" % [polygon_index, local_segment["strand_id"]],
 			})
 	return segments
+
+
+func get_support_segments_near(point: Vector3, radius: float) -> Array[Dictionary]:
+	if _support_query == null:
+		_support_query = SUPPORT_QUERY.new(get_support_segments(), global_transform)
+	return _support_query.find(point, radius)
 
 
 # ============================================================
