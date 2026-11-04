@@ -55,7 +55,8 @@ func _run() -> void:
 		"Spider hitbox must cover its body and extend through the gameplay plane")
 	var anchor: Node3D = arena.catch_webs[0].valid_nodes[0]
 	var anchor_shape := anchor.get_node("ProjectileHitbox").get_child(0) as CollisionShape3D
-	assert(anchor_shape.shape is CapsuleShape3D and anchor_shape.shape.radius >= 0.4)
+	assert(anchor_shape.shape is CapsuleShape3D
+		and anchor_shape.shape.radius >= 0.2 and anchor_shape.shape.radius <= 0.3)
 	assert(absf(anchor_shape.global_basis.y.normalized().dot(Vector3.BACK)) > 0.999)
 	arena.queue_free()
 	await process_frame
