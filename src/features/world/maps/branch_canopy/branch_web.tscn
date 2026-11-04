@@ -6,103 +6,103 @@
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor01"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor02"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor03"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor04"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor13"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor14"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor05"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor06"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor07"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor15"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor24"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor25"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor16"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor17"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor18"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor19"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor08"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor09"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor20"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor22"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor21"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor10"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor11"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor23"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_Anchor12"]
 resource_local_to_scene = true
-size = Vector3(0.9, 0.9, 3)
+size = Vector3(0.5, 0.5, 3)
 
 [node name="BranchWeb" type="Node3D" unique_id=645545693]
 

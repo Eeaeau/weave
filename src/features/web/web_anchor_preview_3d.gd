@@ -6,7 +6,7 @@ extends Node3D
 const PREVIEW_TEXTURE := preload("res://src/features/web/assets/editor_anchor_marker.svg")
 const WEB_ANCHOR_LAYER := 1 << 4
 
-@export_range(0.1, 1.0, 0.05) var projectile_hit_radius: float = 0.45
+@export_range(0.1, 1.0, 0.05) var projectile_hit_radius: float = 0.25
 @export_range(1.0, 8.0, 0.5) var projectile_hit_depth: float = 3.0
 @export var preview_color: Color = Color(0.26, 0.91, 0.94):
 	set(value):

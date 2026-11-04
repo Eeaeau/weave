@@ -32,6 +32,8 @@ func _run() -> void:
 			branch = null
 			passed = await _check_hits(blocker)
 			if passed:
+				passed = await _check_clearance(blocker)
+			if passed:
 				colliders.scale.x = -1
 				passed = await _check_hits(blocker)
 	if is_instance_valid(branch):
@@ -82,6 +84,20 @@ func _check_hits(blocker: CollisionShape3D, index: int = 0) -> bool:
 	if not hit:
 		return _fail("Projectile passed through a moved branch region")
 	return await _check_hits(blocker, index + 1)
+
+
+func _check_clearance(blocker: CollisionShape3D) -> bool:
+	var projectile := PROJECTILES[1].instantiate() as Projectile3D
+	root.add_child(projectile)
+	projectile.set_process(false)
+	projectile.explosion_damage = 0.0
+	projectile.global_position = blocker.to_global(Vector3(0.6, 0, 0))
+	await physics_frame
+	await physics_frame
+	var passed := is_instance_valid(projectile) and not projectile.freeze
+	if is_instance_valid(projectile):
+		projectile.free()
+	return passed or _fail("A rocket passing beside a narrow branch region should stay in flight")
 
 
 func _fail(message: String) -> bool:

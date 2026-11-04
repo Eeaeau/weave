@@ -29,6 +29,11 @@ var _normal := Vector3.FORWARD
 var _axis_u := Vector3.RIGHT
 var _axis_v := Vector3.UP
 var _origin := Vector3.ZERO
+var _region_samples: Dictionary = {}
+var _simulation_points := PackedInt32Array()
+var _simulation_edges: Array[Vector2i] = []
+var _occupied := PackedByteArray()
+var _region_selection: Array = []
 
 
 func setup(web: Web3D) -> void:
@@ -47,6 +52,10 @@ func setup(web: Web3D) -> void:
 			if is_instance_valid(anchor):
 				_anchors.append(anchor.global_position)
 	_edges.clear()
+	_region_samples.clear()
+	_region_selection.clear()
+	_simulation_points.clear()
+	_simulation_edges.clear()
 	peak_sag = 0.0
 	peak_depth = 0.0
 	if _segments.is_empty():
@@ -91,6 +100,66 @@ func setup(web: Web3D) -> void:
 				_connect(index, index + 1)
 			if row + 1 < field_size.y:
 				_connect(index, index + field_size.x)
+	_index_regions(web)
+	for index in range(_points.size()):
+		if _active[index] != 0:
+			_simulation_points.append(index)
+	_simulation_edges = _edges.duplicate()
+	_occupied = _active.duplicate()
+
+
+func _index_regions(web: Web3D) -> void:
+	for region in range(web.polygon_container.get_child_count()):
+		var polygon := web.polygon_container.get_child(region) as WebPolygon3D
+		if polygon == null:
+			continue
+		var minimum := Vector2(INF, INF)
+		var maximum := Vector2(-INF, -INF)
+		for point in polygon.points:
+			var projected := _project(polygon.to_global(point)) / spacing
+			minimum = minimum.min(projected)
+			maximum = maximum.max(projected)
+		var first := Vector2i((minimum - Vector2.ONE).floor()).max(Vector2i.ZERO)
+		var last := Vector2i((maximum + Vector2.ONE).ceil()).min(field_size - Vector2i.ONE)
+		var samples := PackedInt32Array()
+		for row in range(first.y, last.y + 1):
+			for column in range(first.x, last.x + 1):
+				var index := row * field_size.x + column
+				if _active[index] != 0:
+					samples.append(index)
+		_region_samples[region] = samples
+
+
+func set_active_regions(active_regions: Array, occupied_regions: Array) -> void:
+	var selection := [active_regions, occupied_regions]
+	if selection == _region_selection:
+		return
+	_region_selection = selection.duplicate(true)
+	var selected := PackedByteArray()
+	selected.resize(_points.size())
+	_occupied.resize(_points.size())
+	_occupied.fill(0)
+	for region: int in active_regions:
+		for index: int in _region_samples.get(region, []):
+			selected[index] = 1
+	for region: int in occupied_regions:
+		for index: int in _region_samples.get(region, []):
+			_occupied[index] = 1
+	_simulation_points.clear()
+	for index in range(_points.size()):
+		if selected[index] != 0:
+			_simulation_points.append(index)
+		else:
+			_offsets[index] = Vector2.ZERO
+			_velocities[index] = Vector2.ZERO
+	_simulation_edges.clear()
+	for edge in _edges:
+		if selected[edge.x] != 0 or selected[edge.y] != 0:
+			_simulation_edges.append(edge)
+
+
+func simulated_point_count() -> int:
+	return _simulation_points.size()
 
 
 func _resize(count: int) -> void:
@@ -138,6 +207,8 @@ func _connect(start: int, finish: int) -> void:
 
 
 func advance(delta: float, contacts: Array[Dictionary]) -> void:
+	if _simulation_points.is_empty():
+		return
 	if not effect_enabled:
 		_offsets.fill(Vector2.ZERO)
 		_velocities.fill(Vector2.ZERO)
@@ -150,20 +221,18 @@ func advance(delta: float, contacts: Array[Dictionary]) -> void:
 		_deposit(contact, loads, mass)
 	var drag := PackedFloat32Array()
 	drag.resize(_points.size())
-	for index in range(drag.size()):
+	for index in _simulation_points:
 		drag[index] = 2.0 * damping * sqrt(tension * _stiffnesses[index] * mass)
 	var elapsed := clampf(delta, 0.0, 0.05)
 	var steps := maxi(1, ceili(elapsed * 120.0))
 	var dt := elapsed / steps
 	for iteration in range(steps):
 		var forces := loads.duplicate()
-		for edge in _edges:
+		for edge in _simulation_edges:
 			var force := tension * (_offsets[edge.y] - _offsets[edge.x])
 			forces[edge.x] += force
 			forces[edge.y] -= force
-		for index in range(_points.size()):
-			if _active[index] == 0:
-				continue
+		for index in _simulation_points:
 			var force := forces[index] - tension * _anchor_strength[index] * _offsets[index]
 			_velocities[index] += (force - drag[index] * _velocities[index]) / mass * dt
 			_offsets[index] += _velocities[index] * dt
@@ -175,6 +244,11 @@ func advance(delta: float, contacts: Array[Dictionary]) -> void:
 				_velocities[index].y = 0.0
 			peak_sag = maxf(peak_sag, absf(_offsets[index].x))
 			peak_depth = maxf(peak_depth, absf(_offsets[index].y))
+	var relaxation := exp(-8.0 * elapsed)
+	for index in _simulation_points:
+		if _occupied[index] == 0:
+			_offsets[index] *= relaxation
+			_velocities[index] *= relaxation
 
 
 func _deposit(contact: Dictionary, loads: PackedVector2Array, mass: float) -> void:
@@ -188,7 +262,7 @@ func _deposit(contact: Dictionary, loads: PackedVector2Array, mass: float) -> vo
 	for offset: Vector2i in [Vector2i.ZERO, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.ONE]:
 		var sample := (cell + offset).min(field_size - Vector2i.ONE)
 		var index := sample.y * field_size.x + sample.x
-		if _active[index] == 0:
+		if _occupied[index] == 0:
 			continue
 		var blend := (1.0 - fraction.x if offset.x == 0 else fraction.x)
 		blend *= 1.0 - fraction.y if offset.y == 0 else fraction.y
