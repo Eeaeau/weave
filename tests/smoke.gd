@@ -156,6 +156,8 @@ func _check_sprite_visuals(match_scene: Node3D) -> bool:
 func _is_web_mesh(mesh: Node) -> bool:
 	if mesh is WebDeformation3D:
 		return true
+	if mesh.get_parent() is Web3D and mesh.name == "DormantWebStrands":
+		return true
 	if mesh.get_script() == preload("res://src/features/web/loose_web_threads_3d.gd"):
 		return true
 	var ancestor := mesh.get_parent()

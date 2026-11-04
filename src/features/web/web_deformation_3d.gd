@@ -6,6 +6,7 @@ const SPRING_MODEL := preload("res://src/features/web/web_spring_model_3d.gd")
 const SPRITE_SHADER := preload("res://src/features/web/web_sprite_offset.gdshader")
 const STRAND_SHADER := preload("res://src/features/web/web_strand_deformation.gdshader")
 const MAX_CONTACTS := 64
+const PATCH_SETTLE_SECONDS := 2.0
 
 @export var local_pull_enabled := true
 @export var global_spring_enabled := true
@@ -35,6 +36,13 @@ var _mesh_parameters: Array[Array] = []
 var _contact_meta := PackedVector4Array()
 var _contact_bends := PackedVector4Array()
 var _view_normal := Vector3.BACK
+var _active_regions: Dictionary = {}
+var _visible_regions: Array = []
+var _select_regions := false
+var _patch_meshes: Dictionary = {}
+var _shared_segments: Dictionary = {}
+var _static_mesh := MeshInstance3D.new()
+var _static_material := StandardMaterial3D.new()
 
 
 func _process(delta: float) -> void:
@@ -44,6 +52,8 @@ func _process(delta: float) -> void:
 func _exit_tree() -> void:
 	_restore_materials()
 	_set_original_strands_visible(true)
+	if is_instance_valid(_static_mesh):
+		_static_mesh.queue_free()
 
 
 func _set_original_strands_visible(value: bool) -> void:
@@ -56,6 +66,14 @@ func _set_original_strands_visible(value: bool) -> void:
 
 func setup(web: Web3D) -> void:
 	_web = web
+	_static_mesh.name = "DormantWebStrands"
+	_web.add_child(_static_mesh)
+	_static_mesh.top_level = true
+	_static_mesh.global_transform = Transform3D.IDENTITY
+	_static_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_static_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_static_mesh.material_override = _static_material
+	_static_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	top_level = true
 	global_transform = Transform3D.IDENTITY
 	model = SPRING_MODEL.new()
@@ -72,12 +90,14 @@ func setup(web: Web3D) -> void:
 
 
 func register_gait(gait: SpiderLegController3D) -> void:
+	set_process(true)
 	if _groups.has(gait):
 		return
 	var landings: Array[float] = []
 	landings.resize(8)
 	landings.fill(-1.0)
-	_groups[gait] = { "tips": {}, "contacts": {}, "landings": landings }
+	_groups[gait] = { "tips": {}, "contacts": {}, "landings": landings,
+		"region_center": Vector3.INF, "region_radius": 0.0, "regions": {} }
 
 
 func unregister_gait(gait: SpiderLegController3D) -> void:
@@ -99,6 +119,7 @@ func contact_target(gait: SpiderLegController3D, index: int) -> Dictionary:
 		return {}
 	var state: Dictionary = contacts[index]
 	if (not state.attached
+			or not _active_regions.has(int(_segments[state.segment].strand_id.get_slice(":", 0)))
 			or gait._is_stepping(index)
 			or gait._feet[index].dangling
 			or gait.is_carried(index)):
@@ -123,7 +144,12 @@ func advance_visuals(delta: float) -> void:
 		_restore_materials()
 		visible = false
 		_set_original_strands_visible(true)
+		_static_mesh.visible = false
+		_select_regions = false
 		return
+	_update_regions(delta)
+	_static_mesh.visible = true
+	_static_material.albedo_color = _web.line_color
 	var loads: Array[Dictionary] = []
 	_influences.clear()
 	for gait in _groups.keys():
@@ -146,14 +172,62 @@ func advance_visuals(delta: float) -> void:
 	model.advance(delta, loads)
 	for gait in _groups:
 		_update_materials(gait)
-	var active := not _groups.is_empty() and not _segments.is_empty()
-	_set_original_strands_visible(not active)
+	var active := not _active_regions.is_empty() and not _segments.is_empty()
 	visible = active
 	if not active:
+		if _groups.is_empty():
+			set_process(false)
 		return
 	var camera := get_viewport().get_camera_3d()
 	_view_normal = camera.global_basis.z.normalized() if camera != null else model._normal
 	_redraw()
+
+
+func _update_regions(delta: float) -> void:
+	var occupied: Dictionary = {}
+	for gait in _groups.keys():
+		if not is_instance_valid(gait) or not gait.is_inside_tree():
+			_groups.erase(gait)
+			continue
+		var center: Vector3 = gait.get_parent().global_position
+		var radius := 0.15
+		for index in range(gait._feet.size()):
+			radius = maxf(radius, center.distance_to(gait.get_leg_origin(index))
+				+ gait.get_leg_reach(index) + 0.15)
+		var group: Dictionary = _groups[gait]
+		if (center.distance_squared_to(group.region_center) > 0.0025
+				or absf(radius - group.region_radius) > 0.025):
+			group.region_center = center
+			group.region_radius = radius
+			group.regions.clear()
+			for segment in _web.get_support_segments_near(center, radius):
+				var closest := Geometry3D.get_closest_point_to_segment(
+					center, segment.start, segment.end)
+				if center.distance_squared_to(closest) <= radius * radius:
+					group.regions[int(segment.strand_id.get_slice(":", 0))] = true
+		occupied.merge(group.regions)
+	for region in _active_regions.keys():
+		_active_regions[region] -= maxf(delta, 0.0)
+		if _active_regions[region] <= 0.0:
+			_active_regions.erase(region)
+	for region in occupied:
+		_active_regions[region] = PATCH_SETTLE_SECONDS
+	var active_ids := _active_regions.keys()
+	var occupied_ids := occupied.keys()
+	active_ids.sort()
+	occupied_ids.sort()
+	model.set_active_regions(active_ids, occupied_ids)
+	if _select_regions and active_ids == _visible_regions:
+		return
+	_select_regions = true
+	_visible_regions = active_ids
+	_surface.clear_surfaces()
+	_build_mesh()
+	_set_original_strands_visible(false)
+
+
+func is_region_dynamic(region: int) -> bool:
+	return _active_regions.has(region)
 
 
 func _rebuild() -> void:
@@ -168,11 +242,18 @@ func _rebuild() -> void:
 	_influences.clear()
 	_surface.clear_surfaces()
 	_mesh_parameters.clear()
+	_active_regions.clear()
+	_visible_regions.clear()
+	_select_regions = false
 	_material.set_shader_parameter("contact_count", 0)
+	_cache_meshes()
 	_build_mesh()
 	for group in _groups.values():
 		group.contacts.clear()
+		group.region_center = Vector3.INF
 	_set_original_strands_visible(_groups.is_empty())
+	visible = not _groups.is_empty()
+	set_process(true)
 
 
 func _collect_loads(
@@ -305,9 +386,9 @@ func _redraw() -> void:
 	_material.set_shader_parameter("web_color", _web.line_color)
 
 
-func _build_mesh() -> void:
-	if _segments.is_empty():
-		return
+func _cache_meshes() -> void:
+	_patch_meshes.clear()
+	_shared_segments.clear()
 	_spring_data.resize(maxi(model._points.size(), 1) * 4)
 	_spring_data.fill(0.0)
 	_spring_image = Image.create_from_data(model.field_size.x, model.field_size.y, false,
@@ -317,53 +398,121 @@ func _build_mesh() -> void:
 	_material.set_shader_parameter("gravity_direction", model.load_direction.normalized())
 	_material.set_shader_parameter("depth_direction", model._normal)
 	_material.set_shader_parameter("field_size", model.field_size)
-	var vertices := PackedVector3Array()
-	var texture_coordinates := PackedVector2Array()
-	var spring_coordinates := PackedVector2Array()
 	var camera := get_viewport().get_camera_3d()
 	var normal := camera.global_basis.z.normalized() if camera != null else model._normal
-	var previous_vertex := Vector3.ZERO
-	var previous_uv := Vector2.ZERO
-	var previous_uv2 := Vector2.ZERO
 	for segment_index in range(_segments.size()):
 		var segment := _segments[segment_index]
+		var region := int(segment.strand_id.get_slice(":", 0))
+		if not _patch_meshes.has(region):
+			_patch_meshes[region] = { "vertices": PackedVector3Array(), "uv": PackedVector2Array(),
+				"uv2": PackedVector2Array(), "static": PackedVector3Array(),
+				"parts": [], "keys": [], "variants": {}, "neighbors": {} }
+		var patch: Dictionary = _patch_meshes[region]
 		var parameters: Array = []
-		var count := maxi(2, ceili(segment.start.distance_to(segment.end) / 0.12))
-		for sample in range(count + 1):
-			parameters.append(float(sample) / count)
-		parameters.sort()
 		_mesh_parameters.append(parameters)
+		var count := maxi(2, ceili(segment.start.distance_to(segment.end) / 0.12))
 		var direction: Vector3 = segment.end - segment.start
 		var side := direction.cross(normal).normalized() * _web.web_width
-		for index in range(parameters.size()):
-			var t: float = parameters[index]
+		var static_part := PackedVector3Array([
+			segment.start - side, segment.start + side, segment.end - side,
+			segment.end - side, segment.start + side, segment.end + side,
+		])
+		patch.static.append_array(static_part)
+		patch.parts.append(static_part)
+		var first := str(segment.start.snapped(Vector3.ONE * 0.0001))
+		var last := str(segment.end.snapped(Vector3.ONE * 0.0001))
+		var key := first + ":" + last if first < last else last + ":" + first
+		patch.keys.append(key)
+		if not _shared_segments.has(key):
+			_shared_segments[key] = {}
+		_shared_segments[key][region] = true
+		for sample in range(count + 1):
+			var t := float(sample) / count
+			parameters.append(t)
 			var point: Vector3 = segment.start.lerp(segment.end, t)
 			var uv := Vector2(segment_index + t * 0.999, model.anchor_factor(point))
 			var relative := point - model._origin
-			var uv2 := Vector2(relative.dot(model._axis_u), relative.dot(model._axis_v))
-			uv2 /= model.spacing
-			if index == 0 and not vertices.is_empty():
-				vertices.append(previous_vertex)
-				texture_coordinates.append(previous_uv)
-				spring_coordinates.append(previous_uv2)
-				vertices.append(point - side)
-				texture_coordinates.append(uv)
-				spring_coordinates.append(uv2)
-			vertices.append(point - side)
-			vertices.append(point + side)
-			texture_coordinates.append(uv)
-			texture_coordinates.append(uv)
-			spring_coordinates.append(uv2)
-			spring_coordinates.append(uv2)
-			previous_vertex = point + side
-			previous_uv = uv
-			previous_uv2 = uv2
+			var uv2 := Vector2(
+				relative.dot(model._axis_u),
+				relative.dot(model._axis_v),
+			) / model.spacing
+			if sample == 0 and not patch.vertices.is_empty():
+				patch.vertices.append(patch.vertices[-1])
+				patch.uv.append(patch.uv[-1])
+				patch.uv2.append(patch.uv2[-1])
+				patch.vertices.append(point - side)
+				patch.uv.append(uv)
+				patch.uv2.append(uv2)
+			patch.vertices.append(point - side)
+			patch.vertices.append(point + side)
+			patch.uv.append(uv)
+			patch.uv.append(uv)
+			patch.uv2.append(uv2)
+			patch.uv2.append(uv2)
+	for region in _patch_meshes:
+		var patch: Dictionary = _patch_meshes[region]
+		for key: String in patch.keys:
+			for neighbor in _shared_segments[key]:
+				if neighbor != region:
+					patch.neighbors[neighbor] = true
+
+
+func _static_patch_vertices(region: int) -> PackedVector3Array:
+	var patch: Dictionary = _patch_meshes[region]
+	var neighbors: Array = []
+	for neighbor in patch.neighbors:
+		if _active_regions.has(neighbor):
+			neighbors.append(neighbor)
+	if neighbors.is_empty():
+		return patch.static
+	neighbors.sort()
+	var variant := str(neighbors)
+	if not patch.variants.has(variant):
+		var vertices := PackedVector3Array()
+		for index in range(patch.parts.size()):
+			var shared := false
+			for neighbor in neighbors:
+				shared = shared or _shared_segments[patch.keys[index]].has(neighbor)
+			if not shared:
+				vertices.append_array(patch.parts[index])
+		patch.variants[variant] = vertices
+	return patch.variants[variant]
+
+
+func _build_mesh() -> void:
+	var vertices := PackedVector3Array()
+	var texture_coordinates := PackedVector2Array()
+	var spring_coordinates := PackedVector2Array()
+	var static_vertices := PackedVector3Array()
+	for region in _patch_meshes:
+		var patch: Dictionary = _patch_meshes[region]
+		if _select_regions and not _active_regions.has(region):
+			static_vertices.append_array(_static_patch_vertices(region))
+			continue
+		if not vertices.is_empty():
+			vertices.append(vertices[-1])
+			texture_coordinates.append(texture_coordinates[-1])
+			spring_coordinates.append(spring_coordinates[-1])
+			vertices.append(patch.vertices[0])
+			texture_coordinates.append(patch.uv[0])
+			spring_coordinates.append(patch.uv2[0])
+		vertices.append_array(patch.vertices)
+		texture_coordinates.append_array(patch.uv)
+		spring_coordinates.append_array(patch.uv2)
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_TEX_UV] = texture_coordinates
 	arrays[Mesh.ARRAY_TEX_UV2] = spring_coordinates
-	_surface.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
+	if not vertices.is_empty():
+		_surface.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
+	var static_surface := ArrayMesh.new()
+	if not static_vertices.is_empty():
+		var static_arrays := []
+		static_arrays.resize(Mesh.ARRAY_MAX)
+		static_arrays[Mesh.ARRAY_VERTEX] = static_vertices
+		static_surface.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, static_arrays)
+	_static_mesh.mesh = static_surface
 
 
 func _rendered_point(segment_index: int, t: float) -> Vector3:
