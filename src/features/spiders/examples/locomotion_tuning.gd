@@ -260,6 +260,26 @@ func _add_sliders(canvas: CanvasLayer) -> void:
 	)
 	_slider(
 		canvas,
+		"Idle pause",
+		5,
+		0.1,
+		2.0,
+		0.05,
+		gait.idle_step_interval,
+		func(value: float): gait.idle_step_interval = value,
+	)
+	_slider(
+		canvas,
+		"Idle swing",
+		6,
+		0.3,
+		1.0,
+		0.05,
+		gait.idle_step_duration,
+		func(value: float): gait.idle_step_duration = value,
+	)
+	_slider(
+		canvas,
 		"Web pull",
 		0,
 		0.0,

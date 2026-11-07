@@ -12,8 +12,10 @@ func _run() -> void:
 	var previous: Dictionary = await _sample(true)
 	var calmer: Dictionary = await _sample(false)
 	print("IDLE GAIT samples: previous=%s calmer=%s" % [previous, calmer])
-	if (previous.count == 0 or calmer.count == 0 or calmer.count > previous.count * 0.75
-			or calmer.duration < previous.duration * 1.3 or calmer.walk_delay > 0.18):
+	if (previous.count == 0 or calmer.count == 0 or calmer.count > 10
+			or calmer.count > previous.count * 0.75
+			or calmer.duration < previous.duration * 1.3 or calmer.walk_delay > 0.18
+			or not calmer.swing_resumes):
 		push_error("IDLE GAIT FAIL: calmer idle steps must preserve walking response")
 		quit(1)
 		return
@@ -63,17 +65,42 @@ func _sample(previous: bool) -> Dictionary:
 				count += 1
 				duration += plan.duration
 		await process_frame
-	var found_idle_step := false
+	var idle_plan: Dictionary = {}
 	for frame in range(240):
 		animation.advance(1.0 / 60.0)
 		gait.advance(1.0 / 60.0)
 		deformation.advance_visuals(1.0 / 60.0)
 		await process_frame
-		if _new_step(gait):
-			found_idle_step = true
+		for plan in gait.get_step_plans():
+			if (is_zero_approx(plan.elapsed)
+					and is_equal_approx(plan.duration, gait.get("idle_step_duration"))):
+				idle_plan = plan
+				break
+		if not idle_plan.is_empty():
 			break
 	var delay := INF
-	if found_idle_step:
+	var swing_resumes := false
+	if not idle_plan.is_empty():
+		for frame in range(8):
+			animation.advance(1.0 / 60.0)
+			gait.advance(1.0 / 60.0)
+			deformation.advance_visuals(1.0 / 60.0)
+			await process_frame
+		var before: Dictionary = {}
+		for plan in gait.get_step_plans():
+			if plan.index == idle_plan.index:
+				before = plan
+		var previous_position: Vector3 = gait._feet[idle_plan.index].marker.global_position
+		spider.position.z += 0.95 / 60.0
+		gait.advance(1.0 / 60.0)
+		for plan in gait.get_step_plans():
+			if plan.index == idle_plan.index and not before.is_empty():
+				var progress_change: float = (plan.elapsed / plan.duration
+					- before.elapsed / before.duration)
+				var foot_motion: float = gait._feet[plan.index].marker.global_position.distance_to(
+					previous_position)
+				swing_resumes = (plan.duration < idle_plan.duration - 0.05
+					and progress_change > 0.0 and progress_change < 0.08 and foot_motion < 0.12)
 		spider.position.z += 0.45
 		for frame in range(12):
 			spider.position.z += 0.95 / 60.0
@@ -84,7 +111,8 @@ func _sample(previous: bool) -> Dictionary:
 	spider.queue_free()
 	web.queue_free()
 	await process_frame
-	return { "count": count, "duration": duration / maxi(count, 1), "walk_delay": delay }
+	return { "count": count, "duration": duration / maxi(count, 1), "walk_delay": delay,
+		"swing_resumes": swing_resumes }
 
 
 func _new_step(gait: SpiderContactGait3D) -> bool:

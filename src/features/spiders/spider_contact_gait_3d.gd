@@ -8,8 +8,8 @@ extends SpiderLegController3D
 @export var body_footprint := Rect2(-1.91, -2.08, 3.32, 3.64)
 @export var landing_adjustment := 0.32
 @export_group("Idle stepping")
-@export_range(0.08, 2.0, 0.05) var idle_step_interval := 0.65
-@export_range(0.22, 1.0, 0.01) var idle_step_duration := 0.55
+@export_range(0.08, 2.0, 0.05) var idle_step_interval := 1.15
+@export_range(0.22, 1.0, 0.01) var idle_step_duration := 0.65
 @export_group("Front and rear placement")
 @export_range(0.25, 1.0, 0.05) var end_leg_stance_width := 0.65
 @export_range(0.6, 1.0, 0.02) var end_leg_stance_reach := 0.9
@@ -92,6 +92,13 @@ func _advance_gait(delta: float) -> void:
 	_cycle.rig_moved = not travel.is_zero_approx()
 	if _cycle.rig_moved:
 		_cycle.travel_direction = travel.normalized()
+	if _travel_speed >= 0.05:
+		for swing in _steps:
+			if swing.has("walking_duration"):
+				var progress: float = swing.elapsed / swing.duration
+				swing.duration = swing.walking_duration
+				swing.elapsed = progress * swing.duration
+				swing.erase("walking_duration")
 	_cycle.last_rig_position = _rig.global_position
 	_update_dangling(delta)
 	_release_crossed_feet()
@@ -111,7 +118,13 @@ func _advance_gait(delta: float) -> void:
 		pose_gap -= _depth_normal() * pose_gap.dot(_depth_normal())
 		var need := maxf(gap.length() / step_distance, pose_gap.length() / idle_pose_step_distance)
 		var near_limit := _near_reach_limit(index) and _travel_speed > 0.1
-		var urgent := near_limit or _needs_replant.has(index)
+		var front_behind := (index < 2 and _travel_speed > 0.1
+			and (foot.marker.global_position - _body_sprite.global_position).dot(
+				_rig.global_basis.z.normalized()) < 0.45)
+		var approaching_body := (index < 2 and _travel_speed > 0.1
+			and _inside_body(foot.marker.global_position
+				- _cycle.travel_direction * minf(_travel_speed * 0.5, 0.5)))
+		var urgent := near_limit or _needs_replant.has(index) or front_behind or approaching_body
 		if (_travel_speed < 0.05 and not urgent and not foot.dangling
 				and not _forced_replacements.has(index)
 				and _clock < _next_idle_lift):
@@ -120,11 +133,12 @@ func _advance_gait(delta: float) -> void:
 			continue
 		if (not _forced_replacements.has(index)
 				and not _needs_replant.has(index)
-				and not _can_lift(index)):
+				and not _can_lift(index, approaching_body)):
 			continue
 		if not foot.dangling and not urgent and _clock - _landed[index] < minimum_stance:
 			continue
-		_query_foot = index if not foot.dangling and not urgent else -1
+		_query_foot = index if not foot.dangling and not near_limit \
+			and not _needs_replant.has(index) and not approaching_body else -1
 		_query_direction = _rest_destination(index) - foot.marker.global_position
 		_query_direction -= _depth_normal() * _query_direction.dot(_depth_normal())
 		_query_direction = _query_direction.normalized()
@@ -142,6 +156,8 @@ func _advance_gait(delta: float) -> void:
 		var score := need + (8.0 if foot.dangling else 0.0)
 		if urgent:
 			score += 4.0
+		if front_behind or approaching_body:
+			score += 3.0
 		if _needs_replant.has(index):
 			score += 12.0
 		if index % 2 != _last_side:
@@ -166,6 +182,7 @@ func _commit_step(selected: int, selected_landing: Dictionary) -> void:
 		and get_leg_origin(selected).distance_to(selected_foot.marker.global_position)
 			<= get_leg_reach(selected))
 	var duration := maxf(step_duration, 1.5 * stride / maxf(foot_swing_speed, _travel_speed * 3.0))
+	var walking_duration := duration
 	if idle:
 		duration = maxf(duration, idle_step_duration)
 		_next_idle_lift = _clock + idle_step_interval
@@ -173,6 +190,8 @@ func _commit_step(selected: int, selected_landing: Dictionary) -> void:
 		"end": selected_landing.point, "strand_id": selected_landing.get("strand_id", ""),
 		"pose_anchor": _pose_rest_local(selected), "elapsed": 0.0,
 		"duration": duration})
+	if idle and walking_duration < duration:
+		_steps[-1]["walking_duration"] = walking_duration
 	_next_lift = _clock + lift_spacing
 	_last_side = selected % 2
 	_forced_replacements.erase(selected)
@@ -182,15 +201,17 @@ func _commit_step(selected: int, selected_landing: Dictionary) -> void:
 		history.pop_front()
 
 
-func _can_lift(index: int) -> bool:
+func _can_lift(index: int, prevent_body_overlap: bool = false) -> bool:
 	var opposite := index ^ 1
-	if not _feet[opposite].carried and _is_stepping(opposite):
+	if (not prevent_body_overlap and not _feet[opposite].carried
+			and _is_stepping(opposite)):
 		return false
 	for direction in [-2, 2]:
 		var neighbor: int = index + direction
 		while neighbor >= 0 and neighbor < 8 and _feet[neighbor].carried:
 			neighbor += direction
-		if neighbor >= 0 and neighbor < 8 and _is_stepping(neighbor):
+		if (not prevent_body_overlap and neighbor >= 0 and neighbor < 8
+				and _is_stepping(neighbor)):
 			return false
 	var available := 0
 	var supported := 0
@@ -321,6 +342,8 @@ func _rest_destination(index: int) -> Vector3:
 			var axial := direction.dot(outward)
 			if axial < 0.0:
 				direction -= outward * axial * (1.0 - push_step_lead)
+			elif index < 2 and axial > 0.1:
+				destination += outward * minf(_travel_speed * 0.12, 0.12)
 		destination += direction * lead
 	var normal := _depth_normal()
 	destination += normal * (_feet[index].ground_height - destination.dot(normal))
@@ -343,6 +366,8 @@ func _choose_web_destination(index: int) -> Dictionary:
 		return {}
 	var desired := _rest_destination(index)
 	var landing := _find_landing_near(index, desired, landing_adjustment)
+	if landing.is_empty() and (index < 2 or index >= 6) and _travel_speed > 0.1:
+		landing = _find_landing_near(index, desired, landing_adjustment * 2.0)
 	if landing.is_empty() and (_feet[index].dangling or _needs_replant.has(index)):
 		landing = _find_landing_near(index, _feet[index].marker.global_position, landing_adjustment)
 		if landing.is_empty():
