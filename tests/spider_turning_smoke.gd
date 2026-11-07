@@ -65,6 +65,7 @@ func _run() -> void:
 	await process_frame
 	await create_timer(0.2).timeout
 	if short_turn and _check_free_step_reversals():
+		await process_frame
 		print("SPIDER TURNING PASS: responsive reversals, gradual visual turn and settle")
 		quit(0)
 		return
