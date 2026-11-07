@@ -19,6 +19,9 @@ const PATCH_SETTLE_SECONDS := 2.0
 @export_range(0.0, 0.3, 0.01) var maximum_sag := 0.3
 @export_range(0.0, 0.1, 0.005) var depth_sway := 0.035
 @export_range(0.0, 0.1, 0.005) var maximum_contact_gap := 0.04
+@export_group("Visibility")
+@export var pause_offscreen := true
+@export_range(0.0, 10.0, 0.25) var visibility_margin := 2.0
 
 var model: WebSpringModel3D
 var _web: Web3D
@@ -97,7 +100,7 @@ func register_gait(gait: SpiderLegController3D) -> void:
 	landings.resize(8)
 	landings.fill(-1.0)
 	_groups[gait] = { "tips": {}, "contacts": {}, "landings": landings,
-		"region_center": Vector3.INF, "region_radius": 0.0, "regions": {} }
+		"region_center": Vector3.INF, "region_radius": 0.0, "regions": {}, "view_visible": true }
 
 
 func unregister_gait(gait: SpiderLegController3D) -> void:
@@ -157,6 +160,8 @@ func advance_visuals(delta: float) -> void:
 			_groups.erase(gait)
 			continue
 		var group: Dictionary = _groups[gait]
+		if not group.view_visible:
+			continue
 		_collect_loads(gait, group, loads)
 		if local_pull_enabled:
 			for index in range(gait._feet.size()):
@@ -171,7 +176,8 @@ func advance_visuals(delta: float) -> void:
 	model.depth_sway = depth_sway
 	model.advance(delta, loads)
 	for gait in _groups:
-		_update_materials(gait)
+		if _groups[gait].view_visible:
+			_update_materials(gait)
 	var active := not _active_regions.is_empty() and not _segments.is_empty()
 	visible = active
 	if not active:
@@ -185,6 +191,10 @@ func advance_visuals(delta: float) -> void:
 
 func _update_regions(delta: float) -> void:
 	var occupied: Dictionary = {}
+	var camera := get_viewport().get_camera_3d()
+	var frustum: Array[Plane] = []
+	if pause_offscreen and camera != null:
+		frustum = camera.get_frustum()
 	for gait in _groups.keys():
 		if not is_instance_valid(gait) or not gait.is_inside_tree():
 			_groups.erase(gait)
@@ -205,7 +215,11 @@ func _update_regions(delta: float) -> void:
 					center, segment.start, segment.end)
 				if center.distance_squared_to(closest) <= radius * radius:
 					group.regions[int(segment.strand_id.get_slice(":", 0))] = true
-		occupied.merge(group.regions)
+		group.view_visible = group.regions.is_empty()
+		for region: int in group.regions:
+			if _patch_in_view(region, frustum):
+				occupied[region] = true
+				group.view_visible = true
 	for region in _active_regions.keys():
 		_active_regions[region] -= maxf(delta, 0.0)
 		if _active_regions[region] <= 0.0:
@@ -224,6 +238,15 @@ func _update_regions(delta: float) -> void:
 	_surface.clear_surfaces()
 	_build_mesh()
 	_set_original_strands_visible(false)
+
+
+func _patch_in_view(region: int, frustum: Array[Plane]) -> bool:
+	var padding := visibility_margin + maximum_sag + depth_sway + maximum_bend
+	var bounds: AABB = _patch_meshes[region].bounds.grow(padding)
+	for plane in frustum:
+		if plane.is_point_over(bounds.get_support(-plane.normal)):
+			return false
+	return true
 
 
 func is_region_dynamic(region: int) -> bool:
@@ -406,8 +429,10 @@ func _cache_meshes() -> void:
 		if not _patch_meshes.has(region):
 			_patch_meshes[region] = { "vertices": PackedVector3Array(), "uv": PackedVector2Array(),
 				"uv2": PackedVector2Array(), "static": PackedVector3Array(),
-				"parts": [], "keys": [], "variants": {}, "neighbors": {} }
+				"parts": [], "keys": [], "variants": {}, "neighbors": {},
+				"bounds": AABB(segment.start, Vector3.ZERO) }
 		var patch: Dictionary = _patch_meshes[region]
+		patch.bounds = patch.bounds.expand(segment.start).expand(segment.end)
 		var parameters: Array = []
 		_mesh_parameters.append(parameters)
 		var count := maxi(2, ceili(segment.start.distance_to(segment.end) / 0.12))
