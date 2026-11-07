@@ -215,6 +215,7 @@ def main() -> int:
         ("spider_leg_reach_smoke", "SPIDER LEG REACH PASS:"),
         ("spider_web_step_smoke", "SPIDER WEB STEP PASS:"),
         ("spider_contact_gait_smoke", "CONTACT GAIT PASS:"),
+        ("spider_idle_gait_smoke", "IDLE GAIT PASS:"),
         ("web_deformation_smoke", "WEB DEFORMATION PASS:"),
         ("web_occupancy_smoke", "WEB OCCUPANCY PASS:"),
         ("web_shader_field_smoke", "WEB SHADER FIELD PASS:"),

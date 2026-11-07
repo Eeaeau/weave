@@ -7,6 +7,9 @@ extends SpiderLegController3D
 @export var foot_swing_speed := 2.8
 @export var body_footprint := Rect2(-1.91, -2.08, 3.32, 3.64)
 @export var landing_adjustment := 0.32
+@export_group("Idle stepping")
+@export_range(0.08, 2.0, 0.05) var idle_step_interval := 0.65
+@export_range(0.22, 1.0, 0.01) var idle_step_duration := 0.55
 @export_group("Front and rear placement")
 @export_range(0.25, 1.0, 0.05) var end_leg_stance_width := 0.65
 @export_range(0.6, 1.0, 0.02) var end_leg_stance_reach := 0.9
@@ -15,6 +18,7 @@ extends SpiderLegController3D
 
 var _clock := 0.0
 var _next_lift := 0.0
+var _next_idle_lift := 0.0
 var _landed: Array[float] = []
 var history: Array[int] = []
 var _last_side := -1
@@ -108,6 +112,10 @@ func _advance_gait(delta: float) -> void:
 		var need := maxf(gap.length() / step_distance, pose_gap.length() / idle_pose_step_distance)
 		var near_limit := _near_reach_limit(index) and _travel_speed > 0.1
 		var urgent := near_limit or _needs_replant.has(index)
+		if (_travel_speed < 0.05 and not urgent and not foot.dangling
+				and not _forced_replacements.has(index)
+				and _clock < _next_idle_lift):
+			continue
 		if not foot.dangling and need < 1.0 and not urgent:
 			continue
 		if (not _forced_replacements.has(index)
@@ -153,13 +161,18 @@ func _commit_step(selected: int, selected_landing: Dictionary) -> void:
 	var selected_foot := _feet[selected]
 	var from_point := _planar(selected_foot.marker.global_position)
 	var stride := from_point.distance_to(_planar(selected_landing.point))
+	var idle := (_travel_speed < 0.05 and not selected_foot.dangling
+		and not _needs_replant.has(selected) and not _forced_replacements.has(selected)
+		and get_leg_origin(selected).distance_to(selected_foot.marker.global_position)
+			<= get_leg_reach(selected))
+	var duration := maxf(step_duration, 1.5 * stride / maxf(foot_swing_speed, _travel_speed * 3.0))
+	if idle:
+		duration = maxf(duration, idle_step_duration)
+		_next_idle_lift = _clock + idle_step_interval
 	_steps.append({"index": selected, "start": selected_foot.marker.global_position,
 		"end": selected_landing.point, "strand_id": selected_landing.get("strand_id", ""),
 		"pose_anchor": _pose_rest_local(selected), "elapsed": 0.0,
-		"duration": maxf(
-			step_duration,
-			1.5 * stride / maxf(foot_swing_speed, _travel_speed * 3.0),
-		)})
+		"duration": duration})
 	_next_lift = _clock + lift_spacing
 	_last_side = selected % 2
 	_forced_replacements.erase(selected)
