@@ -7,15 +7,18 @@
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6q6db"]
 height = 0.5093994
 
-[node name="WeaponRocketLauncher" type="Node3D" unique_id=1754921735 node_paths=PackedStringArray("pickup_area")]
+[node name="WeaponRocketLauncher" type="Node3D" unique_id=1754921735 node_paths=PackedStringArray("pickup_area", "rear_grip", "front_grip")]
 script = ExtResource("1_wox85")
 projectile_scene = ExtResource("2_ylcqh")
 icon = ExtResource("3_ylcqh")
 pickup_area = NodePath("PickupArea")
+rear_grip = NodePath("RearGrip")
+front_grip = NodePath("FrontGrip")
 metadata/_custom_type_script = "uid://br605w6pc4cgw"
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=772267363]
 transform = Transform3D(0, 0.3, 0, -0.3, 0, 0, 0, 0, 0.671, 0, 0, 0)
+offset = Vector2(59, 65)
 texture = ExtResource("3_ylcqh")
 
 [node name="PickupArea" type="Area3D" parent="." unique_id=802743741]
@@ -23,3 +26,11 @@ texture = ExtResource("3_ylcqh")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea" unique_id=30624004]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21747237, 0)
 shape = SubResource("CylinderShape3D_6q6db")
+
+[node name="RearGrip" type="Marker3D" parent="."]
+position = Vector3(-0.22, 0.22, 0.035)
+gizmo_extents = 0.08
+
+[node name="FrontGrip" type="Marker3D" parent="."]
+position = Vector3(0.22, 0.22, 0.035)
+gizmo_extents = 0.08

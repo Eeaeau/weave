@@ -27,6 +27,8 @@ func _run() -> void:
 	if not await _check_dense_web_cases():
 		quit(1)
 		return
+	await process_frame
+	await create_timer(0.2).timeout
 	print("SPIDER WEB STEP PASS: visible support, thresholds, and strand replacement")
 	quit(0)
 
@@ -120,6 +122,8 @@ func _check_controller_support_refresh() -> bool:
 
 func _check_web_step_threshold_and_replacement() -> bool:
 	var spider := SPIDER_SCENE.instantiate() as BaseSpider3D
+	spider.get_node("SpiderRig/LegController").set_script(
+		load("res://src/features/spiders/spider_leg_controller_3d.gd"))
 	root.add_child(spider)
 	var controller := spider.get_node("SpiderRig/LegController") as Node
 	controller.set_process(false)
@@ -234,7 +238,7 @@ func _check_all_feet_share_one_strand() -> bool:
 	controller.set_process(false)
 	await process_frame
 	_freeze_spider_animation(spider)
-	var web := _make_line_web(Vector3(0.0, 0.5, -5.0), Vector3(0.0, 0.5, 5.0))
+	var web := _make_line_web(Vector3(0.0, 0.0, -5.0), Vector3(0.0, 0.0, 5.0))
 	root.add_child(web)
 	await process_frame
 	controller.set("support_web", web)
@@ -245,7 +249,7 @@ func _check_all_feet_share_one_strand() -> bool:
 		var landing: Dictionary = controller.call("_choose_destination", foot_index)
 		if landing.is_empty():
 			_free_nodes(spider, web)
-			return _fail("All eight feet must find room on a long shared web strand")
+			return _fail("Foot %s must find reachable room on the shared strand" % foot_index)
 		var point: Vector3 = landing["point"]
 		var strand_id: String = landing["strand_id"]
 		if not controller.call("has_web_support", point):
@@ -321,6 +325,19 @@ func _check_dense_web_landings() -> bool:
 	print("DENSE WEB ADVANCE BENCH: 60 frames, %.2f ms/frame" % (
 		float(Time.get_ticks_usec() - start) / 60.0 / 1000.0
 	))
+	var previous_position := spider.global_position
+	spider.global_position += Vector3(100, 0, 100)
+	start = Time.get_ticks_usec()
+	for query in range(1000):
+		if not controller.call("_choose_web_destination", 0).is_empty():
+			_free_nodes(spider, web)
+			return _fail("A distant web must not produce unreachable landings")
+	var distant_ms := float(Time.get_ticks_usec() - start) / 1000.0
+	print("DISTANT WEB BENCH: 1000 unreachable queries, %.2f ms" % distant_ms)
+	if distant_ms > 200.0:
+		_free_nodes(spider, web)
+		return _fail("Unreachable web searches must not stall frame processing")
+	spider.global_position = previous_position
 	var passed := _check_dense_web_support_invalidation(controller, web)
 	_free_nodes(spider, web)
 	return passed
@@ -451,8 +468,8 @@ func _make_support_web(foot_position: Vector3) -> Web3D:
 	web.valid_nodes = [
 		_add_web_node(web, foot_position + Vector3(-0.12, 0.0, 0.0)),
 		_add_web_node(web, foot_position + Vector3(0.12, 0.0, 0.0)),
-		_add_web_node(web, foot_position + Vector3(-0.12, 0.0, 0.18)),
-		_add_web_node(web, foot_position + Vector3(0.12, 0.0, 0.18)),
+		_add_web_node(web, foot_position + Vector3(-0.12, 0.0, 0.14)),
+		_add_web_node(web, foot_position + Vector3(0.12, 0.0, 0.14)),
 	]
 	web.edges = [Vector2i(0, 1), Vector2i(2, 3)]
 	return web

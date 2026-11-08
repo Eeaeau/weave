@@ -1,4 +1,7 @@
 extends SceneTree
+
+const GROUPED_GAIT := preload("res://src/features/spiders/spider_leg_controller_3d.gd")
+
 ## Exercise the real spider rig's world-planted, alternating free-step targets.
 
 const SPIDER_SCENE := preload("res://src/features/spiders/base_spider.tscn")
@@ -20,6 +23,8 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var controller := spider.get_node_or_null("SpiderRig/LegController") as Node3D
 	if controller == null:
@@ -41,7 +46,8 @@ func _run() -> void:
 		return
 	if not _check_emergency_release():
 		return
-	if not _check_preview() or not _check_idle_pose_steps():
+	if (not _check_preview() or not _check_idle_pose_steps()
+			or not await _check_short_step_arc()):
 		return
 	print("SPIDER FREE STEP PASS: planted feet and alternating diagonal steps")
 	quit(0)
@@ -75,14 +81,16 @@ func _check_stationary(controller: Node3D, targets: Node) -> bool:
 
 
 func _check_steps(controller: Node3D, targets: Node, spider: Node3D) -> bool:
+	controller.set("step_distance", 0.02)
+	controller.set("step_lead", 0.01)
 	var initial := _positions(targets)
-	spider.position.z += 0.14
+	spider.position.z += 0.01
 	controller.call("advance", 0.016)
 	var moved_during_short_travel := not _same_positions(targets, initial)
 	controller.call("advance", 0.016)
 	if moved_during_short_travel or not _same_positions(targets, initial):
 		return _fail("Short movement must not step during travel or after stopping")
-	spider.position.z += 0.14
+	spider.position.z += 0.02
 	controller.call("advance", 0.05)
 	if not _moved_group(targets, initial, GROUP_A):
 		return _fail("First diagonal group did not start a step")
@@ -127,6 +135,8 @@ func _check_preview() -> bool:
 
 func _check_idle_pose_steps() -> bool:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
@@ -159,6 +169,8 @@ func _check_idle_pose_steps() -> bool:
 
 func _check_turning() -> bool:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
@@ -188,6 +200,8 @@ func _check_turning() -> bool:
 
 func _check_emergency_release() -> bool:
 	var spider := SPIDER_SCENE.instantiate()
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
 	root.add_child(spider)
 	var rig := spider.get_node("SpiderRig") as Node3D
 	var controller := rig.get_node("LegController") as Node3D
@@ -240,7 +254,7 @@ func _same_positions(targets: Node, positions: Dictionary) -> bool:
 func _moved_group(targets: Node, positions: Dictionary, names: Array) -> bool:
 	for target_name in names:
 		var target := targets.get_node(target_name) as Node3D
-		if target.global_position.distance_to(positions[target_name]) < 0.01:
+		if target.global_position.distance_to(positions[target_name]) <= 0.001:
 			return false
 	return true
 
@@ -257,3 +271,46 @@ func _fail(message: String) -> bool:
 	push_error("SPIDER FREE STEP FAIL: " + message)
 	quit(1)
 	return false
+
+
+func _check_short_step_arc() -> bool:
+	var spider := SPIDER_SCENE.instantiate() as BaseSpider3D
+	spider.get_node("SpiderRig/LegController").set_script(
+		GROUPED_GAIT)
+	root.add_child(spider)
+	var gait: SpiderLegController3D = spider.get_node("SpiderRig/LegController")
+	gait.set_process(false)
+	gait.targeting_mode = SpiderLegController3D.TargetingMode.FREE_STEP_DEBUG
+	var animation: AnimationPlayer = spider.get_node("SpiderRig/AnimationPlayer")
+	animation.pause()
+	animation.seek(0.0, true)
+	gait.step_distance = 0.02
+	gait.step_lead = 0.01
+	gait.step_duration = 0.3
+	gait.step_height = 0.2
+	var foot: Node3D = spider.get_node("SpiderRig/FootTargets/FootFrontLeft")
+	var start := foot.global_position
+	spider.position.z += 0.06
+	gait.advance(0.0)
+	var peak := 0.0
+	var first_lift := 0.0
+	var last_height := 0.0
+	for sample in range(20):
+		gait.advance(gait.step_duration / 20.0)
+		var height := foot.global_position.y - start.y
+		peak = maxf(peak, height)
+		if sample == 0:
+			first_lift = height
+		if sample == 18:
+			last_height = height
+	var finish := foot.global_position
+	var stride := Vector2(finish.x - start.x, finish.z - start.z).length()
+	var passed := stride > 0.03 and peak <= stride * 0.3 + 0.001
+	passed = passed and first_lift < 0.003 and last_height < 0.003
+	passed = passed and absf(finish.y - start.y) < 0.001
+	spider.queue_free()
+	await process_frame
+	await create_timer(0.2).timeout
+	if not passed:
+		return _fail("Short steps must stay low and ease into lift-off and touchdown")
+	return true

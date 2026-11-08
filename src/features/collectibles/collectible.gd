@@ -26,5 +26,7 @@ func _area_entered(area: Area3D) -> void:
 		return
 	var parent = area.get_parent_node_3d()
 	if parent and parent is PlayerSpider3D:
+		if collectible is InsectData and not parent.is_active:
+			return
 		if parent.pick_up(self):
 			after_picked_up()

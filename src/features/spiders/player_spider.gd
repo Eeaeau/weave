@@ -4,10 +4,12 @@ class_name PlayerSpider3D
 extends BaseSpider3D
 
 const AIM_SPEED: float = 3.0
-const MOVE_SPEED: float = 2.0
+const MOVE_SPEED: float = 0.95
 const SILK_CAPACITY: int = 5
 const STARTING_SILK: int = 3
 
+@export_range(0.02, 0.5, 0.01) var weapon_depth_clearance := 0.12
+@export var projectile_spawn_offset := Vector3(0, 0, 0.45)
 @export var is_active: bool = false
 @export var n_remaining_actions: int = 0
 @export_range(0, 20) var silk_amount: int = STARTING_SILK
@@ -26,6 +28,7 @@ var match_finished := false
 var burn_turns := 0
 var _burn_tick_due := false
 var _burn_visual: Node3D
+var _movement_velocity := Vector3.ZERO
 
 @onready var selected_indicator: Sprite3D = $SelectedIndicator
 @onready var aim_arrow: Node3D = $AimingArrow
@@ -38,6 +41,8 @@ func _ready() -> void:
 	super._ready()
 	add_to_group("burnable_spiders")
 	aim_arrow_offset = aim_arrow.position
+	var arrow_sprite := aim_arrow.get_node("TheAimingArrow") as Sprite3D
+	arrow_sprite.position.x = arrow_sprite.texture.get_width() * arrow_sprite.pixel_size / 2.0
 	assert(aim_arrow, "PlayerSpider3D {0} needs aim_arrow".format([name]))
 	assert(selected_indicator, "PlayerSpider3D {0} needs selected_indicator".format([name]))
 	var no_action = load(
@@ -54,8 +59,11 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	super._process(delta)
 	if not network_controlled:
 		simulate(delta, PlayerCommand.from_input())
+	else:
+		update_presentation()
 
 
 func simulate(delta: float, command: PlayerCommand) -> void:
@@ -67,7 +75,14 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 		take_damage(1)
 
 	update_presentation()
-	if not is_active:
+	if not is_active or is_dead():
+		_movement_velocity = Vector3.ZERO
+		return
+	var guided := get_guided_rocket()
+	if guided != null:
+		_movement_velocity = Vector3.ZERO
+		guided.set_steering(int(command.is_pressed("aim_left"))
+			- int(command.is_pressed("aim_right")))
 		return
 	if not is_nan(command.final_aim):
 		var margin := AIM_SPEED * PlayerCommand.MAX_TIMING_CORRECTION
@@ -81,8 +96,19 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 
 	var movement_direction := command.movement_direction()
 	if not movement_direction.is_zero_approx():
-		spider_rig.rotation.y = atan2(movement_direction.x, -movement_direction.y)
-	var velocity = movement_direction * MOVE_SPEED
+		face_direction(atan2(movement_direction.x, -movement_direction.y))
+	var desired_velocity := movement_direction * MOVE_SPEED
+	var acceleration := 6.0
+	if (desired_velocity.is_zero_approx()
+			or _movement_velocity.length() > desired_velocity.length() + 0.001):
+		acceleration = 10.0
+	if _movement_velocity.dot(desired_velocity) < 0.0:
+		acceleration = 12.0
+	_movement_velocity = _movement_velocity.move_toward(
+		desired_velocity,
+		acceleration * maxf(delta, 0.0),
+	)
+	var velocity := _movement_velocity
 	if velocity.length() > 0:
 		if remaining_movement > 0:
 			var to_move = velocity * delta
@@ -97,6 +123,8 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 			if is_on_web(new_position):
 				remaining_movement -= to_move.length()
 				global_position += to_move
+			else:
+				_movement_velocity = Vector3.ZERO
 
 	if command.is_pressed("aim_left"):
 		aim_angle += AIM_SPEED * delta
@@ -145,13 +173,15 @@ func simulate(delta: float, command: PlayerCommand) -> void:
 
 func update_presentation() -> void:
 	_update_burn_visual()
+	_update_weapon_pose()
 	selected_indicator.visible = is_active and health > 0
 	aim_arrow.visible = selected_indicator.visible and selected_weapon_idx >= 2
 	if aim_arrow.visible:
-		aim_arrow.position = aim_arrow_offset.rotated(Vector3(0, 1, 0), aim_angle)
-		aim_arrow.scale.x = 0.2 + (sin(action_charged_time * 2) + 1)
-		aim_arrow.rotation.y = aim_angle
-	_update_weapon_pose()
+		var forward := Vector3(cos(aim_angle), sin(aim_angle), 0)
+		aim_arrow.global_position = _get_weapon_equip_target().global_position \
+			+ forward * aim_arrow_offset.length()
+		aim_arrow.global_basis = Basis(Vector3.BACK, aim_angle) * Basis.from_scale(
+			Vector3(0.2 + (sin(action_charged_time * 2) + 1), 1, 1))
 	if silk_builder:
 		if is_active and selected_weapon_idx == 1:
 			silk_builder.update_preview()
@@ -215,6 +245,13 @@ func get_movement_direction() -> Vector3:
 	return PlayerCommand.from_input().movement_direction()
 
 
+func get_guided_rocket() -> Node:
+	for rocket in get_tree().get_nodes_in_group("guided_rockets"):
+		if rocket.source_hurtbox == hurtbox and not rocket.is_queued_for_deletion():
+			return rocket
+	return null
+
+
 func is_done() -> bool:
 	return n_remaining_actions <= 0 or is_dead()
 
@@ -263,7 +300,20 @@ func _sync_equipped_weapon_visuals() -> void:
 
 
 func _update_weapon_pose() -> void:
-	_get_weapon_equip_target().global_basis = Basis(Vector3.BACK, aim_angle)
+	var mount := _get_weapon_equip_target()
+	var depth := body.global_position.z
+	for sprite_name in ["Body", "LeftEye", "RightEye"]:
+		var sprite := get_node("SpiderRig/BoneAttachment3D/BodyOffset/" + sprite_name) as Sprite3D
+		var bounds := sprite.get_aabb()
+		for index in range(8):
+			depth = maxf(depth, (sprite.global_transform * bounds.get_endpoint(index)).z)
+	mount.global_position = Vector3(body.global_position.x, body.global_position.y,
+		depth + weapon_depth_clearance)
+	mount.global_basis = Basis(Vector3.BACK, aim_angle)
+	var weapon: Weapon3D = null
+	if selected_weapon_idx >= 0 and selected_weapon_idx < weapons.size():
+		weapon = weapons[selected_weapon_idx]
+	get_node("SpiderRig/WeaponCarry").set_weapon(weapon)
 
 
 func _get_weapon_equip_target() -> Marker3D:
