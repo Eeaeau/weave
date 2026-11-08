@@ -201,6 +201,7 @@ def main() -> int:
         ("moth_visual_smoke", "MOTH VISUAL PASS:"),
         ("insect_pickup_smoke", "INSECT PICKUP PASS:"),
         ("weapon_self_hit_smoke", "WEAPON SELF HIT PASS:"),
+        ("match_fire_smoke", "MATCH FIRE PASS:"),
         ("guided_rocket_smoke", "GUIDED ROCKET PASS:"),
         ("guided_replication_smoke", "GUIDED REPLICATION PASS:"),
         ("combat_layout_smoke", "COMBAT LAYOUT PASS:"),
@@ -288,6 +289,13 @@ def main() -> int:
         marker="LOBBY ERRORS PASS",
         timeout=210,
     )
+    for scenario in ("fire", "fire-leave"):
+        run(
+            [sys.executable, "tools/check_multiplayer.py", "--godot", str(godot),
+             "--scenario", scenario, "--host-fps", "24", "--guest-fps", "144", "--latency-ms", "60"],
+            marker="MULTIPLAYER PASS:",
+            timeout=65,
+        )
     print("\nLOCAL CHECKS PASS")
     return 0
 

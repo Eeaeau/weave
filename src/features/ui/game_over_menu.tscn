@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://src/features/ui/game_over_menu.gd" id="1"]
 
 [node name="GameOverMenu" type="CanvasLayer"]
+layer = 20
 visible = false
 process_mode = 3
 script = ExtResource("1")
@@ -30,13 +31,18 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="Backdrop/Center/Menu"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "YOU DIED"
+text = "Match finished"
 horizontal_alignment = 1
 
 [node name="RetryButton" type="Button" parent="Backdrop/Center/Menu"]
 custom_minimum_size = Vector2(260, 44)
 layout_mode = 2
-text = "Retry"
+text = "Play Again"
+
+[node name="WaitingLabel" type="Label" parent="Backdrop/Center/Menu"]
+visible = false
+layout_mode = 2
+text = "Waiting for the host to return to the lobby."
 
 [node name="MainMenuButton" type="Button" parent="Backdrop/Center/Menu"]
 custom_minimum_size = Vector2(260, 44)

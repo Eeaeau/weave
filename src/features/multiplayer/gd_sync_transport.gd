@@ -6,7 +6,7 @@ signal packet_too_large(kind: String, byte_count: int)
 const MAX_PACKET_BYTES := 65_536
 const KINDS := ["prepare", "scene_ready", "snapshot", "snapshot_ack", "start", "command",
 	"command_ack", "events", "state_ack", "recover", "wind", "wind_contact", "wind_skip",
-	"projectile"]
+	"projectile", "flame", "return_lobby"]
 
 var sent_messages: Dictionary = {}
 var sent_bytes: Dictionary = {}
